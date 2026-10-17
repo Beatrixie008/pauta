@@ -202,7 +202,7 @@ const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
 const fmt=s=>s.slice(8)+"/"+s.slice(5,7);
 const ini=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 const hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%5;return [330,285,12,305,350][h]};
-let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
+let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
 
 function seed(){
   const L=[["l1","A fazer"],["l2","Em andamento"],["l3","Em revisão"],["l4","Concluída",1]].map(([id,name,done])=>({id,name,done:!!done}));
@@ -445,7 +445,7 @@ function ownerName(v){v=v.trim();return v.includes("@")?v.split("@")[0]:v}
 function ownerEmail(v){v=v.trim().toLowerCase();return v.includes("@")?v:""}
 function applyRemote(){if(drag)return;render()}
 function defaultLists(){return [["A fazer"],["Em andamento"],["Em revisão"],["Concluída",1]].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))}
-function cardObj(c,i){return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:c.aEmail||"",by:c.by||me.email,done:!!c.done,boardId:bd.id,ord:i}}
+function cardObj(c,i){const ae=c.aEmail||"";return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:ae,by:c.by||me.email,done:!!c.done,boardId:bd.id,ord:i,readers:[...new Set([...(bd.memberEmails||[]),ae].filter(Boolean))].sort()}}
 function persist(){
   if(!bd||!me)return;
   const b=writeBatch(db);let n=0;
@@ -456,17 +456,18 @@ function persist(){
   if(n)b.commit().catch(fail);
 }
 function switchBoard(b){
-  if(unsubC)unsubC();
   bd=b;curId=b.id;try{localStorage.setItem("pauta.board",b.id)}catch(e){}
   data={lists:(b.lists||[]).map(x=>({...x})),cards:[]};
   synced={cards:{},lists:JSON.stringify(data.lists)};compL=null;addingList=false;
-  unsubC=onSnapshot(query(collection(db,"cards"),where("boardId","==",b.id)),snap=>{
-    data.cards=snap.docs.map(d=>({id:d.id,...d.data()})).sort((x,y)=>(x.ord||0)-(y.ord||0));
-    synced.cards={};data.cards.forEach(c=>{synced.cards[c.id]=JSON.stringify(cardObj(c,c.ord||0))});
-    applyRemote();
-  },e=>toast("Erro ao carregar tarefas ("+e.code+")"));
+  rebuildCards();
 }
-function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null}
+function rebuildCards(){
+  if(!bd||!me)return;
+  data.cards=allCards.filter(c=>c.boardId===bd.id).map(c=>({...c})).sort((x,y)=>(x.ord||0)-(y.ord||0));
+  assigned=allCards.filter(c=>c.aEmail===me.email&&c.boardId!==bd.id);
+  synced.cards={};data.cards.forEach(c=>{synced.cards[c.id]=JSON.stringify(cardObj(c,c.ord||0))});
+}
+function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null;allCards=[]}
 function start(){
   const pid="u_"+me.uid;
   unsubB=onSnapshot(query(collection(db,"boards"),where("memberEmails","array-contains",me.email)),snap=>{
@@ -478,9 +479,9 @@ function start(){
     else{bd=want;const rl=JSON.stringify(want.lists||[]);if(rl!==JSON.stringify(data.lists))data.lists=(want.lists||[]).map(x=>({...x}));synced.lists=rl}
     applyRemote();
   },e=>toast("Erro ao carregar quadros ("+e.code+")"));
-  unsubA=onSnapshot(query(collection(db,"cards"),where("aEmail","==",me.email)),snap=>{
-    assigned=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote();
-  },e=>toast("Erro ao carregar atribuições ("+e.code+")"));
+  unsubC=onSnapshot(query(collection(db,"cards"),where("readers","array-contains",me.email)),snap=>{
+    allCards=snap.docs.map(d=>({id:d.id,...d.data()}));rebuildCards();applyRemote();
+  },e=>toast("Erro ao carregar tarefas ("+e.code+")"));
 }
 async function newBoard(){
   const n=(prompt("Nome do quadro compartilhado:")||"").trim();if(!n)return;
@@ -490,11 +491,11 @@ async function newBoard(){
 async function invite(){
   const e=(prompt("Participantes: "+(bd.memberEmails||[]).join(", ")+"\n\nE-mail da pessoa para convidar:")||"").trim().toLowerCase();
   if(!e.includes("@"))return;
-  try{await updateDoc(doc(db,"boards",bd.id),{memberEmails:arrayUnion(e)});toast(e+" agora tem acesso. Avise a pessoa para entrar com esse e-mail.")}catch(x){fail(x)}
+  try{const bt=writeBatch(db);bt.update(doc(db,"boards",bd.id),{memberEmails:arrayUnion(e)});allCards.filter(c=>c.boardId===bd.id).forEach(c=>bt.update(doc(db,"cards",c.id),{readers:arrayUnion(e)}));await bt.commit();toast(e+" agora tem acesso. Avise a pessoa para entrar com esse e-mail.")}catch(x){fail(x)}
 }
 async function delBoard(){
   if(!bd||bd.personal||bd.owner!==me.uid||!confirm("Excluir o quadro “"+bd.name+"” e todas as tarefas dele?"))return;
-  try{const s=await getDocs(query(collection(db,"cards"),where("boardId","==",bd.id)));const b=writeBatch(db);s.docs.forEach(d=>b.delete(d.ref));b.delete(doc(db,"boards",bd.id));curId="u_"+me.uid;await b.commit()}catch(e){fail(e)}
+  try{const b=writeBatch(db);allCards.filter(c=>c.boardId===bd.id).forEach(c=>b.delete(doc(db,"cards",c.id)));b.delete(doc(db,"boards",bd.id));curId="u_"+me.uid;await b.commit()}catch(e){fail(e)}
 }
 $("#bsel").addEventListener("change",e=>{
   const v=e.target.value;

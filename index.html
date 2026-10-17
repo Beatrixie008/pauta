@@ -3,23 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Gerenciador de atividades com quadro, calendário, painel e gráficos.">
+<meta name="theme-color" content="#f3d9ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#25132d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pauta">
+<link rel="apple-touch-icon" id="ati">
+<link rel="icon" id="ico">
 <title>Pauta - Gerenciador de Atividades I Beatriz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--grad:linear-gradient(135deg,#ffd3e6 0%,#e8d4ff 48%,#ffe2d2 100%);--glass:rgba(255,255,255,.58);--edge:rgba(255,255,255,.7);--surface:#fff;--ink:#3b2340;--muted:#7d6584;--line:#f6e3f0;--accent:#d6336c;--accent-ink:#fff;--high:#f0508c;--mid:#ff9a5c;--low:#a77bf3;--ok:#3fb68b;--shadow:0 2px 6px rgba(120,40,100,.12);--lift:0 10px 22px rgba(120,40,100,.2);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--grad:linear-gradient(135deg,#27122f 0%,#1d1530 50%,#2c1522 100%);--glass:rgba(255,255,255,.07);--edge:rgba(255,255,255,.1);--surface:#38243f;--ink:#fbeaf7;--muted:#c7aacf;--line:#4d3558;--accent:#f472b6;--accent-ink:#3b0a24;--high:#ff6fa5;--mid:#ffa66e;--low:#b794f6;--ok:#5fd3a8;--shadow:none;--lift:0 10px 22px rgba(0,0,0,.4)}}
-:root[data-theme="dark"]{--grad:linear-gradient(135deg,#27122f 0%,#1d1530 50%,#2c1522 100%);--glass:rgba(255,255,255,.07);--edge:rgba(255,255,255,.1);--surface:#38243f;--ink:#fbeaf7;--muted:#c7aacf;--line:#4d3558;--accent:#f472b6;--accent-ink:#3b0a24;--high:#ff6fa5;--mid:#ffa66e;--low:#b794f6;--ok:#5fd3a8;--shadow:none;--lift:0 10px 22px rgba(0,0,0,.4)}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{--bgc:#f6d9ea;--grad:linear-gradient(135deg,#ffd3e6 0%,#e8d4ff 48%,#ffe2d2 100%);--glass:rgba(255,255,255,.58);--edge:rgba(255,255,255,.7);--surface:#fff;--ink:#3b2340;--muted:#7d6584;--line:#f6e3f0;--accent:#d6336c;--accent-ink:#fff;--high:#f0508c;--mid:#ff9a5c;--low:#a77bf3;--ok:#3fb68b;--shadow:0 2px 6px rgba(120,40,100,.12);--lift:0 10px 22px rgba(120,40,100,.2);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bgc:#25132d;--grad:linear-gradient(135deg,#27122f 0%,#1d1530 50%,#2c1522 100%);--glass:rgba(255,255,255,.07);--edge:rgba(255,255,255,.1);--surface:#38243f;--ink:#fbeaf7;--muted:#c7aacf;--line:#4d3558;--accent:#f472b6;--accent-ink:#3b0a24;--high:#ff6fa5;--mid:#ffa66e;--low:#b794f6;--ok:#5fd3a8;--shadow:none;--lift:0 10px 22px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--bgc:#25132d;--grad:linear-gradient(135deg,#27122f 0%,#1d1530 50%,#2c1522 100%);--glass:rgba(255,255,255,.07);--edge:rgba(255,255,255,.1);--surface:#38243f;--ink:#fbeaf7;--muted:#c7aacf;--line:#4d3558;--accent:#f472b6;--accent-ink:#3b0a24;--high:#ff6fa5;--mid:#ffa66e;--low:#b794f6;--ok:#5fd3a8;--shadow:none;--lift:0 10px 22px rgba(0,0,0,.4)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background-color:var(--bgc)}
 *{box-sizing:border-box}
-body{margin:0;min-height:100dvh;background:var(--grad) fixed;background-color:#f3d9ec;color:var(--ink);font:15px/1.45 Nunito,system-ui,-apple-system,"Segoe UI",sans-serif}
+body{margin:0;min-height:100dvh;background:var(--grad);color:var(--ink);font:15px/1.45 Nunito,system-ui,-apple-system,"Segoe UI",sans-serif}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
+input,select,textarea{font-size:16px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
 .top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:18px 18px 14px}
 .brand{margin:0 auto 0 0;font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
-.brand small{display:block;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;text-transform:capitalize}
+.brand small{display:block;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}.brand small::first-letter,.calh h2::first-letter{text-transform:uppercase}
 .field{background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(10px);border-radius:99px;padding:9px 16px;min-width:0}
 #q{width:190px}
 .pill{background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(10px);border-radius:99px;padding:7px 14px;font-weight:600;font-size:13px}
@@ -105,7 +114,7 @@ dialog::backdrop{background:rgba(60,15,50,.45);backdrop-filter:blur(3px)}
 .cl.lt i{background:var(--accent)}
 .cl b{color:var(--ink)}
 .calh{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.calh h2{flex:1;margin:0;font-size:20px;font-weight:800;text-transform:capitalize;text-align:center}
+.calh h2{flex:1;margin:0;font-size:20px;font-weight:800;text-align:center}
 .wk,.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .wk span{text-align:center;font-size:12px;font-weight:800;color:var(--muted);padding:4px 0}
 .day{background:var(--glass);border:1px solid var(--edge);border-radius:12px;min-height:96px;padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0;overflow:hidden;transition:transform .15s,box-shadow .15s}
@@ -120,6 +129,12 @@ dialog::backdrop{background:rgba(60,15,50,.45);backdrop-filter:blur(3px)}
 .dayd{margin-top:14px}
 .dayd .btn{margin-top:8px}
 @media (max-width:600px){.day{min-height:56px;padding:4px;flex-direction:row;flex-wrap:wrap;align-content:flex-start}.num{flex:0 0 100%}.ev{pointer-events:none;display:inline-block;width:7px;height:7px;padding:0;font-size:0;border-radius:50%;background:var(--c);margin-right:2px}.more{display:none}}
+.ct{display:flex;gap:8px;align-items:flex-start}.ct h3{flex:1;min-width:0}
+.chk{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);background:transparent;margin-top:1px;display:grid;place-items:center;font-size:13px;font-weight:800;color:var(--accent-ink);padding:0;transition:background .15s,border-color .15s}
+.chk:hover{border-color:var(--ok)}.chk.on{background:var(--ok);border-color:var(--ok)}
+.card.done h3{text-decoration:line-through;opacity:.65}
+.mv{display:none;gap:6px;margin-top:8px}.mv button{flex:1;border:0;border-radius:10px;background:var(--line);padding:5px;font-weight:800;font-size:16px}
+@media (hover:none){.mv{display:flex}}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -150,6 +165,7 @@ dialog::backdrop{background:rgba(60,15,50,.45);backdrop-filter:blur(3px)}
     <datalist id="projs"></datalist><datalist id="owns"></datalist>
     <div class="acts">
       <button type="button" class="btn danger" id="del">Excluir</button>
+      <button type="button" class="btn" id="fin">Concluir tarefa</button>
       <button type="button" class="btn" id="cancel">Cancelar</button>
       <button type="submit" class="btn primary">Salvar tarefa</button>
     </div>
@@ -186,10 +202,10 @@ function vis(c){const q=$("#q").value.trim().toLowerCase(),o=$("#fo").value;retu
 
 function cardHtml(c,done){
   const late=!done&&c.due&&c.due<iso(new Date());
-  return `<article class="card${c.id===newId?" new":""}" draggable="true" data-id="${c.id}" tabindex="0" aria-label="Abrir ${esc(c.t)}">
+  return `<article class="card${c.id===newId?" new":""}${done?" done":""}" draggable="true" data-id="${c.id}" tabindex="0" aria-label="Abrir ${esc(c.t)}">
     ${c.pr?`<span class="chip" style="--c:var(--${PC[c.pr]})">${PRI[c.pr]}</span>`:""}
-    <h3>${esc(c.t)}</h3>
-    <div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${c.due?`<span class="due ${late?"late":done?"ok":""}">${late?"Atrasada · ":done?"✓ ":""}${fmt(c.due)}</span>`:""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>
+    <div class="ct"><button class="chk${done?" on":""}" data-chk="${c.id}" aria-label="${done?"Reabrir":"Concluir"} tarefa" title="${done?"Reabrir":"Concluir"}">${done?"✓":""}</button><h3>${esc(c.t)}</h3></div>
+    <div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${c.due?`<span class="due ${late?"late":done?"ok":""}">${late?"Atrasada · ":done?"✓ ":""}${fmt(c.due)}</span>`:""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div><div class="mv"><button data-mv="-1" aria-label="Mover para a lista anterior">‹</button><button data-mv="1" aria-label="Mover para a próxima lista">›</button></div>
   </article>`;
 }
 
@@ -223,12 +239,25 @@ function addList(){const v=$("#nl").value.trim();if(!v){$("#nl").focus();return}
 function openDlg(id){
   if(!data.lists.length){addingList=true;focusNext=true;render();return}
   editing=id?data.cards.find(c=>c.id===id):null;
-  $("#del").style.display=editing?"":"none";
+  $("#del").style.display=editing?"":"none";const cl=editing&&data.lists.find(l=>l.id===editing.l);$("#fin").style.display=editing?"":"none";$("#fin").textContent=cl&&cl.done?"Reabrir tarefa":"Concluir tarefa";
   $("#l").innerHTML=data.lists.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join("");
   const c=editing||{t:"",d:"",l:data.lists[0].id,pr:"media",p:"",o:"",due:presetDue||plus(7)};
   $("#t").value=c.t;$("#d").value=c.d;$("#l").value=c.l;$("#pr").value=c.pr;$("#p").value=c.p;$("#o").value=c.o;$("#due").value=c.due;
   $("#dlg").showModal();
 }
+function toggleDone(id){
+  const c=data.cards.find(x=>x.id===id);if(!c)return;
+  const cur=data.lists.find(l=>l.id===c.l);
+  if(cur&&cur.done){let t=data.lists.find(l=>!l.done);if(!t){t={id:"l"+(++uid),name:"A fazer",done:false};data.lists.unshift(t)}c.l=t.id}
+  else{let d=data.lists.find(l=>l.done);if(!d){d={id:"l"+(++uid),name:"Concluída",done:true};data.lists.push(d)}c.l=d.id}
+  data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
+}
+function moveCard(id,dir){
+  const c=data.cards.find(x=>x.id===id);if(!c)return;
+  const i=data.lists.findIndex(l=>l.id===c.l),n=data.lists[i+dir];if(!n)return;
+  c.l=n.id;data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
+}
+$("#fin").onclick=()=>{if(editing){const id=editing.id;$("#dlg").close();toggleDone(id)}};
 $("#new").onclick=()=>openDlg();
 $("#cancel").onclick=()=>$("#dlg").close();
 $("#del").onclick=()=>{if(editing&&confirm("Excluir esta tarefa?")){data.cards=data.cards.filter(c=>c!==editing);save();$("#dlg").close();render()}};
@@ -251,6 +280,8 @@ board.addEventListener("click",e=>{
   if(g("data-al")){addingList=true;compL=null;focusNext=true;render();return}
   if(g("data-cl")){addingList=false;render();return}
   if(g("data-sl")){addList();return}
+  if(el=g("data-chk")){toggleDone(el.dataset.chk);return}
+  if(el=g("data-mv")){moveCard(el.closest(".card").dataset.id,+el.dataset.mv);return}
   if(el=e.target.closest(".card"))openDlg(el.dataset.id);
 });
 board.addEventListener("keydown",e=>{
@@ -377,6 +408,7 @@ $("#view").addEventListener("click",e=>{
 $("#view").addEventListener("keydown",e=>{const d=e.target.dataset.day;if(d&&e.key==="Enter"){selDay=d;renderView()}});
 
 $("#today").textContent=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+try{const cv=document.createElement("canvas");cv.width=cv.height=180;const x=cv.getContext("2d"),g=x.createLinearGradient(0,0,180,180);g.addColorStop(0,"#f0508c");g.addColorStop(1,"#a77bf3");x.fillStyle=g;x.fillRect(0,0,180,180);x.fillStyle="#fff";x.font="800 110px Nunito,system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("P",90,98);const u=cv.toDataURL("image/png");$("#ati").href=u;$("#ico").href=u}catch(e){}
 load();render();
 setTimeout(()=>board.classList.remove("intro"),900);
 </script>

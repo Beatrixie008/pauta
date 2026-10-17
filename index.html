@@ -135,11 +135,22 @@ dialog::backdrop{background:rgba(60,15,50,.45);backdrop-filter:blur(3px)}
 .card.done h3{text-decoration:line-through;opacity:.65}
 .mv{display:none;gap:6px;margin-top:8px}.mv button{flex:1;border:0;border-radius:10px;background:var(--line);padding:5px;font-weight:800;font-size:16px}
 @media (hover:none){.mv{display:flex}}
+.bar2{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 12px;align-items:center}
+.me .lh .ln{font-weight:800;font-size:16px;padding:6px 8px}
+.auth{min-height:100dvh;display:grid;place-items:center;padding:24px}
+.authc{width:min(360px,100%);display:grid;gap:10px;background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(12px);border-radius:24px;padding:24px}
+.authc input{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;width:100%}
+.authc .sub{margin:0 0 6px;color:var(--muted);font-weight:600}
+.am{margin:0;min-height:1.2em;color:var(--accent);font-weight:700;font-size:14px}
+.anon .top,.anon .bar2,.anon .tabs,.anon .board,.anon .view{display:none!important}
+body:not(.anon) .auth,.boot .auth{display:none}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:99px;font-weight:700;z-index:50;max-width:90vw;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
-<body>
+<body class="anon boot">
 <header class="top">
   <h1 class="brand">Pauta<small id="today"></small></h1>
   <div id="st"></div>
@@ -147,10 +158,13 @@ dialog::backdrop{background:rgba(60,15,50,.45);backdrop-filter:blur(3px)}
   <select class="field" id="fo" aria-label="Filtrar por pessoa"></select>
   <button class="btn primary" id="new">Nova tarefa</button>
 </header>
+<div class="bar2"><select class="field" id="bsel" aria-label="Quadro"></select><button class="btn" id="inv" hidden>Convidar</button><button class="btn danger" id="delb" hidden>Excluir quadro</button><span class="pill" id="who"></span><button class="btn ghost" id="out">Sair</button></div>
 <nav class="tabs" id="tabs" role="tablist" aria-label="Visualizações"></nav>
 <main class="board intro" id="board"></main>
 <section class="view" id="view" hidden></section>
 
+<div class="auth" id="auth"><form class="authc" id="af"><h1 class="brand">Pauta</h1><p class="sub">Entre para ver suas tarefas em qualquer aparelho.</p><input id="ae" type="email" placeholder="E-mail" autocomplete="email" autocapitalize="none" required><input id="ap" type="password" placeholder="Senha (mínimo 6 caracteres)" autocomplete="current-password" required><p class="am" id="am" role="alert"></p><button class="btn primary" type="submit">Entrar</button><button class="btn" type="button" id="acr">Criar conta</button><button class="btn ghost" type="button" id="afg">Esqueci a senha</button></form></div>
+<div id="toast" role="status"></div>
 <dialog id="dlg">
   <form method="dialog" id="form">
     <input id="t" required maxlength="120" placeholder="Título da tarefa" aria-label="Título">
@@ -159,7 +173,7 @@ dialog::backdrop{background:rgba(60,15,50,.45);backdrop-filter:blur(3px)}
       <label>Lista<select id="l"></select></label>
       <label>Etiqueta<select id="pr"><option value="">Sem etiqueta</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option></select></label>
       <label>Projeto<input id="p" list="projs"></label>
-      <label>Responsável<input id="o" list="owns"></label>
+      <label>Responsável (nome ou e-mail)<input id="o" list="owns" autocapitalize="none" autocomplete="off"></label>
       <label class="full">Prazo<input type="date" id="due"></label>
     </div>
     <datalist id="projs"></datalist><datalist id="owns"></datalist>
@@ -167,12 +181,19 @@ dialog::backdrop{background:rgba(60,15,50,.45);backdrop-filter:blur(3px)}
       <button type="button" class="btn danger" id="del">Excluir</button>
       <button type="button" class="btn" id="fin">Concluir tarefa</button>
       <button type="button" class="btn" id="cancel">Cancelar</button>
-      <button type="submit" class="btn primary">Salvar tarefa</button>
+      <button type="submit" class="btn primary" id="sv">Salvar tarefa</button>
     </div>
   </form>
 </dialog>
 
-<script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,updateDoc,onSnapshot,query,where,writeBatch,arrayUnion,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyBYO8VYOqq6gvFamJum91XxB6SurnKY1jI",authDomain:"pauta-697de.firebaseapp.com",projectId:"pauta-697de",storageBucket:"pauta-697de.firebasestorage.app",messagingSenderId:"824847154234",appId:"1:824847154234:web:661dc0dc0e633c27410903"};
+const fbApp=initializeApp(firebaseConfig);
+let db;try{db=initializeFirestore(fbApp,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}catch(e){db=getFirestore(fbApp)}
+const auth=getAuth(fbApp);
 const KEY="pauta.v2",PRI={alta:"Alta",media:"Média",baixa:"Baixa"},PC={alta:"high",media:"mid",baixa:"low"};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -181,7 +202,7 @@ const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
 const fmt=s=>s.slice(8)+"/"+s.slice(5,7);
 const ini=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 const hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%5;return [330,285,12,305,350][h]};
-let uid=Date.now(),data,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
+let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
 
 function seed(){
   const L=[["l1","A fazer"],["l2","Em andamento"],["l3","Em revisão"],["l4","Concluída",1]].map(([id,name,done])=>({id,name,done:!!done}));
@@ -196,39 +217,46 @@ function seed(){
   return {lists:L,cards:C.map(([l,t,p,o,pr,n],i)=>({id:"c"+(uid+i),l,t,d:"",p,o,pr,due:plus(n)}))};
 }
 function load(){try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&Array.isArray(r.lists)&&Array.isArray(r.cards)){data=r;return}}catch(e){}data=seed()}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+function save(){persist()}
 
 function vis(c){const q=$("#q").value.trim().toLowerCase(),o=$("#fo").value;return(!q||(c.t+" "+c.d+" "+c.p).toLowerCase().includes(q))&&(!o||c.o===o)}
 
 function cardHtml(c,done){
   const late=!done&&c.due&&c.due<iso(new Date());
-  return `<article class="card${c.id===newId?" new":""}${done?" done":""}" draggable="true" data-id="${c.id}" tabindex="0" aria-label="Abrir ${esc(c.t)}">
+  return `<article class="card${c.id===newId?" new":""}${done?" done":""}" draggable="${c.boardId&&c.boardId!==curId?"false":"true"}" data-id="${c.id}" tabindex="0" aria-label="Abrir ${esc(c.t)}">
     ${c.pr?`<span class="chip" style="--c:var(--${PC[c.pr]})">${PRI[c.pr]}</span>`:""}
     <div class="ct"><button class="chk${done?" on":""}" data-chk="${c.id}" aria-label="${done?"Reabrir":"Concluir"} tarefa" title="${done?"Reabrir":"Concluir"}">${done?"✓":""}</button><h3>${esc(c.t)}</h3></div>
-    <div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${c.due?`<span class="due ${late?"late":done?"ok":""}">${late?"Atrasada · ":done?"✓ ":""}${fmt(c.due)}</span>`:""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div><div class="mv"><button data-mv="-1" aria-label="Mover para a lista anterior">‹</button><button data-mv="1" aria-label="Mover para a próxima lista">›</button></div>
+    <div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${c.boardId&&c.boardId!==curId&&c.by?`<span>de ${esc(c.by.split("@")[0])}</span>`:""}${c.due?`<span class="due ${late?"late":done?"ok":""}">${late?"Atrasada · ":done?"✓ ":""}${fmt(c.due)}</span>`:""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>${c.boardId&&c.boardId!==curId?"":`<div class="mv"><button data-mv="-1" aria-label="Mover para a lista anterior">‹</button><button data-mv="1" aria-label="Mover para a próxima lista">›</button></div>`}
   </article>`;
 }
 
 function render(){
   const b=$("#board"),sx=b.scrollLeft,today=iso(new Date());
+  const bs=$("#bsel"),ob=[...boards.filter(x=>x.personal),...boards.filter(x=>!x.personal).sort((x,y)=>(x.name||"").localeCompare(y.name||"","pt-BR"))];
+  bs.innerHTML=ob.map(x=>`<option value="${x.id}">${x.personal?"Meu quadro":esc(x.name||"Quadro")}</option>`).join("")+'<option value="__new">+ Novo quadro compartilhado…</option>';
+  if(bd)bs.value=bd.id;
+  $("#inv").hidden=!bd||!!bd.personal;$("#delb").hidden=!(bd&&!bd.personal&&me&&bd.owner===me.uid);
+  const asg=bd&&bd.personal?assigned.filter(c=>c.boardId!==curId&&vis(c)):[];
+  const vl=asg.length?`<section class="list me"><div class="lh"><span class="ln">Atribuídas a mim</span><span class="cnt">${asg.length}</span></div><div class="cards">${asg.map(c=>cardHtml(c,c.done)).join("")}</div></section>`:"";
+  const hadCq=document.activeElement&&document.activeElement.id==="cq",dv=$("#cq")?$("#cq").value:"";
   const uniq=k=>[...new Set(data.cards.map(c=>c[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
   const owners=uniq("o"),cur=$("#fo").value;
   $("#fo").innerHTML='<option value="">Todas as pessoas</option>'+owners.map(o=>`<option>${esc(o)}</option>`).join("");
   $("#fo").value=owners.includes(cur)?cur:"";
   $("#projs").innerHTML=uniq("p").map(v=>`<option value="${esc(v)}">`).join("");
-  $("#owns").innerHTML=owners.map(v=>`<option value="${esc(v)}">`).join("");
+  $("#owns").innerHTML=[...new Set([...owners,...((bd&&bd.memberEmails)||[])])].map(v=>`<option value="${esc(v)}">`).join("");
   const doneIds=new Set(data.lists.filter(l=>l.done).map(l=>l.id));
   const open=data.cards.filter(c=>!doneIds.has(c.l)),late=open.filter(c=>c.due&&c.due<today).length;
   $("#st").innerHTML=`<span class="pill"><b>${open.length}</b> em aberto</span><span class="pill${late?" warn":""}"><b>${late}</b> atrasadas</span>`;
-  b.innerHTML=data.lists.map(l=>{
+  b.innerHTML=vl+data.lists.map(l=>{
     const cs=data.cards.filter(c=>c.l===l.id&&vis(c));
     return `<section class="list" data-list="${l.id}">
       <div class="lh"><input class="ln" value="${esc(l.name)}" data-rn="${l.id}" aria-label="Nome da lista"><span class="cnt">${cs.length}</span><button class="x" data-dl="${l.id}" aria-label="Excluir lista ${esc(l.name)}">×</button></div>
-      <div class="cards" data-cards="${l.id}">${cs.map(c=>cardHtml(c,l.done)).join("")}</div>
+      <div class="cards" data-cards="${l.id}">${cs.map(c=>cardHtml(c,l.done||c.done)).join("")}</div>
       ${compL===l.id?`<div class="comp"><textarea id="cq" rows="3" placeholder="Digite um título para o cartão…"></textarea><div class="row"><button class="btn primary" data-ac>Adicionar cartão</button><button class="btn ghost" data-cc aria-label="Cancelar">×</button></div></div>`:`<button class="addc" data-oc="${l.id}">+ Adicionar cartão</button>`}
     </section>`}).join("")+
     `<div class="newl">${addingList?`<div class="comp"><input id="nl" placeholder="Nome da lista" maxlength="40"><div class="row"><button class="btn primary" data-sl>Adicionar lista</button><button class="btn ghost" data-cl aria-label="Cancelar">×</button></div></div>`:`<button class="addl" data-al>+ Adicionar outra lista</button>`}</div>`;
-  b.scrollLeft=sx;
+  b.scrollLeft=sx;if(dv&&$("#cq"))$("#cq").value=dv;if(hadCq&&$("#cq"))$("#cq").focus();
   if(focusNext){const f=b.querySelector("#cq")||b.querySelector("#nl");if(f)f.focus();focusNext=false}
   newId=null;renderView();
 }
@@ -238,32 +266,33 @@ function addList(){const v=$("#nl").value.trim();if(!v){$("#nl").focus();return}
 
 function openDlg(id){
   if(!data.lists.length){addingList=true;focusNext=true;render();return}
-  editing=id?data.cards.find(c=>c.id===id):null;
-  $("#del").style.display=editing?"":"none";const cl=editing&&data.lists.find(l=>l.id===editing.l);$("#fin").style.display=editing?"":"none";$("#fin").textContent=cl&&cl.done?"Reabrir tarefa":"Concluir tarefa";
+  editing=id?(data.cards.find(c=>c.id===id)||assigned.find(c=>c.id===id)):null;
+  const ro=!!(editing&&editing.boardId&&editing.boardId!==curId);document.querySelectorAll("#form input,#form select,#form textarea").forEach(x=>x.disabled=ro);$("#sv").style.display=ro?"none":"";$("#del").style.display=editing&&!ro?"":"none";const cl=editing&&data.lists.find(l=>l.id===editing.l);$("#fin").style.display=editing?"":"none";$("#fin").textContent=(cl&&cl.done)||(editing&&editing.done)?"Reabrir tarefa":"Concluir tarefa";
   $("#l").innerHTML=data.lists.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join("");
   const c=editing||{t:"",d:"",l:data.lists[0].id,pr:"media",p:"",o:"",due:presetDue||plus(7)};
-  $("#t").value=c.t;$("#d").value=c.d;$("#l").value=c.l;$("#pr").value=c.pr;$("#p").value=c.p;$("#o").value=c.o;$("#due").value=c.due;
+  $("#t").value=c.t;$("#d").value=c.d;$("#l").value=c.l;$("#pr").value=c.pr;$("#p").value=c.p;$("#o").value=c.aEmail||c.o;$("#due").value=c.due;
   $("#dlg").showModal();
 }
 function toggleDone(id){
-  const c=data.cards.find(x=>x.id===id);if(!c)return;
-  const cur=data.lists.find(l=>l.id===c.l);
-  if(cur&&cur.done){let t=data.lists.find(l=>!l.done);if(!t){t={id:"l"+(++uid),name:"A fazer",done:false};data.lists.unshift(t)}c.l=t.id}
-  else{let d=data.lists.find(l=>l.done);if(!d){d={id:"l"+(++uid),name:"Concluída",done:true};data.lists.push(d)}c.l=d.id}
+  const c=data.cards.find(x=>x.id===id);
+  if(!c){const a=assigned.find(x=>x.id===id);if(a)updateDoc(doc(db,"cards",id),{done:!a.done}).catch(fail);return}
+  const cl0=data.lists.find(l=>l.id===c.l),isDone=!!(c.done||(cl0&&cl0.done));
+  if(isDone){c.done=false;if(cl0&&cl0.done){let t=data.lists.find(l=>!l.done);if(!t){t={id:"l"+(++uid),name:"A fazer",done:false};data.lists.unshift(t)}c.l=t.id}}
+  else{c.done=true;let d=data.lists.find(l=>l.done);if(!d){d={id:"l"+(++uid),name:"Concluída",done:true};data.lists.push(d)}c.l=d.id}
   data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
 }
 function moveCard(id,dir){
   const c=data.cards.find(x=>x.id===id);if(!c)return;
   const i=data.lists.findIndex(l=>l.id===c.l),n=data.lists[i+dir];if(!n)return;
-  c.l=n.id;data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
+  c.l=n.id;c.done=!!n.done;data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
 }
 $("#fin").onclick=()=>{if(editing){const id=editing.id;$("#dlg").close();toggleDone(id)}};
 $("#new").onclick=()=>openDlg();
 $("#cancel").onclick=()=>$("#dlg").close();
-$("#del").onclick=()=>{if(editing&&confirm("Excluir esta tarefa?")){data.cards=data.cards.filter(c=>c!==editing);save();$("#dlg").close();render()}};
+$("#del").onclick=()=>{if(editing&&confirm("Excluir esta tarefa?")){data.cards=data.cards.filter(c=>c.id!==editing.id);save();$("#dlg").close();render()}};
 $("#form").addEventListener("submit",()=>{
-  const v={t:$("#t").value.trim(),d:$("#d").value.trim(),l:$("#l").value,pr:$("#pr").value,p:$("#p").value.trim(),o:$("#o").value.trim(),due:$("#due").value};
-  if(editing){const moved=editing.l!==v.l;Object.assign(editing,v);if(moved){data.cards=data.cards.filter(c=>c!==editing);data.cards.push(editing)}}
+  const v={t:$("#t").value.trim(),d:$("#d").value.trim(),l:$("#l").value,pr:$("#pr").value,p:$("#p").value.trim(),o:ownerName($("#o").value),aEmail:ownerEmail($("#o").value),due:$("#due").value};
+  if(editing){editing=data.cards.find(c=>c.id===editing.id)||editing;const moved=editing.l!==v.l;Object.assign(editing,v);if(moved){editing.done=!!(data.lists.find(l=>l.id===v.l)||{}).done;data.cards=data.cards.filter(c=>c!==editing);data.cards.push(editing)}}
   else{const id="c"+(++uid);data.cards.push({id,...v});newId=id}
   save();render();
 });
@@ -304,7 +333,7 @@ board.addEventListener("dragstart",e=>{
   e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",drag.id)}catch(_){}
 });
 board.addEventListener("dragover",e=>{
-  if(!drag)return;const z=e.target.closest(".list");if(!z)return;
+  if(!drag)return;const z=e.target.closest(".list");if(!z||z.classList.contains("me"))return;
   e.preventDefault();
   const box=z.querySelector(".cards");let ph=$("#ph");
   if(!ph){ph=document.createElement("div");ph.id="ph";ph.className="ph";ph.style.height=drag.h+"px"}
@@ -320,7 +349,7 @@ board.addEventListener("drop",e=>{
   const lid=ph.parentNode.dataset.cards;let nx=ph.nextElementSibling;
   while(nx&&(!nx.dataset.id||nx.dataset.id===drag.id))nx=nx.nextElementSibling;
   const i=data.cards.findIndex(c=>c.id===drag.id);if(i<0)return;
-  const [c]=data.cards.splice(i,1);c.l=lid;
+  const [c]=data.cards.splice(i,1);c.l=lid;c.done=!!(data.lists.find(l=>l.id===lid)||{}).done;
   const bi=nx?data.cards.findIndex(x=>x.id===nx.dataset.id):-1;
   if(bi>=0)data.cards.splice(bi,0,c);else data.cards.push(c);
   save();
@@ -409,7 +438,85 @@ $("#view").addEventListener("keydown",e=>{const d=e.target.dataset.day;if(d&&e.k
 
 $("#today").textContent=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
 try{const cv=document.createElement("canvas");cv.width=cv.height=180;const x=cv.getContext("2d"),g=x.createLinearGradient(0,0,180,180);g.addColorStop(0,"#f0508c");g.addColorStop(1,"#a77bf3");x.fillStyle=g;x.fillRect(0,0,180,180);x.fillStyle="#fff";x.font="800 110px Nunito,system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("P",90,98);const u=cv.toDataURL("image/png");$("#ati").href=u;$("#ico").href=u}catch(e){}
-load();render();
+let tt;
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),5000)}
+const fail=e=>toast("Não foi possível salvar ("+(e.code||e.message)+")");
+function ownerName(v){v=v.trim();return v.includes("@")?v.split("@")[0]:v}
+function ownerEmail(v){v=v.trim().toLowerCase();return v.includes("@")?v:""}
+function applyRemote(){if(drag)return;render()}
+function defaultLists(){return [["A fazer"],["Em andamento"],["Em revisão"],["Concluída",1]].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))}
+function cardObj(c,i){return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:c.aEmail||"",by:c.by||me.email,done:!!c.done,boardId:bd.id,ord:i}}
+function persist(){
+  if(!bd||!me)return;
+  const b=writeBatch(db);let n=0;
+  data.cards.forEach((c,i)=>{const o=cardObj(c,i),s=JSON.stringify(o);if(synced.cards[c.id]!==s){b.set(doc(db,"cards",c.id),o);synced.cards[c.id]=s;n++}});
+  Object.keys(synced.cards).forEach(id=>{if(!data.cards.some(c=>c.id===id)){b.delete(doc(db,"cards",id));delete synced.cards[id];n++}});
+  const ls=JSON.stringify(data.lists);
+  if(ls!==synced.lists){b.update(doc(db,"boards",bd.id),{lists:data.lists});synced.lists=ls;n++}
+  if(n)b.commit().catch(fail);
+}
+function switchBoard(b){
+  if(unsubC)unsubC();
+  bd=b;curId=b.id;try{localStorage.setItem("pauta.board",b.id)}catch(e){}
+  data={lists:(b.lists||[]).map(x=>({...x})),cards:[]};
+  synced={cards:{},lists:JSON.stringify(data.lists)};compL=null;addingList=false;
+  unsubC=onSnapshot(query(collection(db,"cards"),where("boardId","==",b.id)),snap=>{
+    data.cards=snap.docs.map(d=>({id:d.id,...d.data()})).sort((x,y)=>(x.ord||0)-(y.ord||0));
+    synced.cards={};data.cards.forEach(c=>{synced.cards[c.id]=JSON.stringify(cardObj(c,c.ord||0))});
+    applyRemote();
+  },e=>toast("Erro ao carregar tarefas ("+e.code+")"));
+}
+function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null}
+function start(){
+  const pid="u_"+me.uid;
+  unsubB=onSnapshot(query(collection(db,"boards"),where("memberEmails","array-contains",me.email)),snap=>{
+    boards=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!boards.some(b=>b.id===pid)&&!snap.metadata.fromCache)setDoc(doc(db,"boards",pid),{name:"Meu quadro",owner:me.uid,personal:true,memberEmails:[me.email],lists:defaultLists()}).catch(fail);
+    const want=boards.find(b=>b.id===curId)||boards.find(b=>b.id===pid)||boards[0];
+    if(!want){render();return}
+    if(!bd||bd.id!==want.id)switchBoard(want);
+    else{bd=want;const rl=JSON.stringify(want.lists||[]);if(rl!==JSON.stringify(data.lists))data.lists=(want.lists||[]).map(x=>({...x}));synced.lists=rl}
+    applyRemote();
+  },e=>toast("Erro ao carregar quadros ("+e.code+")"));
+  unsubA=onSnapshot(query(collection(db,"cards"),where("aEmail","==",me.email)),snap=>{
+    assigned=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote();
+  },e=>toast("Erro ao carregar atribuições ("+e.code+")"));
+}
+async function newBoard(){
+  const n=(prompt("Nome do quadro compartilhado:")||"").trim();if(!n)return;
+  const id="b"+(++uid);curId=id;
+  try{await setDoc(doc(db,"boards",id),{name:n,owner:me.uid,personal:false,memberEmails:[me.email],lists:defaultLists()})}catch(e){fail(e)}
+}
+async function invite(){
+  const e=(prompt("Participantes: "+(bd.memberEmails||[]).join(", ")+"\n\nE-mail da pessoa para convidar:")||"").trim().toLowerCase();
+  if(!e.includes("@"))return;
+  try{await updateDoc(doc(db,"boards",bd.id),{memberEmails:arrayUnion(e)});toast(e+" agora tem acesso. Avise a pessoa para entrar com esse e-mail.")}catch(x){fail(x)}
+}
+async function delBoard(){
+  if(!bd||bd.personal||bd.owner!==me.uid||!confirm("Excluir o quadro “"+bd.name+"” e todas as tarefas dele?"))return;
+  try{const s=await getDocs(query(collection(db,"cards"),where("boardId","==",bd.id)));const b=writeBatch(db);s.docs.forEach(d=>b.delete(d.ref));b.delete(doc(db,"boards",bd.id));curId="u_"+me.uid;await b.commit()}catch(e){fail(e)}
+}
+$("#bsel").addEventListener("change",e=>{
+  const v=e.target.value;
+  if(v==="__new"){e.target.value=bd?bd.id:"";newBoard();return}
+  const b=boards.find(x=>x.id===v);if(b){switchBoard(b);render()}
+});
+$("#inv").onclick=invite;$("#delb").onclick=delBoard;$("#out").onclick=()=>signOut(auth);
+
+const msg=e=>({"auth/invalid-credential":"E-mail ou senha incorretos.","auth/wrong-password":"E-mail ou senha incorretos.","auth/user-not-found":"E-mail ou senha incorretos.","auth/email-already-in-use":"Este e-mail já tem conta. Toque em Entrar.","auth/weak-password":"A senha precisa ter ao menos 6 caracteres.","auth/invalid-email":"E-mail inválido.","auth/too-many-requests":"Muitas tentativas. Aguarde um pouco e tente de novo.","auth/network-request-failed":"Sem conexão com a internet."}[e.code]||"Não foi possível concluir. Tente de novo.");
+const am=t=>{$("#am").textContent=t};
+$("#af").addEventListener("submit",async e=>{e.preventDefault();am("");try{await signInWithEmailAndPassword(auth,$("#ae").value.trim(),$("#ap").value)}catch(x){am(msg(x))}});
+$("#acr").onclick=async()=>{am("");const em=$("#ae").value.trim(),pw=$("#ap").value;if(!em||pw.length<6){am("Informe o e-mail e uma senha de ao menos 6 caracteres.");return}try{await createUserWithEmailAndPassword(auth,em,pw)}catch(x){am(msg(x))}};
+$("#afg").onclick=async()=>{const em=$("#ae").value.trim();if(!em){am("Digite seu e-mail acima e toque de novo.");return}try{await sendPasswordResetEmail(auth,em);am("Enviamos um e-mail para redefinir a senha.")}catch(x){am(msg(x))}};
+onAuthStateChanged(auth,u=>{
+  document.body.classList.remove("boot");stopAll();
+  if(!u){me=null;data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}
+  document.body.classList.remove("anon");
+  me={uid:u.uid,email:u.email.toLowerCase()};$("#who").textContent=me.email;
+  try{curId=localStorage.getItem("pauta.board")||""}catch(e){}
+  start();
+});
+render();
 setTimeout(()=>board.classList.remove("intro"),900);
 </script>
 </body>

@@ -251,6 +251,9 @@ body.sec-adm #new,body.sec-dem #new{display:none}
 .lab{font-size:13px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px}
 body.sec-iv #new,body.sec-note #new,body.sec-find #new{display:none}
 #idlg,#ndlg,#sdlg,#tdlg{max-height:92dvh;overflow:auto}
+.iconbtn{flex:none;width:44px;height:44px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--accent) 40%,transparent);background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:var(--shadow);transition:transform .15s}
+.iconbtn:hover{transform:scale(1.07)}.iconbtn:active{transform:scale(.93)}
+a.btn{display:inline-block;text-decoration:none;color:var(--ink)}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -261,7 +264,7 @@ body.sec-iv #new,body.sec-note #new,body.sec-find #new{display:none}
   <div id="st"></div>
   <input class="field" type="search" id="q" placeholder="Buscar cartão" aria-label="Buscar cartão">
   <select class="field" id="fo" aria-label="Filtrar por pessoa"></select>
-  <button class="btn primary" id="new">Nova tarefa</button><span id="who" hidden></span><button id="out" hidden></button><button class="avbtn" id="prof" aria-label="Perfil e configurações"><span id="pav">P</span></button>
+  <button class="iconbtn" id="srch" aria-label="Buscar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button><button class="btn primary" id="new">Nova tarefa</button><span id="who" hidden></span><button id="out" hidden></button><button class="avbtn" id="prof" aria-label="Perfil e configurações"><span id="pav">P</span></button>
 </header>
 <nav class="nav" id="nav" role="tablist" aria-label="Seções"></nav>
 <div class="bar2"><select class="field" id="bsel" aria-label="Quadro"></select><button class="btn" id="inv" hidden>Convidar</button><button class="btn danger" id="delb" hidden>Excluir quadro</button></div>
@@ -324,6 +327,8 @@ body.sec-iv #new,body.sec-note #new,body.sec-find #new{display:none}
       <label>Resultado<select id="ivs"><option>Em análise</option><option>Aprovado(a)</option><option>Reprovado(a)</option><option>Banco de talentos</option></select></label>
       <label>Nota<select id="ivr"><option value="0">Sem nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
       <label class="full">Parecer<textarea id="ivp" rows="6" placeholder="Pontos fortes, pontos de atenção e recomendação…"></textarea></label>
+      <div class="full"><span class="lab">Currículo</span><div id="cvbox" style="margin-bottom:8px"></div><input type="file" id="cvf" accept=".pdf,.doc,.docx,application/pdf" hidden><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="cvadd">Anexar arquivo</button><button type="button" class="btn danger" id="cvrm" hidden>Remover</button></div><p class="sub2" style="margin:6px 0 0">PDF, DOC ou DOCX de até 500 KB. Para arquivos maiores, use o link abaixo.</p></div>
+      <label class="full">Link do currículo (opcional)<input id="cvl" type="url" placeholder="https://…" autocapitalize="none"></label>
     </div>
     <div class="acts" style="flex-wrap:wrap">
       <button type="button" class="btn danger" id="ivdel">Excluir</button>
@@ -366,7 +371,7 @@ body.sec-iv #new,body.sec-note #new,body.sec-find #new{display:none}
     <div class="f">
       <label class="full">Nome do funcionário<input id="pn" required maxlength="80"></label>
       <label>Cargo<input id="pcg" maxlength="60"></label>
-      <label>Contrato<input id="pdp" list="ctr" maxlength="60"></label><datalist id="ctr"><option value="CLT"><option value="PJ"><option value="Estágio"><option value="Aprendiz"><option value="Temporário"></datalist>
+      <label>Contrato<input id="pdp" list="ctr" maxlength="60"></label><datalist id="ctr"><option value="CLT"><option value="PJ"><option value="Estágio"><option value="Jovem Aprendiz"><option value="Temporário"></datalist>
       <label class="full"><span id="pdtt">Data de admissão</span><input type="date" id="pdt"></label>
       <label class="full" id="pmw">Tipo de desligamento<select id="pm"><option>Sem justa causa</option><option>Pedido de demissão</option><option>Acordo</option><option>Justa causa</option><option>Término de contrato</option><option>Outro</option></select></label>
     </div>
@@ -735,11 +740,11 @@ const SECS=[["home","Início"],["mine","Minhas tarefas"],["proj","Projetos"],["a
 const procF={adm:"all",dem:"all"};
 const A0=["Coletar documentos pessoais (RG, CPF, CTPS, comprovante de residência)","Agendar exame médico admissional","Registrar a admissão no eSocial antes do início das atividades","Assinar o contrato de trabalho","Coletar dados bancários para o salário","Cadastrar benefícios (VT, VR/VA, plano de saúde)","Cadastrar no ponto e na folha de pagamento","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Assinar termos (confidencialidade, LGPD, políticas internas)","Realizar a integração e apresentar à equipe","Definir gestor e plano dos primeiros 30 dias","Acompanhar o período de experiência"];
 const D0=["Formalizar a comunicação (aviso prévio ou pedido de demissão)","Definir a data e o tipo de desligamento","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Emitir documentos para FGTS e seguro-desemprego","Recolher equipamentos, crachá e chaves","Desativar e-mail e acessos aos sistemas","Cancelar benefícios (VT, VR/VA, plano de saúde)","Realizar a entrevista de desligamento","Atualizar folha e ponto","Arquivar a pasta do funcionário"];
-const PTPL={adm:{"CLT":A0,"Estágio":["Coletar documentos pessoais e da instituição de ensino","Assinar o Termo de Compromisso de Estágio","Conferir o seguro de acidentes pessoais","Cadastrar no ponto","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Realizar a integração e apresentar à equipe","Definir supervisor e plano de atividades","Agendar as avaliações periódicas"],"PJ / Prestador":["Coletar dados da empresa (CNPJ, contrato social)","Definir escopo, prazo e valor","Assinar o contrato de prestação de serviços","Coletar dados bancários e orientar sobre nota fiscal","Assinar termo de confidencialidade","Criar e-mail e acessos aos sistemas","Realizar a integração e apresentar à equipe"]},
+const PTPL={adm:{"CLT":A0,"Estágio":["Coletar documentos pessoais e da instituição de ensino","Assinar o Termo de Compromisso de Estágio","Conferir o seguro de acidentes pessoais","Cadastrar no ponto","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Realizar a integração e apresentar à equipe","Definir supervisor e plano de atividades","Agendar as avaliações periódicas"],"Jovem Aprendiz":["Coletar documentos pessoais e do responsável legal, se menor de idade","Confirmar a matrícula e a frequência escolar","Confirmar a vinculação ao curso de aprendizagem","Agendar exame médico admissional","Registrar a admissão no eSocial antes do início das atividades","Assinar o contrato de aprendizagem","Cadastrar benefícios (VT, VR/VA)","Cadastrar no ponto e na folha de pagamento","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Realizar a integração e apresentar à equipe","Definir o tutor e o plano de atividades","Acompanhar a frequência escolar e as avaliações do curso"],"PJ / Prestador":["Coletar dados da empresa (CNPJ, contrato social)","Definir escopo, prazo e valor","Assinar o contrato de prestação de serviços","Coletar dados bancários e orientar sobre nota fiscal","Assinar termo de confidencialidade","Criar e-mail e acessos aos sistemas","Realizar a integração e apresentar à equipe"]},
 dem:{"Sem justa causa":D0,"Pedido de demissão":["Receber a carta de pedido de demissão","Definir a data e o cumprimento do aviso prévio","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Recolher equipamentos, crachá e chaves","Desativar e-mail e acessos aos sistemas","Cancelar benefícios","Realizar a entrevista de desligamento","Atualizar folha e ponto","Arquivar a pasta do funcionário"],"Término de contrato":["Confirmar a data de término do contrato","Comunicar o funcionário e o gestor","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Recolher equipamentos e crachá","Desativar acessos e cancelar benefícios","Arquivar a pasta do funcionário"]}};
 function tplItems(tipo,k){return PTPL[tipo][k].map(t=>({id:"i"+(++uid),t,done:false}))}
 let pd=null;
-$("#nav").innerHTML=SECS.map(([k,n])=>`<button data-s="${k}" role="tab">${n}</button>`).join("");
+$("#nav").innerHTML=SECS.filter(x=>x[0]!=="find").map(([k,n])=>`<button data-s="${k}" role="tab">${n}</button>`).join("");
 $("#nav").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b){curSec=b.dataset.s;render();swapCur()}});
 const kpi=(n,l,c="")=>`<div class="kpi ${c}"><b>${n}</b><span>${l}</span></div>`;
 const byDue=(a,b)=>(a.due||"9").localeCompare(b.due||"9");
@@ -895,7 +900,7 @@ const IVS={"Em análise":"go","Aprovado(a)":"ok","Reprovado(a)":"no","Banco de t
 const stars=n=>"★".repeat(n)+"☆".repeat(5-n);
 function ivHtml(){
   const all=ivs.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")),list=all.filter(i=>ivF==="all"||(i.status||"Em análise")===ivF);
-  const card=i=>`<button class="pc" data-iv="${i.id}"><div class="pch"><span class="av" style="background:hsl(${hue(i.nome)} 52% 46%);margin:0">${esc(ini(i.nome))}</span><div><b>${esc(i.nome)}</b><small>${esc([i.vaga,i.etapa].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${IVS[i.status]||"go"}">${esc(i.status||"Em análise")}</span></div>${i.nota?`<div class="stars">${stars(i.nota)}</div>`:""}<div class="pcf"><span>${esc(i.entrevistador||"")}</span><span>${i.data?fmt(i.data):""}</span></div>${i.parecer?`<div class="snip">${esc(i.parecer.slice(0,110))}${i.parecer.length>110?"…":""}</div>`:""}</button>`;
+  const card=i=>`<button class="pc" data-iv="${i.id}"><div class="pch"><span class="av" style="background:hsl(${hue(i.nome)} 52% 46%);margin:0">${esc(ini(i.nome))}</span><div><b>${esc(i.nome)}</b><small>${esc([i.vaga,i.etapa].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${IVS[i.status]||"go"}">${esc(i.status||"Em análise")}</span></div>${i.nota?`<div class="stars">${stars(i.nota)}</div>`:""}<div class="pcf"><span>${esc(i.entrevistador||"")}</span><span>${i.data?fmt(i.data):""}</span></div>${(i.cvData||i.cvl)?'<div class="snip">Currículo anexado</div>':""}${i.parecer?`<div class="snip">${esc(i.parecer.slice(0,110))}${i.parecer.length>110?"…":""}</div>`:""}</button>`;
   const fb=(k,n)=>`<button data-ivf="${k}" aria-pressed="${ivF===k}">${n}</button>`,cnt=s=>all.filter(i=>(i.status||"Em análise")===s).length;
   return `<div class="sech"><div><h2 class="sh">Entrevistas</h2><p class="sub2">Registre cada candidato e o parecer da entrevista.</p></div><button class="btn primary" data-newiv>Nova entrevista</button></div>
   <div class="kpis">${kpi(all.length,"Entrevistas")}${kpi(cnt("Em análise"),"Em análise")}${kpi(cnt("Aprovado(a)"),"Aprovados")}${kpi(cnt("Reprovado(a)"),"Reprovados")}</div>
@@ -906,11 +911,11 @@ function openIv(id){
   const ex=id?ivs.find(i=>i.id===id):null;
   iw=ex?{...ex}:{nome:"",vaga:"",data:iso(new Date()),entrevistador:"",etapa:"Triagem",status:"Em análise",nota:0,parecer:""};
   $("#ivh").textContent=ex?"Entrevista":"Nova entrevista";
-  $("#ivn").value=iw.nome;$("#ivv").value=iw.vaga||"";$("#ivd").value=iw.data||"";$("#ive").value=iw.entrevistador||"";$("#ivt").value=iw.etapa||"Triagem";$("#ivs").value=iw.status||"Em análise";$("#ivr").value=String(iw.nota||0);$("#ivp").value=iw.parecer||"";
+  $("#ivn").value=iw.nome;$("#ivv").value=iw.vaga||"";$("#ivd").value=iw.data||"";$("#ive").value=iw.entrevistador||"";$("#ivt").value=iw.etapa||"Triagem";$("#ivs").value=iw.status||"Em análise";$("#ivr").value=String(iw.nota||0);$("#ivp").value=iw.parecer||"";iw.cvChanged=false;$("#cvl").value=iw.cvl||"";cvDraw();
   $("#ivdel").hidden=!ex||ex.owner!==me.uid;$("#ivshare").hidden=!ex;$("#idlg").showModal();
 }
 $("#ivf").addEventListener("submit",()=>{
-  const v={nome:$("#ivn").value.trim(),vaga:$("#ivv").value.trim(),data:$("#ivd").value,entrevistador:$("#ive").value.trim(),etapa:$("#ivt").value,status:$("#ivs").value,nota:+$("#ivr").value,parecer:$("#ivp").value.trim()};
+  const v={nome:$("#ivn").value.trim(),vaga:$("#ivv").value.trim(),data:$("#ivd").value,entrevistador:$("#ive").value.trim(),etapa:$("#ivt").value,status:$("#ivs").value,nota:+$("#ivr").value,parecer:$("#ivp").value.trim(),cvl:$("#cvl").value.trim()};if(iw.cvChanged||!iw.id){v.cvName=iw.cvName||"";v.cvType=iw.cvType||"";v.cvData=iw.cvData||""}
   if(iw.id)updateDoc(doc(db,"interviews",iw.id),v).catch(fail);
   else setDoc(doc(db,"interviews","v"+(++uid)),{...v,owner:me.uid,ownerEmail:me.email,readers:[me.email],createdAt:Date.now()}).catch(fail);
 });
@@ -959,6 +964,19 @@ $("#tf").addEventListener("submit",async()=>{
   try{await setDoc(doc(db,"boards",id),{name:n,owner:me.uid,personal:false,memberEmails:[me.email],lists:t[3].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))})}catch(e){fail(e)}
 });
 $("#ptp").onchange=()=>{if(pd&&!pd.id){pd.itens=tplItems(pd.tipo,$("#ptp").value);drawItems()}};
+function cvDraw(){
+  const has=!!iw.cvData;
+  $("#cvbox").innerHTML=has?`<a class="btn" href="${iw.cvData}" download="${esc(iw.cvName||"curriculo")}">Baixar ${esc(iw.cvName||"currículo")}</a>`:'<span class="sub2">Nenhum arquivo anexado.</span>';
+  $("#cvrm").hidden=!has;$("#cvadd").textContent=has?"Trocar arquivo":"Anexar arquivo";
+}
+$("#cvadd").onclick=()=>$("#cvf").click();
+$("#cvf").onchange=()=>{
+  const f=$("#cvf").files[0];if(!f)return;
+  if(f.size>500*1024){toast("Arquivo grande demais. O limite é 500 KB. Use o link do currículo.");$("#cvf").value="";return}
+  const r=new FileReader();r.onload=()=>{iw.cvData=r.result;iw.cvName=f.name;iw.cvType=f.type;iw.cvChanged=true;cvDraw()};r.readAsDataURL(f);$("#cvf").value="";
+};
+$("#cvrm").onclick=()=>{iw.cvData="";iw.cvName="";iw.cvType="";iw.cvChanged=true;cvDraw()};
+$("#srch").onclick=()=>{curSec="find";render();swapCur();const f=$("#fq");if(f)f.focus()};
 onAuthStateChanged(auth,u=>{
   document.body.classList.remove("boot");stopAll();
   if(!u){me=null;data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}

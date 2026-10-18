@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<script>try{var t=localStorage.getItem("pauta.theme");if(t&&t!=="auto")document.documentElement.dataset.theme=t}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Gerenciador de atividades com quadro, calendário, painel e gráficos.">
 <meta name="theme-color" content="#f3d9ec" media="(prefers-color-scheme: light)">
@@ -222,17 +223,45 @@ body.sec-adm #new,body.sec-dem #new{display:none}
 .tabs button[aria-selected=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 40%,transparent)}
 .seg3 button{background:var(--surface);color:var(--ink);border:1.5px solid color-mix(in srgb,var(--accent) 40%,transparent);font-weight:800}
 .seg3 button[aria-selected=true],.seg3 button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+[hidden]{display:none!important}
+.mark{flex:none;width:44px;height:44px;border-radius:14px;border:0;color:#fff;font-size:24px;font-weight:800;background:linear-gradient(135deg,#f93fd0,#ff9f55);box-shadow:0 8px 20px rgba(249,63,208,.35);transition:transform .2s}
+.mark:hover{transform:rotate(-6deg) scale(1.07)}
+.avbtn{flex:none;width:44px;height:44px;border-radius:50%;border:2px solid var(--accent);background:var(--surface);color:var(--accent);font-weight:800;font-size:18px;transition:transform .2s}
+.avbtn:hover{transform:scale(1.07)}
+.welcome{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:linear-gradient(135deg,#f93fd0,#b52df0 55%,#4f2fff);color:#fff;text-align:center;transition:opacity .6s,transform .6s}
+.welcome.out{opacity:0;transform:scale(1.06);pointer-events:none}
+.welcome .mark.big{width:84px;height:84px;font-size:46px;margin:0 auto 14px;background:#fff;color:#b52df0;animation:float 2s ease-in-out infinite}
+.welcome h2{margin:0;font-size:34px;font-weight:800;animation:pop .6s both}
+.welcome p{margin:6px 0 0;opacity:.9;font-weight:700}
+.enter .top,.enter .nav,.enter .view{animation:pop .7s .45s both}
+.sw{animation:slide .35s ease both}
+@keyframes slide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.nav button,.tabs button{transition:transform .15s,background .25s,color .25s,box-shadow .25s}
+.btn:active,.nav button:active,.tabs button:active,.seg3 button:active,.qa button:active,.chk:active,.pc:active,.avbtn:active,.mark:active,.row:active{transform:scale(.95)}
+.cf{position:fixed;width:8px;height:8px;border-radius:2px;z-index:95;pointer-events:none;animation:cf .8s ease-out forwards}
+@keyframes cf{to{transform:translate(var(--dx),var(--dy)) rotate(260deg);opacity:0}}
+.pulse{animation:pulse .45s ease}
+@keyframes pulse{40%{transform:scale(1.4)}}
+.stars{color:#ff9f55;letter-spacing:2px;font-size:15px}
+.snip{color:var(--muted);font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:600}
+.st.no{background:color-mix(in srgb,var(--high) 28%,var(--surface))}
+.st.bt{background:color-mix(in srgb,var(--low) 30%,var(--surface))}
+#fq{width:100%;font-size:16px;padding:14px 18px;background:var(--surface);border:1.5px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:99px;color:var(--ink)}
+#nx{min-height:38vh}
+.lab{font-size:13px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px}
+body.sec-iv #new,body.sec-note #new,body.sec-find #new{display:none}
+#idlg,#ndlg,#sdlg,#tdlg{max-height:92dvh;overflow:auto}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body class="anon boot">
 <header class="top">
-  <h1 class="brand">Pauta<small id="today"></small></h1>
+  <button class="mark" id="mark" aria-label="Ir para o início">P</button><h1 class="brand">Pauta<small id="today"></small></h1>
   <div id="st"></div>
   <input class="field" type="search" id="q" placeholder="Buscar cartão" aria-label="Buscar cartão">
   <select class="field" id="fo" aria-label="Filtrar por pessoa"></select>
-  <button class="btn primary" id="new">Nova tarefa</button><span class="pill" id="who"></span><button class="btn ghost" id="out">Sair</button>
+  <button class="btn primary" id="new">Nova tarefa</button><span id="who" hidden></span><button id="out" hidden></button><button class="avbtn" id="prof" aria-label="Perfil e configurações"><span id="pav">P</span></button>
 </header>
 <nav class="nav" id="nav" role="tablist" aria-label="Seções"></nav>
 <div class="bar2"><select class="field" id="bsel" aria-label="Quadro"></select><button class="btn" id="inv" hidden>Convidar</button><button class="btn danger" id="delb" hidden>Excluir quadro</button></div>
@@ -264,16 +293,84 @@ body.sec-adm #new,body.sec-dem #new{display:none}
     </form>
   </div>
 </div>
+<div class="welcome" id="welcome" hidden aria-hidden="true"><div><div class="mark big">P</div><h2>Olá, <span id="wname"></span></h2><p>Preparando o seu espaço…</p></div></div>
+<dialog id="sdlg">
+  <form method="dialog" id="sf">
+    <h2 style="margin:0 0 12px">Perfil e configurações</h2>
+    <div class="f">
+      <label class="full">Como você quer ser chamado(a)<input id="sname" maxlength="40"></label>
+      <label class="full">E-mail<input id="smail" disabled></label>
+      <div class="full"><span class="lab">Aparência</span><div class="seg3" id="sth"><button type="button" data-th="auto">Automático</button><button type="button" data-th="light">Claro</button><button type="button" data-th="dark">Escuro</button></div></div>
+    </div>
+    <p class="sub2" id="sver" style="margin-top:10px"></p>
+    <div class="acts" style="flex-wrap:wrap">
+      <button type="button" class="btn" id="sver2" hidden>Reenviar e-mail de confirmação</button>
+      <button type="button" class="btn" id="sswitch">Trocar de conta</button>
+      <button type="button" class="btn danger" id="sout">Sair</button>
+      <button type="button" class="btn" id="sclose">Fechar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="idlg">
+  <form method="dialog" id="ivf">
+    <h2 id="ivh" style="margin:0 0 12px">Nova entrevista</h2>
+    <div class="f">
+      <label class="full">Candidato(a)<input id="ivn" required maxlength="80"></label>
+      <label>Vaga<input id="ivv" maxlength="60"></label>
+      <label>Data da entrevista<input type="date" id="ivd"></label>
+      <label>Entrevistador(a)<input id="ive" maxlength="60"></label>
+      <label>Etapa<select id="ivt"><option>Triagem</option><option>RH</option><option>Técnica</option><option>Gestor</option><option>Final</option></select></label>
+      <label>Resultado<select id="ivs"><option>Em análise</option><option>Aprovado(a)</option><option>Reprovado(a)</option><option>Banco de talentos</option></select></label>
+      <label>Nota<select id="ivr"><option value="0">Sem nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+      <label class="full">Parecer<textarea id="ivp" rows="6" placeholder="Pontos fortes, pontos de atenção e recomendação…"></textarea></label>
+    </div>
+    <div class="acts" style="flex-wrap:wrap">
+      <button type="button" class="btn danger" id="ivdel">Excluir</button>
+      <button type="button" class="btn" id="ivshare">Compartilhar</button>
+      <button type="button" class="btn" id="ivclose">Fechar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="ndlg">
+  <form method="dialog" id="nf">
+    <h2 id="nh" style="margin:0 0 12px">Nova nota</h2>
+    <div class="f">
+      <label class="full" id="ntw">Modelo<select id="ntp"><option value="">Em branco</option><option value="ata">Ata de reunião</option><option value="fb">Feedback 1:1</option><option value="rot">Roteiro de entrevista</option></select></label>
+      <label class="full">Título<input id="nt" maxlength="80"></label>
+      <label class="full">Anotação<textarea id="nx" rows="12" placeholder="Escreva aqui…"></textarea></label>
+    </div>
+    <div class="acts" style="flex-wrap:wrap">
+      <button type="button" class="btn danger" id="ndel">Excluir</button>
+      <button type="button" class="btn" id="nshare">Compartilhar</button>
+      <button type="button" class="btn" id="nclose">Fechar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="tdlg">
+  <form method="dialog" id="tf">
+    <h2 style="margin:0 0 12px">Novo quadro compartilhado</h2>
+    <div class="f">
+      <label class="full">Nome do quadro<input id="tn" required maxlength="50"></label>
+      <label class="full">Modelo<select id="tt"></select></label>
+    </div>
+    <p class="sub2" id="tdesc" style="margin-top:10px"></p>
+    <div class="acts"><button type="button" class="btn" id="tclose">Cancelar</button><button type="submit" class="btn primary">Criar quadro</button></div>
+  </form>
+</dialog>
 <dialog id="pdlg">
   <form method="dialog" id="pf">
     <h2 id="ph" style="margin:0 0 12px">Nova admissão</h2>
     <div class="f">
       <label class="full">Nome do funcionário<input id="pn" required maxlength="80"></label>
       <label>Cargo<input id="pcg" maxlength="60"></label>
-      <label>Departamento<input id="pdp" maxlength="60"></label>
-      <label class="full"><span id="pdtt">Data de início</span><input type="date" id="pdt"></label>
+      <label>Contrato<input id="pdp" list="ctr" maxlength="60"></label><datalist id="ctr"><option value="CLT"><option value="PJ"><option value="Estágio"><option value="Aprendiz"><option value="Temporário"></datalist>
+      <label class="full"><span id="pdtt">Data de admissão</span><input type="date" id="pdt"></label>
       <label class="full" id="pmw">Tipo de desligamento<select id="pm"><option>Sem justa causa</option><option>Pedido de demissão</option><option>Acordo</option><option>Justa causa</option><option>Término de contrato</option><option>Outro</option></select></label>
     </div>
+    <label class="full" id="ptw" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted);margin-top:12px">Modelo de checklist<select id="ptp"></select></label>
     <div class="plist">
       <div class="plh"><span>Checklist</span><span id="ppct"></span></div>
       <div class="bt"><i id="pbar" style="background:linear-gradient(90deg,#f93fd0,#ff9f55)"></i></div>
@@ -312,7 +409,7 @@ body.sec-adm #new,body.sec-dem #new{display:none}
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,sendPasswordResetEmail,GoogleAuthProvider,signInWithPopup} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,sendPasswordResetEmail,GoogleAuthProvider,signInWithPopup,updateProfile,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,updateDoc,onSnapshot,query,where,writeBatch,arrayUnion,getDocs,deleteDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyBYO8VYOqq6gvFamJum91XxB6SurnKY1jI",authDomain:"pauta-697de.firebaseapp.com",projectId:"pauta-697de",storageBucket:"pauta-697de.firebasestorage.app",messagingSenderId:"824847154234",appId:"1:824847154234:web:661dc0dc0e633c27410903"};
 const fbApp=initializeApp(firebaseConfig);
@@ -326,7 +423,7 @@ const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
 const fmt=s=>s.slice(8)+"/"+s.slice(5,7);
 const ini=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 const hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%5;return [330,285,12,305,350][h]};
-let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
+let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],ivs=[],notes=[],curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,unsubI,unsubN,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
 
 function seed(){
   const L=[["l1","A fazer"],["l2","Em andamento"],["l3","Em revisão"],["l4","Concluída",1]].map(([id,name,done])=>({id,name,done:!!done}));
@@ -399,11 +496,11 @@ function openDlg(id){
 }
 function toggleDone(id){
   const c=data.cards.find(x=>x.id===id);
-  if(!c){const a=allCards.find(x=>x.id===id);if(a)updateDoc(doc(db,"cards",id),{done:!cardDone(a)}).catch(fail);return}
+  if(!c){const a=allCards.find(x=>x.id===id);if(a){const nd2=!cardDone(a);updateDoc(doc(db,"cards",id),{done:nd2}).catch(fail);if(nd2)setTimeout(()=>fx(id),350)}return}
   const cl0=data.lists.find(l=>l.id===c.l),isDone=!!(c.done||(cl0&&cl0.done));
   if(isDone){c.done=false;if(cl0&&cl0.done){let t=data.lists.find(l=>!l.done);if(!t){t={id:"l"+(++uid),name:"A fazer",done:false};data.lists.unshift(t)}c.l=t.id}}
   else{c.done=true;let d=data.lists.find(l=>l.done);if(!d){d={id:"l"+(++uid),name:"Concluída",done:true};data.lists.push(d)}c.l=d.id}
-  data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
+  data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();if(!isDone)fx(id);
 }
 function moveCard(id,dir){
   const c=data.cards.find(x=>x.id===id);if(!c)return;
@@ -485,7 +582,7 @@ const VIEWS=[["board","Quadro"],["cal","Calendário"],["dash","Painel"],["chart"
 const COLORS=["#d6336c","#a77bf3","#ff9a5c","#3fb68b","#f472b6","#6f9cf5"];
 const pcol=c=>"var(--"+(PC[c.pr]||"low")+")";
 $("#tabs").innerHTML=VIEWS.map(([k,n])=>`<button role="tab" data-v="${k}">${n}</button>`).join("");
-$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(b){view=b.dataset.v;render()}});
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(b){view=b.dataset.v;render();swapCur()}});
 
 const grp=(a,k,e)=>{const m={};a.forEach(c=>{const n=c[k]||e;m[n]=(m[n]||0)+1});return Object.entries(m).sort((x,y)=>y[1]-x[1])};
 const bars=(rows,max)=>rows.map(([n,v,c])=>`<div class="br"><span class="bl" title="${esc(n)}">${esc(n)}</span><span class="bt"><i style="width:${max&&v?Math.max(v/max*100,4):0}%;background:${c}"></i></span><b>${v}</b></div>`).join("")||'<p class="empty">Sem dados para mostrar.</p>';
@@ -591,7 +688,7 @@ function rebuildCards(){
   assigned=allCards.filter(c=>c.aEmail===me.email&&c.boardId!==bd.id);
   synced.cards={};data.cards.forEach(c=>{synced.cards[c.id]=JSON.stringify(cardObj(c,c.ord||0))});
 }
-function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null;allCards=[];procs=[];if(unsubP)unsubP();unsubP=null}
+function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null;allCards=[];procs=[];ivs=[];notes=[];[unsubP,unsubI,unsubN].forEach(f=>f&&f());unsubP=unsubI=unsubN=null}
 function start(){
   const pid="u_"+me.uid;
   unsubB=onSnapshot(query(collection(db,"boards"),where("memberEmails","array-contains",me.email)),snap=>{
@@ -607,13 +704,10 @@ function start(){
     allCards=snap.docs.map(d=>({id:d.id,...d.data()}));rebuildCards();applyRemote();
   },e=>toast("Erro ao carregar tarefas ("+e.code+")"));
   unsubP=onSnapshot(query(collection(db,"processes"),where("readers","array-contains",me.email)),snap=>{procs=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar processos ("+e.code+")"));
+  unsubI=onSnapshot(query(collection(db,"interviews"),where("readers","array-contains",me.email)),snap=>{ivs=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar entrevistas ("+e.code+")"));
+  unsubN=onSnapshot(query(collection(db,"notes"),where("readers","array-contains",me.email)),snap=>{notes=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar notas ("+e.code+")"));
 }
-async function newBoard(){
-  const n=(prompt("Nome do quadro compartilhado:")||"").trim();if(!n)return;
-  const id="b"+(++uid);curId=id;
-  try{await setDoc(doc(db,"boards",id),{name:n,owner:me.uid,personal:false,memberEmails:[me.email],lists:defaultLists()})}catch(e){fail(e)}
-}
-async function invite(){
+async function invite(){if((bd.memberEmails||[]).length>=6){toast("Limite atingido: o quadro pode ser compartilhado com até 5 pessoas.");return}
   const e=(prompt("Participantes: "+(bd.memberEmails||[]).join(", ")+"\n\nE-mail da pessoa para convidar:")||"").trim().toLowerCase();
   if(!e.includes("@"))return;
   try{const bt=writeBatch(db);bt.update(doc(db,"boards",bd.id),{memberEmails:arrayUnion(e)});allCards.filter(c=>c.boardId===bd.id).forEach(c=>bt.update(doc(db,"cards",c.id),{readers:arrayUnion(e)}));await bt.commit();toast(e+" agora tem acesso. Avise a pessoa para entrar com esse e-mail.")}catch(x){fail(x)}
@@ -635,15 +729,18 @@ let mode="in";
 function setMode(m){mode=m;$("#tin").setAttribute("aria-selected",m==="in");$("#tup").setAttribute("aria-selected",m==="up");$("#asub").textContent=m==="in"?"Entrar":"Criar minha conta";$("#ap").autocomplete=m==="in"?"current-password":"new-password";$("#afg").hidden=m!=="in";am("")}
 $("#tin").onclick=()=>setMode("in");$("#tup").onclick=()=>setMode("up");
 $("#eye").onclick=()=>{const p=$("#ap"),s=p.type==="password";p.type=s?"text":"password";$("#eye").textContent=s?"Ocultar":"Mostrar"};
-$("#af").addEventListener("submit",async e=>{e.preventDefault();am("");const em=$("#ae").value.trim(),pw=$("#ap").value,b=$("#asub");if(mode==="up"&&pw.length<6){am("A senha precisa ter ao menos 6 caracteres.");return}b.disabled=true;try{if(mode==="in")await signInWithEmailAndPassword(auth,em,pw);else await createUserWithEmailAndPassword(auth,em,pw)}catch(x){am(msg(x))}b.disabled=false});
-$("#afg").onclick=async()=>{const em=$("#ae").value.trim();if(!em){am("Digite seu e-mail acima e toque de novo.");return}try{await sendPasswordResetEmail(auth,em);am("Enviamos um e-mail para redefinir a senha.")}catch(x){am(msg(x))}};
-const SECS=[["home","Início"],["mine","Minhas tarefas"],["proj","Projetos"],["adm","Admissão"],["dem","Demissão"]];
+$("#af").addEventListener("submit",async e=>{e.preventDefault();am("");const em=$("#ae").value.trim(),pw=$("#ap").value,b=$("#asub");if(mode==="up"&&pw.length<6){am("A senha precisa ter ao menos 6 caracteres.");return}b.disabled=true;fromLogin=true;try{if(mode==="in")await signInWithEmailAndPassword(auth,em,pw);else{const cr=await createUserWithEmailAndPassword(auth,em,pw);try{await sendEmailVerification(cr.user);toast("Enviamos um e-mail para confirmar o seu endereço. Veja também o spam.")}catch(e){}}}catch(x){fromLogin=false;am(msg(x))}b.disabled=false});
+$("#afg").onclick=async()=>{const em=$("#ae").value.trim();if(!em){am("Digite seu e-mail acima e toque de novo.");return}try{await sendPasswordResetEmail(auth,em);am("Se existir uma conta com esse e-mail, enviamos o link para redefinir a senha. Veja também a caixa de spam.")}catch(x){am(msg(x))}};
+const SECS=[["home","Início"],["mine","Minhas tarefas"],["proj","Projetos"],["adm","Admissão"],["dem","Demissão"],["iv","Entrevistas"],["note","Notas"],["find","Buscar"]];
 const procF={adm:"all",dem:"all"};
-const PTPL={adm:["Coletar documentos pessoais (RG, CPF, CTPS, comprovante de residência)","Agendar exame médico admissional","Registrar a admissão no eSocial antes do início das atividades","Assinar o contrato de trabalho","Coletar dados bancários para o salário","Cadastrar benefícios (VT, VR/VA, plano de saúde)","Cadastrar no ponto e na folha de pagamento","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Assinar termos (confidencialidade, LGPD, políticas internas)","Realizar a integração e apresentar à equipe","Definir gestor e plano dos primeiros 30 dias","Acompanhar o período de experiência"],
-dem:["Formalizar a comunicação (aviso prévio ou pedido de demissão)","Definir a data e o tipo de desligamento","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Emitir documentos para FGTS e seguro-desemprego","Recolher equipamentos, crachá e chaves","Desativar e-mail e acessos aos sistemas","Cancelar benefícios (VT, VR/VA, plano de saúde)","Realizar a entrevista de desligamento","Atualizar folha e ponto","Arquivar a pasta do funcionário"]};
+const A0=["Coletar documentos pessoais (RG, CPF, CTPS, comprovante de residência)","Agendar exame médico admissional","Registrar a admissão no eSocial antes do início das atividades","Assinar o contrato de trabalho","Coletar dados bancários para o salário","Cadastrar benefícios (VT, VR/VA, plano de saúde)","Cadastrar no ponto e na folha de pagamento","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Assinar termos (confidencialidade, LGPD, políticas internas)","Realizar a integração e apresentar à equipe","Definir gestor e plano dos primeiros 30 dias","Acompanhar o período de experiência"];
+const D0=["Formalizar a comunicação (aviso prévio ou pedido de demissão)","Definir a data e o tipo de desligamento","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Emitir documentos para FGTS e seguro-desemprego","Recolher equipamentos, crachá e chaves","Desativar e-mail e acessos aos sistemas","Cancelar benefícios (VT, VR/VA, plano de saúde)","Realizar a entrevista de desligamento","Atualizar folha e ponto","Arquivar a pasta do funcionário"];
+const PTPL={adm:{"CLT":A0,"Estágio":["Coletar documentos pessoais e da instituição de ensino","Assinar o Termo de Compromisso de Estágio","Conferir o seguro de acidentes pessoais","Cadastrar no ponto","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Realizar a integração e apresentar à equipe","Definir supervisor e plano de atividades","Agendar as avaliações periódicas"],"PJ / Prestador":["Coletar dados da empresa (CNPJ, contrato social)","Definir escopo, prazo e valor","Assinar o contrato de prestação de serviços","Coletar dados bancários e orientar sobre nota fiscal","Assinar termo de confidencialidade","Criar e-mail e acessos aos sistemas","Realizar a integração e apresentar à equipe"]},
+dem:{"Sem justa causa":D0,"Pedido de demissão":["Receber a carta de pedido de demissão","Definir a data e o cumprimento do aviso prévio","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Recolher equipamentos, crachá e chaves","Desativar e-mail e acessos aos sistemas","Cancelar benefícios","Realizar a entrevista de desligamento","Atualizar folha e ponto","Arquivar a pasta do funcionário"],"Término de contrato":["Confirmar a data de término do contrato","Comunicar o funcionário e o gestor","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Recolher equipamentos e crachá","Desativar acessos e cancelar benefícios","Arquivar a pasta do funcionário"]}};
+function tplItems(tipo,k){return PTPL[tipo][k].map(t=>({id:"i"+(++uid),t,done:false}))}
 let pd=null;
 $("#nav").innerHTML=SECS.map(([k,n])=>`<button data-s="${k}" role="tab">${n}</button>`).join("");
-$("#nav").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b){curSec=b.dataset.s;render()}});
+$("#nav").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b){curSec=b.dataset.s;render();swapCur()}});
 const kpi=(n,l,c="")=>`<div class="kpi ${c}"><b>${n}</b><span>${l}</span></div>`;
 const byDue=(a,b)=>(a.due||"9").localeCompare(b.due||"9");
 function cardDone(c){const b=boards.find(x=>x.id===c.boardId),l=b&&(b.lists||[]).find(x=>x.id===c.l);return !!(c.done||(l&&l.done))}
@@ -676,7 +773,7 @@ function mineHtml(){
 function procHtml(tipo){
   const adm=tipo==="adm",all=procs.filter(p=>p.tipo===tipo).sort((a,b)=>(b.data||"").localeCompare(a.data||"")),f=procF[tipo];
   const list=all.filter(p=>f==="all"||(f==="open"?pct(p)<100:pct(p)===100)),nOpen=all.filter(p=>pct(p)<100).length;
-  const card=p=>{const c=pct(p),it=p.itens||[],n=it.filter(x=>x.done).length;return `<button class="pc" data-proc="${p.id}"><div class="pch"><span class="av" style="background:hsl(${hue(p.nome)} 52% 46%);margin:0">${esc(ini(p.nome))}</span><div><b>${esc(p.nome)}</b><small>${esc([p.cargo,p.depto].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${c===100?"ok":c>0?"go":""}">${c===100?"Concluído":c>0?"Em andamento":"Não iniciado"}</span></div><div class="bt"><i style="width:${c}%;background:linear-gradient(90deg,#f93fd0,#ff9f55)"></i></div><div class="pcf"><span>${n}/${it.length} etapas</span><span>${p.data?(adm?"Início ":"Saída ")+fmt(p.data):""}</span></div></button>`};
+  const card=p=>{const c=pct(p),it=p.itens||[],n=it.filter(x=>x.done).length;return `<button class="pc" data-proc="${p.id}"><div class="pch"><span class="av" style="background:hsl(${hue(p.nome)} 52% 46%);margin:0">${esc(ini(p.nome))}</span><div><b>${esc(p.nome)}</b><small>${esc([p.cargo,p.contrato||p.depto].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${c===100?"ok":c>0?"go":""}">${c===100?"Concluído":c>0?"Em andamento":"Não iniciado"}</span></div><div class="bt"><i style="width:${c}%;background:linear-gradient(90deg,#f93fd0,#ff9f55)"></i></div><div class="pcf"><span>${n}/${it.length} etapas</span><span>${p.data?(adm?"Admissão ":"Demissão ")+fmt(p.data):""}</span></div></button>`};
   const fb=(k,n)=>`<button data-f="${tipo}:${k}" aria-pressed="${f===k}">${n}</button>`;
   return `<div class="sech"><div><h2 class="sh">${adm?"Processo de admissão":"Processo de demissão"}</h2><p class="sub2">Checklist por funcionário. Evite registrar dados sensíveis, como CPF.</p></div><button class="btn primary" data-newproc="${tipo}">${adm?"Nova admissão":"Nova demissão"}</button></div>
   <div class="kpis">${kpi(all.length,"Total")}${kpi(nOpen,"Em andamento")}${kpi(all.length-nOpen,"Concluídos")}</div>
@@ -689,7 +786,7 @@ function renderView(){
   SECS.forEach(([k])=>document.body.classList.toggle("sec-"+k,k===curSec));
   document.querySelectorAll("#nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.s===curSec));
   $("#sec").hidden=p;
-  if(!p){$("#board").hidden=true;$("#view").hidden=true;$("#sec").innerHTML=!me?"":curSec==="home"?homeHtml():curSec==="mine"?mineHtml():procHtml(curSec);return}
+  if(!p){$("#board").hidden=true;$("#view").hidden=true;drawSec();return}
   renderView0();
 }
 $("#sec").addEventListener("click",e=>{
@@ -710,42 +807,163 @@ function drawItems(){
 function saveItems(){if(pd.id)updateDoc(doc(db,"processes",pd.id),{itens:pd.itens}).catch(fail)}
 function openProc(id,tipo){
   const ex=id?procs.find(p=>p.id===id):null;
-  pd=ex?JSON.parse(JSON.stringify(ex)):{tipo,nome:"",cargo:"",depto:"",data:"",motivo:"Sem justa causa",itens:PTPL[tipo].map(t=>({id:"i"+(++uid),t,done:false}))};
+  pd=ex?JSON.parse(JSON.stringify(ex)):{tipo,nome:"",cargo:"",contrato:"",data:"",motivo:"Sem justa causa",itens:tplItems(tipo,Object.keys(PTPL[tipo])[0])};
   const adm=pd.tipo==="adm";
   $("#ph").textContent=ex?(adm?"Admissão":"Demissão"):(adm?"Nova admissão":"Nova demissão");
-  $("#pn").value=pd.nome;$("#pcg").value=pd.cargo||"";$("#pdp").value=pd.depto||"";$("#pdt").value=pd.data||"";$("#pm").value=pd.motivo||"Sem justa causa";
-  $("#pdtt").textContent=adm?"Data de início":"Data de desligamento";
+  $("#pn").value=pd.nome;$("#pcg").value=pd.cargo||"";$("#pdp").value=pd.contrato||pd.depto||"";$("#pdt").value=pd.data||"";$("#pm").value=pd.motivo||"Sem justa causa";
+  $("#pdtt").textContent=adm?"Data de admissão":"Data de demissão";
   $("#pmw").hidden=adm;$("#pdel").hidden=!ex||ex.owner!==me.uid;$("#pshare").hidden=!ex;
-  drawItems();$("#pdlg").showModal();
+  $("#ptw").hidden=!!ex;$("#ptp").innerHTML=Object.keys(PTPL[pd.tipo]).map(k=>`<option>${k}</option>`).join("");drawItems();$("#pdlg").showModal();
 }
 $("#pitems").addEventListener("click",e=>{
   const t=e.target.closest("[data-pt]"),d=e.target.closest("[data-pxd]");
-  if(t){const x=pd.itens.find(i=>i.id===t.dataset.pt);if(x)x.done=!x.done}
+  if(t){const x=pd.itens.find(i=>i.id===t.dataset.pt);if(x){x.done=!x.done;cel=x.done?x.id:""}}
   else if(d)pd.itens=pd.itens.filter(i=>i.id!==d.dataset.pxd);
   else return;
-  drawItems();saveItems();
+  drawItems();saveItems();if(cel){const el=document.querySelector('#pitems [data-pt="'+cel+'"]');if(el)burst(el);cel=""}
 });
 function addItem(){const v=$("#pnew").value.trim();if(!v)return;pd.itens.push({id:"i"+(++uid),t:v,done:false});$("#pnew").value="";drawItems();saveItems()}
 $("#paddb").onclick=addItem;
 $("#pnew").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addItem()}});
 $("#pcancel").onclick=()=>$("#pdlg").close();
 $("#pf").addEventListener("submit",()=>{
-  const v={nome:$("#pn").value.trim(),cargo:$("#pcg").value.trim(),depto:$("#pdp").value.trim(),data:$("#pdt").value,motivo:pd.tipo==="dem"?$("#pm").value:"",itens:pd.itens};
+  const v={nome:$("#pn").value.trim(),cargo:$("#pcg").value.trim(),contrato:$("#pdp").value.trim(),data:$("#pdt").value,motivo:pd.tipo==="dem"?$("#pm").value:"",itens:pd.itens};
   if(pd.id)updateDoc(doc(db,"processes",pd.id),v).catch(fail);
   else setDoc(doc(db,"processes","p"+(++uid)),{tipo:pd.tipo,...v,owner:me.uid,ownerEmail:me.email,readers:[me.email],createdAt:Date.now()}).catch(fail);
 });
 $("#pdel").onclick=()=>{if(pd.id&&confirm("Excluir este registro e o checklist dele?")){deleteDoc(doc(db,"processes",pd.id)).catch(fail);$("#pdlg").close()}};
-$("#pshare").onclick=()=>{
-  const cur=procs.find(p=>p.id===pd.id),e=(prompt("Quem já vê este registro: "+((cur&&cur.readers)||[]).join(", ")+"\n\nE-mail de quem vai poder ver e editar:")||"").trim().toLowerCase();
-  if(!e.includes("@"))return;
-  updateDoc(doc(db,"processes",pd.id),{readers:arrayUnion(e)}).then(()=>toast(e+" agora tem acesso a este registro.")).catch(fail);
-};
-$("#gg").onclick=async()=>{am("");try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(x){am(msg(x))}};
+$("#pshare").onclick=()=>{const c=procs.find(p=>p.id===pd.id);shareDoc("processes",pd.id,(c&&c.readers)||[])};
+$("#gg").onclick=async()=>{am("");fromLogin=true;try{await signInWithPopup(auth,gp())}catch(x){fromLogin=false;am(msg(x))}};
+let fromLogin=false,cel="",findQ="",ivF="all",iw=null,nd=null;
+function gp(){const p=new GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"});return p}
+function swap(el){if(!el)return;el.classList.remove("sw");void el.offsetWidth;el.classList.add("sw")}
+function swapCur(){swap(curSec==="proj"?(view==="board"?$("#board"):$("#view")):$("#sec"))}
+function burst(el){
+  const r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,cs=["#f93fd0","#ff9f55","#b52df0","#3fb68b","#4f2fff","#ffd166"];
+  el.classList.remove("pulse");void el.offsetWidth;el.classList.add("pulse");
+  for(let i=0;i<16;i++){const s=document.createElement("i");s.className="cf";const a=Math.random()*6.28,d=40+Math.random()*50;s.style.cssText=`left:${x}px;top:${y}px;background:${cs[i%6]};--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d-20}px`;document.body.appendChild(s);setTimeout(()=>s.remove(),900)}
+}
+function fx(id){requestAnimationFrame(()=>{const el=document.querySelector('[data-chk="'+id+'"]');if(el&&el.offsetParent)burst(el)})}
+function welcome(){const w=$("#welcome");$("#wname").textContent=me.name;w.hidden=false;w.classList.remove("out");document.body.classList.add("enter");setTimeout(()=>w.classList.add("out"),1100);setTimeout(()=>{w.hidden=true;document.body.classList.remove("enter")},1800)}
+$("#mark").onclick=()=>{curSec="home";render();swapCur();window.scrollTo({top:0,behavior:"smooth"})};
+
+function themePref(){try{return localStorage.getItem("pauta.theme")||"auto"}catch(e){return "auto"}}
+function setTheme(t){try{localStorage.setItem("pauta.theme",t)}catch(e){}if(t==="auto")delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===t))}
+function openProfile(){
+  $("#sname").value=me.full||me.name;$("#smail").value=me.email;
+  document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===themePref()));
+  const need=me.pw&&!me.verified;$("#sver").textContent=need?"Seu e-mail ainda não foi confirmado.":"";$("#sver2").hidden=!need;
+  $("#sdlg").showModal();
+}
+$("#prof").onclick=openProfile;
+$("#sth").addEventListener("click",e=>{const b=e.target.closest("[data-th]");if(b)setTheme(b.dataset.th)});
+$("#sclose").onclick=()=>$("#sdlg").close();
+$("#sout").onclick=()=>{$("#sdlg").close();signOut(auth)};
+$("#sswitch").onclick=()=>{$("#sdlg").close();signOut(auth)};
+$("#sver2").onclick=async()=>{try{await sendEmailVerification(auth.currentUser);toast("E-mail de confirmação enviado. Veja também o spam.")}catch(x){toast("Não foi possível enviar agora. Tente mais tarde.")}};
+$("#sf").addEventListener("submit",async()=>{const n=$("#sname").value.trim();if(!n||!auth.currentUser)return;try{await updateProfile(auth.currentUser,{displayName:n});me.full=n;me.name=n.split(" ")[0];$("#pav").textContent=me.name[0].toUpperCase();render();toast("Nome atualizado.")}catch(x){toast("Não foi possível salvar o nome.")}});
+
+function shareDoc(coll,id,list){
+  if(list.length>=6){toast("Limite atingido: você pode compartilhar com até 5 pessoas.");return}
+  const e=(prompt("Quem já vê: "+list.join(", ")+"\n\nE-mail de quem vai poder ver e editar (limite de 5 pessoas):")||"").trim().toLowerCase();
+  if(!e.includes("@")||list.includes(e))return;
+  updateDoc(doc(db,coll,id),{readers:arrayUnion(e)}).then(()=>toast(e+" agora tem acesso.")).catch(fail);
+}
+
+function drawSec(){
+  const a=document.activeElement,had=a&&a.id==="fq";
+  $("#sec").innerHTML=!me?"":({home:homeHtml,mine:mineHtml,adm:()=>procHtml("adm"),dem:()=>procHtml("dem"),iv:ivHtml,note:noteHtml,find:findHtml})[curSec]();
+  if(had){const f=$("#fq");f.focus();f.setSelectionRange(f.value.length,f.value.length)}
+}
+
+function findRes(){
+  const q=findQ.trim().toLowerCase();
+  if(q.length<2)return '<p class="empty">Digite ao menos 2 letras para buscar tarefas, funcionários, entrevistas e notas.</p>';
+  const has=(...a)=>a.join(" ").toLowerCase().includes(q),t=iso(new Date());
+  const T=allCards.filter(c=>has(c.t,c.d,c.p,c.o,c.aEmail)),P=procs.filter(p=>has(p.nome,p.cargo,p.contrato||p.depto||"")),I=ivs.filter(i=>has(i.nome,i.vaga||"",i.parecer||"",i.entrevistador||"")),N=notes.filter(n=>has(n.titulo||"",n.texto||""));
+  const g=(n,l,f)=>l.length?`<div class="panel" style="margin-bottom:12px"><h2>${n} <span class="cnt">${l.length}</span></h2>${l.slice(0,20).map(f).join("")}</div>`:"";
+  const out=g("Tarefas",T,c=>rowHtml(c,!cardDone(c)&&c.due&&c.due<t))
+   +g("Funcionários",P,p=>`<button class="row" data-proc="${p.id}"><span class="dot" style="background:${p.tipo==="adm"?"var(--ok)":"var(--high)"}"></span><span class="rt">${esc(p.nome)} · ${p.tipo==="adm"?"Admissão":"Demissão"}</span><b>${pct(p)}%</b></button>`)
+   +g("Entrevistas",I,i=>`<button class="row" data-iv="${i.id}"><span class="dot" style="background:var(--low)"></span><span class="rt">${esc(i.nome)}${i.vaga?" · "+esc(i.vaga):""}</span></button>`)
+   +g("Notas",N,n=>`<button class="row" data-note="${n.id}"><span class="dot" style="background:var(--mid)"></span><span class="rt">${esc(n.titulo||"Sem título")}</span></button>`);
+  return out||'<p class="empty">Nada encontrado para “'+esc(findQ)+'”.</p>';
+}
+function findHtml(){return `<h2 class="sh">Buscar</h2><p class="sub2">Procure em tarefas, funcionários, entrevistas e notas.</p><input id="fq" type="search" placeholder="Buscar em tudo…" value="${esc(findQ)}" autocomplete="off"><div id="fres" style="margin-top:14px">${findRes()}</div>`}
+$("#sec").addEventListener("input",e=>{if(e.target.id==="fq"){findQ=e.target.value;$("#fres").innerHTML=findRes()}});
+
+const IVS={"Em análise":"go","Aprovado(a)":"ok","Reprovado(a)":"no","Banco de talentos":"bt"};
+const stars=n=>"★".repeat(n)+"☆".repeat(5-n);
+function ivHtml(){
+  const all=ivs.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")),list=all.filter(i=>ivF==="all"||(i.status||"Em análise")===ivF);
+  const card=i=>`<button class="pc" data-iv="${i.id}"><div class="pch"><span class="av" style="background:hsl(${hue(i.nome)} 52% 46%);margin:0">${esc(ini(i.nome))}</span><div><b>${esc(i.nome)}</b><small>${esc([i.vaga,i.etapa].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${IVS[i.status]||"go"}">${esc(i.status||"Em análise")}</span></div>${i.nota?`<div class="stars">${stars(i.nota)}</div>`:""}<div class="pcf"><span>${esc(i.entrevistador||"")}</span><span>${i.data?fmt(i.data):""}</span></div>${i.parecer?`<div class="snip">${esc(i.parecer.slice(0,110))}${i.parecer.length>110?"…":""}</div>`:""}</button>`;
+  const fb=(k,n)=>`<button data-ivf="${k}" aria-pressed="${ivF===k}">${n}</button>`,cnt=s=>all.filter(i=>(i.status||"Em análise")===s).length;
+  return `<div class="sech"><div><h2 class="sh">Entrevistas</h2><p class="sub2">Registre cada candidato e o parecer da entrevista.</p></div><button class="btn primary" data-newiv>Nova entrevista</button></div>
+  <div class="kpis">${kpi(all.length,"Entrevistas")}${kpi(cnt("Em análise"),"Em análise")}${kpi(cnt("Aprovado(a)"),"Aprovados")}${kpi(cnt("Reprovado(a)"),"Reprovados")}</div>
+  <div class="seg3">${fb("all","Todos")}${["Em análise","Aprovado(a)","Reprovado(a)","Banco de talentos"].map(s=>fb(s,s)).join("")}</div>
+  <div class="pgrid">${list.map(card).join("")||'<p class="empty">Nenhuma entrevista registrada.</p>'}</div>`;
+}
+function openIv(id){
+  const ex=id?ivs.find(i=>i.id===id):null;
+  iw=ex?{...ex}:{nome:"",vaga:"",data:iso(new Date()),entrevistador:"",etapa:"Triagem",status:"Em análise",nota:0,parecer:""};
+  $("#ivh").textContent=ex?"Entrevista":"Nova entrevista";
+  $("#ivn").value=iw.nome;$("#ivv").value=iw.vaga||"";$("#ivd").value=iw.data||"";$("#ive").value=iw.entrevistador||"";$("#ivt").value=iw.etapa||"Triagem";$("#ivs").value=iw.status||"Em análise";$("#ivr").value=String(iw.nota||0);$("#ivp").value=iw.parecer||"";
+  $("#ivdel").hidden=!ex||ex.owner!==me.uid;$("#ivshare").hidden=!ex;$("#idlg").showModal();
+}
+$("#ivf").addEventListener("submit",()=>{
+  const v={nome:$("#ivn").value.trim(),vaga:$("#ivv").value.trim(),data:$("#ivd").value,entrevistador:$("#ive").value.trim(),etapa:$("#ivt").value,status:$("#ivs").value,nota:+$("#ivr").value,parecer:$("#ivp").value.trim()};
+  if(iw.id)updateDoc(doc(db,"interviews",iw.id),v).catch(fail);
+  else setDoc(doc(db,"interviews","v"+(++uid)),{...v,owner:me.uid,ownerEmail:me.email,readers:[me.email],createdAt:Date.now()}).catch(fail);
+});
+$("#ivclose").onclick=()=>$("#idlg").close();
+$("#ivdel").onclick=()=>{if(iw.id&&confirm("Excluir esta entrevista?")){deleteDoc(doc(db,"interviews",iw.id)).catch(fail);$("#idlg").close()}};
+$("#ivshare").onclick=()=>{const c=ivs.find(i=>i.id===iw.id);shareDoc("interviews",iw.id,(c&&c.readers)||[])};
+
+const NTPL={ata:["Ata de reunião","Data:\nParticipantes:\n\nPauta:\n- \n\nDecisões:\n- \n\nPróximos passos (quem / prazo):\n- "],fb:["Feedback 1:1","Nome:\nData:\n\nPontos fortes:\n- \n\nPontos de desenvolvimento:\n- \n\nCombinados e prazos:\n- "],rot:["Roteiro de entrevista","Candidato(a):\nVaga:\n\n1. Conte sobre a sua trajetória.\n2. Por que esta vaga?\n3. Uma situação de desafio e como lidou com ela.\n4. Expectativas e pretensão.\n5. Perguntas do candidato.\n\nObservações:\n"]};
+function noteHtml(){
+  const l=notes.slice().sort((a,b)=>(b.updated||0)-(a.updated||0));
+  return `<div class="sech"><div><h2 class="sh">Notas</h2><p class="sub2">Seu bloco de notas. Cada nota é privada até você compartilhar.</p></div><button class="btn primary" data-newnote>Nova nota</button></div><div class="pgrid">${l.map(n=>`<button class="pc" data-note="${n.id}"><b>${esc(n.titulo||"Sem título")}</b><div class="snip">${esc((n.texto||"").slice(0,140))}${(n.texto||"").length>140?"…":""}</div><div class="pcf"><span>${n.updated?new Date(n.updated).toLocaleDateString("pt-BR"):""}</span></div></button>`).join("")||'<p class="empty">Nenhuma nota ainda. Toque em “Nova nota” e escolha um modelo, se quiser.</p>'}</div>`;
+}
+function openNote(id){
+  const ex=id?notes.find(n=>n.id===id):null;nd=ex?{...ex}:{titulo:"",texto:""};
+  $("#nh").textContent=ex?"Nota":"Nova nota";$("#ntw").hidden=!!ex;$("#ntp").value="";$("#nt").value=nd.titulo||"";$("#nx").value=nd.texto||"";
+  $("#ndel").hidden=!ex||ex.owner!==me.uid;$("#nshare").hidden=!ex;$("#ndlg").showModal();
+}
+$("#ntp").onchange=()=>{const t=NTPL[$("#ntp").value];if(t){$("#nt").value=t[0];$("#nx").value=t[1]}};
+$("#nf").addEventListener("submit",()=>{
+  const v={titulo:$("#nt").value.trim(),texto:$("#nx").value,updated:Date.now()};
+  if(nd.id)updateDoc(doc(db,"notes",nd.id),v).catch(fail);
+  else setDoc(doc(db,"notes","n"+(++uid)),{...v,owner:me.uid,ownerEmail:me.email,readers:[me.email],createdAt:Date.now()}).catch(fail);
+});
+$("#nclose").onclick=()=>$("#ndlg").close();
+$("#ndel").onclick=()=>{if(nd.id&&confirm("Excluir esta nota?")){deleteDoc(doc(db,"notes",nd.id)).catch(fail);$("#ndlg").close()}};
+$("#nshare").onclick=()=>{const c=notes.find(n=>n.id===nd.id);shareDoc("notes",nd.id,(c&&c.readers)||[])};
+
+$("#sec").addEventListener("click",e=>{
+  let el;
+  if(el=e.target.closest("[data-newiv]")){openIv();return}
+  if(el=e.target.closest("[data-iv]")){openIv(el.dataset.iv);return}
+  if(el=e.target.closest("[data-ivf]")){ivF=el.dataset.ivf;renderView();return}
+  if(el=e.target.closest("[data-newnote]")){openNote();return}
+  if(el=e.target.closest("[data-note]")){openNote(el.dataset.note)}
+});
+
+const BT=[["pad","Padrão","A fazer, Em andamento, Em revisão e Concluída.",[["A fazer"],["Em andamento"],["Em revisão"],["Concluída",1]]],["rec","Recrutamento e seleção","Vagas abertas, Triagem, Entrevistas, Proposta e Contratado.",[["Vagas abertas"],["Triagem"],["Entrevistas"],["Proposta"],["Contratado",1]]],["onb","Onboarding de funcionários","Antes da chegada, Primeira semana, Primeiros 30 dias e Concluído.",[["Antes da chegada"],["Primeira semana"],["Primeiros 30 dias"],["Concluído",1]]],["prj","Gestão de projeto","Backlog, Planejado, Em andamento, Em revisão e Entregue.",[["Backlog"],["Planejado"],["Em andamento"],["Em revisão"],["Entregue",1]]],["trn","Treinamentos","Ideias, Planejado, Em execução, Avaliação e Concluído.",[["Ideias"],["Planejado"],["Em execução"],["Avaliação"],["Concluído",1]]],["dp","Departamento pessoal","Admissões, Demissões, Férias e afastamentos, Folha e benefícios e Concluído.",[["Admissões"],["Demissões"],["Férias e afastamentos"],["Folha e benefícios"],["Concluído",1]]]];
+$("#tt").innerHTML=BT.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join("");
+function tdesc(){$("#tdesc").textContent=(BT.find(t=>t[0]===$("#tt").value)||BT[0])[2]}
+$("#tt").onchange=tdesc;tdesc();
+function newBoard(){$("#tn").value="";$("#tt").value="pad";tdesc();$("#tdlg").showModal()}
+$("#tclose").onclick=()=>$("#tdlg").close();
+$("#tf").addEventListener("submit",async()=>{
+  const n=$("#tn").value.trim();if(!n)return;
+  const t=BT.find(x=>x[0]===$("#tt").value)||BT[0],id="b"+(++uid);curId=id;
+  try{await setDoc(doc(db,"boards",id),{name:n,owner:me.uid,personal:false,memberEmails:[me.email],lists:t[3].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))})}catch(e){fail(e)}
+});
+$("#ptp").onchange=()=>{if(pd&&!pd.id){pd.itens=tplItems(pd.tipo,$("#ptp").value);drawItems()}};
 onAuthStateChanged(auth,u=>{
   document.body.classList.remove("boot");stopAll();
   if(!u){me=null;data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}
   document.body.classList.remove("anon");
-  me={uid:u.uid,email:u.email.toLowerCase(),name:(u.displayName||u.email.split("@")[0]).split(" ")[0]};$("#who").textContent=me.email;
+  me={uid:u.uid,email:u.email.toLowerCase(),name:(u.displayName||u.email.split("@")[0]).split(" ")[0],full:u.displayName||"",verified:u.emailVerified,pw:u.providerData.some(p=>p.providerId==="password")};$("#who").textContent=me.email;$("#pav").textContent=(me.name[0]||"P").toUpperCase();if(fromLogin){fromLogin=false;welcome()}
   try{curId=localStorage.getItem("pauta.board")||""}catch(e){}
   start();
 });

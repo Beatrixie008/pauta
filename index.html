@@ -260,6 +260,24 @@ a.btn{display:inline-block;text-decoration:none;color:var(--ink)}
 .chipx button{border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;padding:0}
 .chipx button:hover{color:var(--accent)}
 .pn2{background:var(--glass);border:1px solid var(--edge);border-radius:16px;padding:12px;margin-top:12px;display:grid;gap:8px}
+input[type=date]{pointer-events:none;cursor:pointer}
+label:has(>input[type=date]){cursor:pointer}
+.dp{position:fixed;z-index:200;width:304px;max-width:calc(100vw - 16px);background:var(--surface);color:var(--ink);border:1.5px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:20px;padding:12px;box-shadow:0 24px 60px rgba(60,10,50,.35);animation:pop .18s ease}
+.dph{display:flex;align-items:center;justify-content:space-between;gap:2px;margin-bottom:8px}
+.dph b{flex:1;text-align:center;font-size:15px;font-weight:800}
+.dph b::first-letter{text-transform:uppercase}
+.dph button{border:0;background:var(--line);color:var(--ink);width:32px;height:32px;border-radius:10px;font-size:16px;font-weight:800}
+.dpw,.dpg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dpw span{text-align:center;font-size:12px;font-weight:800;color:var(--muted);padding:4px 0}
+.dpd{position:relative;border:0;background:transparent;color:var(--ink);height:36px;border-radius:12px;font-size:14px;font-weight:700;transition:background .15s,transform .1s}
+.dpd:hover{background:var(--line)}
+.dpd.out{color:var(--muted);opacity:.5}
+.dpd.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.dpd.sel{background:var(--accent);color:var(--accent-ink);box-shadow:none;opacity:1}
+.dpd i{position:absolute;left:50%;bottom:4px;width:5px;height:5px;border-radius:50%;background:var(--accent);translate:-50% 0}
+.dpd.sel i{background:var(--accent-ink)}
+.dpf{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.dpf button{border:1.5px solid color-mix(in srgb,var(--accent) 40%,transparent);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:700}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -408,6 +426,8 @@ a.btn{display:inline-block;text-decoration:none;color:var(--ink)}
       <label>Projeto<input id="p" list="projs"></label>
       <label>Responsável (nome ou e-mail)<input id="o" list="owns" autocapitalize="none" autocomplete="off"></label>
       <label class="full">Prazo<input type="date" id="due"></label>
+      <label class="full" id="rpw">Repetir<select id="rp"><option value="">Não repete</option><option value="d">Todos os dias</option><option value="u">Dias úteis (segunda a sexta)</option><option value="w">Toda semana</option><option value="m">Todo mês</option></select></label>
+      <div class="full" id="rpx" hidden><div id="rpdw" hidden style="margin-bottom:10px"><span class="lab">Nos dias</span><div class="seg3" id="rpd" style="margin-bottom:0"></div></div><label>Repetir até<input type="date" id="rpu"></label><p class="sub2" style="margin:6px 0 0">As próximas ocorrências já ficam programadas (até 60). Editar uma delas não muda as outras.</p></div>
     </div>
     <datalist id="projs"></datalist><datalist id="owns"></datalist>
     <div class="acts">
@@ -459,7 +479,7 @@ function cardHtml(c,done){
   return `<article class="card${c.id===newId?" new":""}${done?" done":""}" draggable="${c.boardId&&c.boardId!==curId?"false":"true"}" data-id="${c.id}" tabindex="0" aria-label="Abrir ${esc(c.t)}">
     ${c.pr?`<span class="chip" style="--c:var(--${PC[c.pr]})">${PRI[c.pr]}</span>`:""}
     <div class="ct"><button class="chk${done?" on":""}" data-chk="${c.id}" aria-label="${done?"Reabrir":"Concluir"} tarefa" title="${done?"Reabrir":"Concluir"}">${done?"✓":""}</button><h3>${esc(c.t)}</h3></div>
-    <div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${c.boardId&&c.boardId!==curId&&c.by?`<span>de ${esc(c.by.split("@")[0])}</span>`:""}${c.due?`<span class="due ${late?"late":done?"ok":""}">${late?"Atrasada · ":done?"✓ ":""}${fmt(c.due)}</span>`:""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>${c.boardId&&c.boardId!==curId?"":`<div class="mv"><button data-mv="-1" aria-label="Mover para a lista anterior">‹</button><button data-mv="1" aria-label="Mover para a próxima lista">›</button></div>`}
+    <div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${c.serie?'<span title="Tarefa recorrente">↻</span>':""}${c.boardId&&c.boardId!==curId&&c.by?`<span>de ${esc(c.by.split("@")[0])}</span>`:""}${c.due?`<span class="due ${late?"late":done?"ok":""}">${late?"Atrasada · ":done?"✓ ":""}${fmt(c.due)}</span>`:""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>${c.boardId&&c.boardId!==curId?"":`<div class="mv"><button data-mv="-1" aria-label="Mover para a lista anterior">‹</button><button data-mv="1" aria-label="Mover para a próxima lista">›</button></div>`}
   </article>`;
 }
 
@@ -503,7 +523,7 @@ function openDlg(id){
   const ro=!!(editing&&editing.boardId&&editing.boardId!==curId);document.querySelectorAll("#form input,#form select,#form textarea").forEach(x=>x.disabled=ro);$("#sv").style.display=ro?"none":"";$("#del").style.display=editing&&!ro?"":"none";const cl=editing&&data.lists.find(l=>l.id===editing.l);$("#fin").style.display=editing?"":"none";$("#fin").textContent=(cl&&cl.done)||(editing&&editing.done)?"Reabrir tarefa":"Concluir tarefa";
   $("#l").innerHTML=data.lists.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join("");
   const c=editing||{t:"",d:"",l:data.lists[0].id,pr:"media",p:"",o:"",due:presetDue||plus(7)};
-  $("#t").value=c.t;$("#d").value=c.d;$("#l").value=c.l;$("#pr").value=c.pr;$("#p").value=c.p;$("#o").value=c.aEmail||c.o;$("#due").value=c.due;
+  $("#t").value=c.t;$("#d").value=c.d;$("#l").value=c.l;rpDays.clear();$("#rp").value="";$("#rpw").hidden=!!(editing&&(editing.serie||ro));rpUi(true);$("#pr").value=c.pr;$("#p").value=c.p;$("#o").value=c.aEmail||c.o;$("#due").value=c.due;
   $("#dlg").showModal();
 }
 function toggleDone(id){
@@ -525,8 +545,8 @@ $("#cancel").onclick=()=>$("#dlg").close();
 $("#del").onclick=()=>{if(editing&&confirm("Excluir esta tarefa?")){data.cards=data.cards.filter(c=>c.id!==editing.id);save();$("#dlg").close();render()}};
 $("#form").addEventListener("submit",()=>{
   const v={t:$("#t").value.trim(),d:$("#d").value.trim(),l:$("#l").value,pr:$("#pr").value,p:$("#p").value.trim(),o:ownerName($("#o").value),aEmail:ownerEmail($("#o").value),due:$("#due").value};
-  if(editing){editing=data.cards.find(c=>c.id===editing.id)||editing;const moved=editing.l!==v.l;Object.assign(editing,v);if(moved){editing.done=!!(data.lists.find(l=>l.id===v.l)||{}).done;data.cards=data.cards.filter(c=>c!==editing);data.cards.push(editing)}}
-  else{const id="c"+(++uid);data.cards.push({id,...v});newId=id}
+  if(editing){editing=data.cards.find(c=>c.id===editing.id)||editing;const moved=editing.l!==v.l;Object.assign(editing,v);if(!editing.serie)mkSeries(editing,v);if(moved){editing.done=!!(data.lists.find(l=>l.id===v.l)||{}).done;data.cards=data.cards.filter(c=>c!==editing);data.cards.push(editing)}}
+  else{const id="c"+(++uid),nc={id,...v};data.cards.push(nc);newId=id;mkSeries(nc,v)}
   save();render();
 });
 $("#q").addEventListener("input",render);$("#fo").addEventListener("change",render);
@@ -677,7 +697,7 @@ function ownerName(v){v=v.trim();return v.includes("@")?v.split("@")[0]:v}
 function ownerEmail(v){v=v.trim().toLowerCase();return v.includes("@")?v:""}
 function applyRemote(){if(drag)return;render()}
 function defaultLists(){return [["A fazer"],["Em andamento"],["Em revisão"],["Concluída",1]].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))}
-function cardObj(c,i){const ae=c.aEmail||"";return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:ae,by:c.by||me.email,done:!!c.done,boardId:bd.id,ord:i,readers:[...new Set([...(bd.memberEmails||[]),ae].filter(Boolean))].sort()}}
+function cardObj(c,i){const ae=c.aEmail||"";return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:ae,by:c.by||me.email,done:!!c.done,serie:c.serie||"",boardId:bd.id,ord:i,readers:[...new Set([...(bd.memberEmails||[]),ae].filter(Boolean))].sort()}}
 function persist(){
   if(!bd||!me)return;
   const b=writeBatch(db);let n=0;
@@ -909,7 +929,7 @@ function ivHtml(){
   const card=i=>`<button class="pc" data-iv="${i.id}"><div class="pch"><span class="av" style="background:hsl(${hue(i.nome)} 52% 46%);margin:0">${esc(ini(i.nome))}</span><div><b>${esc(i.nome)}</b><small>${esc([i.vaga,i.etapa].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${IVS[i.status]||"go"}">${esc(i.status||"Em análise")}</span></div>${i.nota?`<div class="stars">${stars(i.nota)}</div>`:""}<div class="pcf"><span>${esc(i.entrevistador||"")}</span><span>${i.data?fmt(i.data):""}</span></div>${(i.cvData||i.cvl)?'<div class="snip">Currículo anexado</div>':""}${i.parecer?`<div class="snip">${esc(i.parecer.slice(0,110))}${i.parecer.length>110?"…":""}</div>`:""}</button>`;
   const fb=(k,n)=>`<button data-ivf="${k}" aria-pressed="${ivF===k}">${n}</button>`,cnt=s=>all.filter(i=>(i.status||"Em análise")===s).length;
   return `<div class="sech"><div><h2 class="sh">Entrevistas</h2><p class="sub2">Registre cada candidato e o parecer da entrevista.</p></div><button class="btn primary" data-newiv>Nova entrevista</button></div>
-  <div class="kpis">${kpi(all.length,"Entrevistas")}${kpi(cnt("Em análise"),"Em análise")}${kpi(cnt("Aprovado(a)"),"Aprovados")}${kpi(cnt("Reprovado(a)"),"Reprovados")}</div>
+  ${shareBar("iv")}<div class="kpis">${kpi(all.length,"Entrevistas")}${kpi(cnt("Em análise"),"Em análise")}${kpi(cnt("Aprovado(a)"),"Aprovados")}${kpi(cnt("Reprovado(a)"),"Reprovados")}</div>
   <div class="seg3">${fb("all","Todos")}${["Em análise","Aprovado(a)","Reprovado(a)","Banco de talentos"].map(s=>fb(s,s)).join("")}</div>
   <div class="pgrid">${list.map(card).join("")||'<p class="empty">Nenhuma entrevista registrada.</p>'}</div>`;
 }
@@ -923,7 +943,7 @@ function openIv(id){
 $("#ivf").addEventListener("submit",()=>{
   const v={nome:$("#ivn").value.trim(),vaga:$("#ivv").value.trim(),data:$("#ivd").value,entrevistador:$("#ive").value.trim(),etapa:$("#ivt").value,status:$("#ivs").value,nota:+$("#ivr").value,parecer:$("#ivp").value.trim(),cvl:$("#cvl").value.trim()};if(iw.cvChanged||!iw.id){v.cvName=iw.cvName||"";v.cvType=iw.cvType||"";v.cvData=iw.cvData||""}
   if(iw.id)updateDoc(doc(db,"interviews",iw.id),v).catch(fail);
-  else setDoc(doc(db,"interviews","v"+(++uid)),{...v,owner:me.uid,ownerEmail:me.email,readers:[me.email],createdAt:Date.now()}).catch(fail);
+  else setDoc(doc(db,"interviews","v"+(++uid)),{...v,owner:me.uid,ownerEmail:me.email,readers:newReaders("iv"),createdAt:Date.now()}).catch(fail);
 });
 $("#ivclose").onclick=()=>$("#idlg").close();
 $("#ivdel").onclick=()=>{if(iw.id&&confirm("Excluir esta entrevista?")){deleteDoc(doc(db,"interviews",iw.id)).catch(fail);$("#idlg").close()}};
@@ -983,37 +1003,39 @@ $("#cvf").onchange=()=>{
 };
 $("#cvrm").onclick=()=>{iw.cvData="";iw.cvName="";iw.cvType="";iw.cvChanged=true;cvDraw()};
 $("#srch").onclick=()=>{curSec="find";render();swapCur();const f=$("#fq");if(f)f.focus()};
-function rhShare(){const b=boards.find(x=>x.id==="u_"+me.uid),r=(b&&b.rhShare)||{};return{adm:r.adm||[],dem:r.dem||[]}}
-function tabPeople(tipo){return [...new Set([...rhShare()[tipo],...procs.filter(p=>p.tipo===tipo).flatMap(p=>p.readers||[])])].filter(e=>e!==me.email)}
-function newReaders(tipo){
-  const base=procs.find(p=>p.tipo===tipo&&p.owner!==me.uid);
-  const all=[...new Set([...rhShare()[tipo],...((base&&base.readers)||[])])].filter(e=>e!==me.email);
-  return [me.email,...all].slice(0,6);
-}
 function shareBar(tipo){
   const mineL=rhShare()[tipo],ppl=tabPeople(tipo);
   return `<div class="sharebar"><span class="lab" style="margin:0">Acompanhando com:</span>${ppl.map(e=>`<span class="chipx">${esc(e)}${mineL.includes(e)?`<button data-unshare="${tipo}" data-e="${esc(e)}" aria-label="Remover acesso de ${esc(e)}">×</button>`:""}</span>`).join("")||'<span class="sub2" style="margin:0">ninguém ainda</span>'}<button class="btn" data-shtab="${tipo}">Compartilhar esta aba</button></div>`;
 }
+function rhShare(){const b=boards.find(x=>x.id==="u_"+me.uid),r=(b&&b.rhShare)||{};return{adm:r.adm||[],dem:r.dem||[],iv:r.iv||[]}}
+function tabItems(tipo){return tipo==="iv"?{coll:"interviews",items:ivs}:{coll:"processes",items:procs.filter(p=>p.tipo===tipo)}}
+function tabPeople(tipo){return [...new Set([...rhShare()[tipo],...tabItems(tipo).items.flatMap(p=>p.readers||[])])].filter(e=>e!==me.email)}
+function newReaders(tipo){
+  const base=tabItems(tipo).items.find(p=>p.owner!==me.uid);
+  const all=[...new Set([...rhShare()[tipo],...((base&&base.readers)||[])])].filter(e=>e!==me.email);
+  return [me.email,...all].slice(0,6);
+}
 async function shareTab(tipo){
-  const cur=rhShare()[tipo];
+  const cur=rhShare()[tipo],T=tabItems(tipo);
   if(cur.length>=5){toast("Limite atingido: você pode compartilhar esta aba com até 5 pessoas.");return}
-  const e=(prompt("Quem já tem acesso: "+(cur.join(", ")||"ninguém")+"\n\nE-mail da pessoa que vai acompanhar "+(tipo==="adm"?"as admissões":"as demissões")+" com você (limite de 5 pessoas):")||"").trim().toLowerCase();
+  const what=tipo==="adm"?"as admissões":tipo==="dem"?"as demissões":"as entrevistas";
+  const e=(prompt("Quem já tem acesso: "+(cur.join(", ")||"ninguém")+"\n\nE-mail da pessoa que vai acompanhar "+what+" com você (limite de 5 pessoas):")||"").trim().toLowerCase();
   if(!e.includes("@")||e===me.email||cur.includes(e))return;
-  const mine=procs.filter(p=>p.tipo===tipo&&p.owner===me.uid);
+  const mine=T.items.filter(p=>p.owner===me.uid);
   try{
     const b=writeBatch(db);
     b.update(doc(db,"boards","u_"+me.uid),{rhShare:{...rhShare(),[tipo]:[...cur,e]}});
-    mine.forEach(p=>b.update(doc(db,"processes",p.id),{readers:arrayUnion(e)}));
+    mine.forEach(p=>b.update(doc(db,T.coll,p.id),{readers:arrayUnion(e)}));
     await b.commit();toast(e+" agora acompanha esta aba em tempo real. Avise a pessoa para entrar com esse e-mail.");
   }catch(x){fail(x)}
 }
 async function unshareTab(tipo,e){
   if(!confirm("Remover o acesso de "+e+" a esta aba?"))return;
-  const mine=procs.filter(p=>p.tipo===tipo&&p.owner===me.uid);
+  const T=tabItems(tipo),mine=T.items.filter(p=>p.owner===me.uid);
   try{
     const b=writeBatch(db);
     b.update(doc(db,"boards","u_"+me.uid),{rhShare:{...rhShare(),[tipo]:rhShare()[tipo].filter(x=>x!==e)}});
-    mine.forEach(p=>b.update(doc(db,"processes",p.id),{readers:arrayRemove(e)}));
+    mine.forEach(p=>b.update(doc(db,T.coll,p.id),{readers:arrayRemove(e)}));
     await b.commit();toast("Acesso removido.");
   }catch(x){fail(x)}
 }
@@ -1035,6 +1057,77 @@ function openProfileExtra(){
 }
 $("#instbtn").onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$("#instbtn").hidden=true};
 
+// ---- repetir tarefas
+let rpDays=new Set();
+const WD=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+$("#rpd").innerHTML=WD.map((n,i)=>`<button type="button" data-wd="${i}" aria-pressed="false">${n}</button>`).join("");
+function defUntil(k,s){const d=new Date(s+"T12:00:00");if(k==="m")d.setMonth(d.getMonth()+11);else d.setDate(d.getDate()+(k==="d"?30:k==="u"?56:84));return iso(d)}
+function rpUi(reset){
+  const k=$("#rp").value,s=$("#due").value||iso(new Date());
+  $("#rpx").hidden=!k;$("#rpdw").hidden=k!=="w";
+  if(k==="w"&&!rpDays.size)rpDays.add(new Date(s+"T12:00:00").getDay());
+  if(k&&reset)$("#rpu").value=defUntil(k,s);
+  document.querySelectorAll("#rpd button").forEach(b=>b.setAttribute("aria-pressed",rpDays.has(+b.dataset.wd)));
+}
+$("#rp").onchange=()=>rpUi(true);
+$("#rpd").addEventListener("click",e=>{const b=e.target.closest("[data-wd]");if(!b)return;const n=+b.dataset.wd;if(rpDays.has(n))rpDays.delete(n);else rpDays.add(n);rpUi(false)});
+function occ(k,s,u,wd){
+  const out=[],a=new Date(s+"T12:00:00"),z=new Date(u+"T12:00:00");
+  if(k==="m"){const dd=a.getDate();for(let i=0;i<24;i++){const d=new Date(a.getFullYear(),a.getMonth()+i,1,12),last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();d.setDate(Math.min(dd,last));if(d>z)break;out.push(iso(d))}return out}
+  for(let d=new Date(a);d<=z&&out.length<400;d.setDate(d.getDate()+1)){const w=d.getDay();if(k==="d"||(k==="u"&&w>0&&w<6)||(k==="w"&&wd.includes(w)))out.push(iso(d))}
+  return out;
+}
+function mkSeries(base,v){
+  const k=$("#rp").value;if(!k||$("#rpw").hidden)return;
+  const start=v.due||iso(new Date());base.due=start;
+  const wd=[...rpDays];if(k==="w"&&!wd.length)wd.push(new Date(start+"T12:00:00").getDay());
+  const until=$("#rpu").value||defUntil(k,start);
+  let dates=occ(k,start,until,wd).filter(d=>d!==start);
+  const cut=dates.length>59;dates=dates.slice(0,59);
+  const sid="s"+(++uid);base.serie=sid;
+  const lst=data.lists.find(l=>l.id===v.l),lid=lst&&lst.done?(data.lists.find(l=>!l.done)||lst).id:v.l;
+  dates.forEach(d=>data.cards.push({id:"c"+(++uid),l:lid,t:v.t,d:v.d,p:v.p,o:v.o,pr:v.pr,due:d,aEmail:v.aEmail,serie:sid,done:false}));
+  toast(dates.length?("Programadas "+(dates.length+1)+" ocorrências"+(cut?" (limite de 60)":"")+"."):"Nenhuma data nova no período escolhido.");
+}
+
+// ---- calendário (seletor de datas)
+const dp=document.createElement("div");dp.id="dp";dp.className="dp";dp.hidden=true;dp.setAttribute("role","dialog");dp.setAttribute("aria-label","Escolher data");
+let dpIn=null,dpY=0,dpM=0;
+const MN=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+function dpOpen(inp){
+  dpIn=inp;const d=new Date((inp.value||iso(new Date()))+"T12:00:00");dpY=d.getFullYear();dpM=d.getMonth();
+  (inp.closest("dialog")||document.body).appendChild(dp);dp.hidden=false;dpDraw();dpPlace();
+}
+function dpClose(){dp.hidden=true;dpIn=null}
+function dpPlace(){
+  if(!dpIn)return;
+  if(innerWidth<520){dp.style.cssText="left:50%;bottom:12px;top:auto;transform:translateX(-50%)";return}
+  const r=dpIn.getBoundingClientRect(),w=304,h=dp.offsetHeight||340;
+  const x=Math.min(Math.max(8,r.left),innerWidth-w-8);let y=r.bottom+6;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-6);
+  dp.style.cssText=`left:${x}px;top:${y}px;bottom:auto;transform:none`;
+}
+function dpDraw(){
+  const sel=dpIn.value,t=iso(new Date()),off=new Date(dpY,dpM,1,12).getDay();
+  const due=dpIn.id==="due"?new Set(allCards.filter(c=>c.due&&!cardDone(c)).map(c=>c.due)):new Set();
+  let cells="";
+  for(let i=0;i<42;i++){const d=new Date(dpY,dpM,1-off+i,12),k=iso(d);cells+=`<button type="button" class="dpd${d.getMonth()!==dpM?" out":""}${k===t?" today":""}${k===sel?" sel":""}" data-d="${k}">${d.getDate()}${due.has(k)?"<i></i>":""}</button>`}
+  dp.innerHTML=`<div class="dph"><button type="button" data-n="-12" aria-label="Ano anterior">«</button><button type="button" data-n="-1" aria-label="Mês anterior">‹</button><b>${MN[dpM]} de ${dpY}</b><button type="button" data-n="1" aria-label="Próximo mês">›</button><button type="button" data-n="12" aria-label="Próximo ano">»</button></div><div class="dpw">${["D","S","T","Q","Q","S","S"].map(x=>`<span>${x}</span>`).join("")}</div><div class="dpg">${cells}</div><div class="dpf"><button type="button" data-q="0">Hoje</button><button type="button" data-q="1">Amanhã</button><button type="button" data-q="7">Em 1 semana</button><button type="button" data-q="x">Limpar</button></div>`;
+}
+function dpPick(v){const i=dpIn;i.value=v;i.dispatchEvent(new Event("input",{bubbles:true}));i.dispatchEvent(new Event("change",{bubbles:true}));dpClose()}
+dp.addEventListener("click",e=>{
+  e.stopPropagation();
+  const n=e.target.closest("[data-n]"),d=e.target.closest("[data-d]"),q=e.target.closest("[data-q]");
+  if(n){const dt=new Date(dpY,dpM+(+n.dataset.n),1);dpY=dt.getFullYear();dpM=dt.getMonth();dpDraw();dpPlace();return}
+  if(d){dpPick(d.dataset.d);return}
+  if(q)dpPick(q.dataset.q==="x"?"":plus(+q.dataset.q));
+});
+document.addEventListener("click",e=>{const l=e.target.closest("label"),i=l&&l.querySelector('input[type="date"]');if(i&&!i.disabled){e.preventDefault();dpOpen(i)}});
+document.addEventListener("pointerdown",e=>{if(!dp.hidden&&!dp.contains(e.target)&&!e.target.closest('label:has(>input[type="date"])'))dpClose()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!dp.hidden){e.preventDefault();e.stopPropagation();dpClose()}},true);
+document.addEventListener("close",e=>{if(e.target.tagName==="DIALOG")dpClose()},true);
+addEventListener("scroll",()=>{if(!dp.hidden)dpPlace()},true);
+addEventListener("resize",()=>{if(!dp.hidden)dpPlace()});
+$("#due").addEventListener("change",()=>{if($("#rp").value==="w"&&rpDays.size<=1){rpDays.clear();rpUi(false)}if($("#rp").value)rpUi(true)});
 onAuthStateChanged(auth,u=>{
   document.body.classList.remove("boot");stopAll();
   if(!u){me=null;data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}

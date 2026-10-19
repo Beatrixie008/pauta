@@ -10,8 +10,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pauta">
-<link rel="apple-touch-icon" id="ati">
-<link rel="icon" id="ico">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <title>Pauta - Gerenciador de Atividades I Beatriz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -254,6 +255,11 @@ body.sec-iv #new,body.sec-note #new,body.sec-find #new{display:none}
 .iconbtn{flex:none;width:44px;height:44px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--accent) 40%,transparent);background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:var(--shadow);transition:transform .15s}
 .iconbtn:hover{transform:scale(1.07)}.iconbtn:active{transform:scale(.93)}
 a.btn{display:inline-block;text-decoration:none;color:var(--ink)}
+.sharebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.chipx{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:700}
+.chipx button{border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;padding:0}
+.chipx button:hover{color:var(--accent)}
+.pn2{background:var(--glass);border:1px solid var(--edge);border-radius:16px;padding:12px;margin-top:12px;display:grid;gap:8px}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -305,6 +311,7 @@ a.btn{display:inline-block;text-decoration:none;color:var(--ink)}
       <label class="full">E-mail<input id="smail" disabled></label>
       <div class="full"><span class="lab">Aparência</span><div class="seg3" id="sth"><button type="button" data-th="auto">Automático</button><button type="button" data-th="light">Claro</button><button type="button" data-th="dark">Escuro</button></div></div>
     </div>
+    <div class="pn2" id="inst"><b>Instalar o Pauta</b><p class="sub2" id="insttx" style="margin:0"></p><button type="button" class="btn primary" id="instbtn" hidden>Instalar agora</button></div>
     <p class="sub2" id="sver" style="margin-top:10px"></p>
     <div class="acts" style="flex-wrap:wrap">
       <button type="button" class="btn" id="sver2" hidden>Reenviar e-mail de confirmação</button>
@@ -415,7 +422,7 @@ a.btn{display:inline-block;text-decoration:none;color:var(--ink)}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,sendPasswordResetEmail,GoogleAuthProvider,signInWithPopup,updateProfile,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,updateDoc,onSnapshot,query,where,writeBatch,arrayUnion,getDocs,deleteDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,updateDoc,onSnapshot,query,where,writeBatch,arrayUnion,arrayRemove,getDocs,deleteDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyBYO8VYOqq6gvFamJum91XxB6SurnKY1jI",authDomain:"pauta-697de.firebaseapp.com",projectId:"pauta-697de",storageBucket:"pauta-697de.firebasestorage.app",messagingSenderId:"824847154234",appId:"1:824847154234:web:661dc0dc0e633c27410903"};
 const fbApp=initializeApp(firebaseConfig);
 let db;try{db=initializeFirestore(fbApp,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}catch(e){db=getFirestore(fbApp)}
@@ -663,7 +670,6 @@ $("#view").addEventListener("click",e=>{
 $("#view").addEventListener("keydown",e=>{const d=e.target.dataset.day;if(d&&e.key==="Enter"){selDay=d;renderView()}});
 
 $("#today").textContent=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
-try{const cv=document.createElement("canvas");cv.width=cv.height=180;const x=cv.getContext("2d"),g=x.createLinearGradient(0,0,180,180);g.addColorStop(0,"#f0508c");g.addColorStop(1,"#a77bf3");x.fillStyle=g;x.fillRect(0,0,180,180);x.fillStyle="#fff";x.font="800 110px Nunito,system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("P",90,98);const u=cv.toDataURL("image/png");$("#ati").href=u;$("#ico").href=u}catch(e){}
 let tt;
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),5000)}
 const fail=e=>toast("Não foi possível salvar ("+(e.code||e.message)+")");
@@ -708,7 +714,7 @@ function start(){
   unsubC=onSnapshot(query(collection(db,"cards"),where("readers","array-contains",me.email)),snap=>{
     allCards=snap.docs.map(d=>({id:d.id,...d.data()}));rebuildCards();applyRemote();
   },e=>toast("Erro ao carregar tarefas ("+e.code+")"));
-  unsubP=onSnapshot(query(collection(db,"processes"),where("readers","array-contains",me.email)),snap=>{procs=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar processos ("+e.code+")"));
+  unsubP=onSnapshot(query(collection(db,"processes"),where("readers","array-contains",me.email)),snap=>{procs=snap.docs.map(d=>({id:d.id,...d.data()}));if(pd&&pd.id&&$("#pdlg").open){const r=procs.find(p=>p.id===pd.id);if(r&&JSON.stringify(r.itens)!==JSON.stringify(pd.itens)){pd.itens=JSON.parse(JSON.stringify(r.itens||[]));drawItems()}}applyRemote()},e=>toast("Erro ao carregar processos ("+e.code+")"));
   unsubI=onSnapshot(query(collection(db,"interviews"),where("readers","array-contains",me.email)),snap=>{ivs=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar entrevistas ("+e.code+")"));
   unsubN=onSnapshot(query(collection(db,"notes"),where("readers","array-contains",me.email)),snap=>{notes=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar notas ("+e.code+")"));
 }
@@ -781,7 +787,7 @@ function procHtml(tipo){
   const card=p=>{const c=pct(p),it=p.itens||[],n=it.filter(x=>x.done).length;return `<button class="pc" data-proc="${p.id}"><div class="pch"><span class="av" style="background:hsl(${hue(p.nome)} 52% 46%);margin:0">${esc(ini(p.nome))}</span><div><b>${esc(p.nome)}</b><small>${esc([p.cargo,p.contrato||p.depto].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${c===100?"ok":c>0?"go":""}">${c===100?"Concluído":c>0?"Em andamento":"Não iniciado"}</span></div><div class="bt"><i style="width:${c}%;background:linear-gradient(90deg,#f93fd0,#ff9f55)"></i></div><div class="pcf"><span>${n}/${it.length} etapas</span><span>${p.data?(adm?"Admissão ":"Demissão ")+fmt(p.data):""}</span></div></button>`};
   const fb=(k,n)=>`<button data-f="${tipo}:${k}" aria-pressed="${f===k}">${n}</button>`;
   return `<div class="sech"><div><h2 class="sh">${adm?"Processo de admissão":"Processo de demissão"}</h2><p class="sub2">Checklist por funcionário. Evite registrar dados sensíveis, como CPF.</p></div><button class="btn primary" data-newproc="${tipo}">${adm?"Nova admissão":"Nova demissão"}</button></div>
-  <div class="kpis">${kpi(all.length,"Total")}${kpi(nOpen,"Em andamento")}${kpi(all.length-nOpen,"Concluídos")}</div>
+  ${shareBar(tipo)}<div class="kpis">${kpi(all.length,"Total")}${kpi(nOpen,"Em andamento")}${kpi(all.length-nOpen,"Concluídos")}</div>
   <div class="seg3">${fb("all","Todos")}${fb("open","Em andamento")}${fb("done","Concluídos")}</div>
   <div class="pgrid">${list.map(card).join("")||`<p class="empty">Nenhum registro por aqui. Toque em “${adm?"Nova admissão":"Nova demissão"}” para começar.</p>`}</div>`;
 }
@@ -834,7 +840,7 @@ $("#pcancel").onclick=()=>$("#pdlg").close();
 $("#pf").addEventListener("submit",()=>{
   const v={nome:$("#pn").value.trim(),cargo:$("#pcg").value.trim(),contrato:$("#pdp").value.trim(),data:$("#pdt").value,motivo:pd.tipo==="dem"?$("#pm").value:"",itens:pd.itens};
   if(pd.id)updateDoc(doc(db,"processes",pd.id),v).catch(fail);
-  else setDoc(doc(db,"processes","p"+(++uid)),{tipo:pd.tipo,...v,owner:me.uid,ownerEmail:me.email,readers:[me.email],createdAt:Date.now()}).catch(fail);
+  else setDoc(doc(db,"processes","p"+(++uid)),{tipo:pd.tipo,...v,owner:me.uid,ownerEmail:me.email,readers:newReaders(pd.tipo),createdAt:Date.now()}).catch(fail);
 });
 $("#pdel").onclick=()=>{if(pd.id&&confirm("Excluir este registro e o checklist dele?")){deleteDoc(doc(db,"processes",pd.id)).catch(fail);$("#pdlg").close()}};
 $("#pshare").onclick=()=>{const c=procs.find(p=>p.id===pd.id);shareDoc("processes",pd.id,(c&&c.readers)||[])};
@@ -858,7 +864,7 @@ function openProfile(){
   $("#sname").value=me.full||me.name;$("#smail").value=me.email;
   document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===themePref()));
   const need=me.pw&&!me.verified;$("#sver").textContent=need?"Seu e-mail ainda não foi confirmado.":"";$("#sver2").hidden=!need;
-  $("#sdlg").showModal();
+  openProfileExtra();$("#sdlg").showModal();
 }
 $("#prof").onclick=openProfile;
 $("#sth").addEventListener("click",e=>{const b=e.target.closest("[data-th]");if(b)setTheme(b.dataset.th)});
@@ -977,6 +983,58 @@ $("#cvf").onchange=()=>{
 };
 $("#cvrm").onclick=()=>{iw.cvData="";iw.cvName="";iw.cvType="";iw.cvChanged=true;cvDraw()};
 $("#srch").onclick=()=>{curSec="find";render();swapCur();const f=$("#fq");if(f)f.focus()};
+function rhShare(){const b=boards.find(x=>x.id==="u_"+me.uid),r=(b&&b.rhShare)||{};return{adm:r.adm||[],dem:r.dem||[]}}
+function tabPeople(tipo){return [...new Set([...rhShare()[tipo],...procs.filter(p=>p.tipo===tipo).flatMap(p=>p.readers||[])])].filter(e=>e!==me.email)}
+function newReaders(tipo){
+  const base=procs.find(p=>p.tipo===tipo&&p.owner!==me.uid);
+  const all=[...new Set([...rhShare()[tipo],...((base&&base.readers)||[])])].filter(e=>e!==me.email);
+  return [me.email,...all].slice(0,6);
+}
+function shareBar(tipo){
+  const mineL=rhShare()[tipo],ppl=tabPeople(tipo);
+  return `<div class="sharebar"><span class="lab" style="margin:0">Acompanhando com:</span>${ppl.map(e=>`<span class="chipx">${esc(e)}${mineL.includes(e)?`<button data-unshare="${tipo}" data-e="${esc(e)}" aria-label="Remover acesso de ${esc(e)}">×</button>`:""}</span>`).join("")||'<span class="sub2" style="margin:0">ninguém ainda</span>'}<button class="btn" data-shtab="${tipo}">Compartilhar esta aba</button></div>`;
+}
+async function shareTab(tipo){
+  const cur=rhShare()[tipo];
+  if(cur.length>=5){toast("Limite atingido: você pode compartilhar esta aba com até 5 pessoas.");return}
+  const e=(prompt("Quem já tem acesso: "+(cur.join(", ")||"ninguém")+"\n\nE-mail da pessoa que vai acompanhar "+(tipo==="adm"?"as admissões":"as demissões")+" com você (limite de 5 pessoas):")||"").trim().toLowerCase();
+  if(!e.includes("@")||e===me.email||cur.includes(e))return;
+  const mine=procs.filter(p=>p.tipo===tipo&&p.owner===me.uid);
+  try{
+    const b=writeBatch(db);
+    b.update(doc(db,"boards","u_"+me.uid),{rhShare:{...rhShare(),[tipo]:[...cur,e]}});
+    mine.forEach(p=>b.update(doc(db,"processes",p.id),{readers:arrayUnion(e)}));
+    await b.commit();toast(e+" agora acompanha esta aba em tempo real. Avise a pessoa para entrar com esse e-mail.");
+  }catch(x){fail(x)}
+}
+async function unshareTab(tipo,e){
+  if(!confirm("Remover o acesso de "+e+" a esta aba?"))return;
+  const mine=procs.filter(p=>p.tipo===tipo&&p.owner===me.uid);
+  try{
+    const b=writeBatch(db);
+    b.update(doc(db,"boards","u_"+me.uid),{rhShare:{...rhShare(),[tipo]:rhShare()[tipo].filter(x=>x!==e)}});
+    mine.forEach(p=>b.update(doc(db,"processes",p.id),{readers:arrayRemove(e)}));
+    await b.commit();toast("Acesso removido.");
+  }catch(x){fail(x)}
+}
+$("#sec").addEventListener("click",e=>{
+  let el;
+  if(el=e.target.closest("[data-shtab]")){shareTab(el.dataset.shtab);return}
+  if(el=e.target.closest("[data-unshare]")){unshareTab(el.dataset.unshare,el.dataset.e)}
+});
+
+// ---- instalar como aplicativo (PWA)
+let dip=null;
+if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();dip=e});
+function openProfileExtra(){
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  const on=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  $("#insttx").textContent=on?"O Pauta já está instalado neste aparelho.":dip?"Instale o Pauta como aplicativo neste aparelho.":ios?"No iPhone ou iPad: toque em Compartilhar (quadrado com seta) e depois em Adicionar à Tela de Início.":"No computador (Chrome ou Edge): clique no ícone de instalar na barra de endereço, ou em Menu > Instalar Pauta. No Android: Menu > Instalar app. No Safari do Mac: Arquivo > Adicionar ao Dock.";
+  $("#instbtn").hidden=!dip;
+}
+$("#instbtn").onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$("#instbtn").hidden=true};
+
 onAuthStateChanged(auth,u=>{
   document.body.classList.remove("boot");stopAll();
   if(!u){me=null;data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}

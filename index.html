@@ -296,6 +296,22 @@ label:has(>input[type=date]){cursor:pointer}
 .sgt td{height:30px;min-width:96px;max-width:260px;padding:0 6px;border-right:1px solid #ece8ec;border-bottom:1px solid #ece8ec;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:cell}
 .sgt td.sel{outline:2px solid #d6336c;outline-offset:-2px;background-color:#fff5fa}
 .sgt .ci{width:100%;height:100%;border:0;outline:0;background:#fff;color:#1b1b1b;font:inherit;padding:0;box-sizing:border-box}
+body.sec-rep #new{display:none}
+.aitext{min-height:130px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1.5px dashed color-mix(in srgb,var(--accent) 45%,transparent);border-radius:12px;padding:12px;font-weight:600;outline:none}
+.aitext:empty::before{content:attr(data-ph);color:var(--muted)}
+.rephead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-weight:800;font-size:16px}
+.rephead span{color:var(--muted);font-weight:700}
+.repact{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.repchk{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:600;color:var(--muted)}
+.repchk input{margin-top:3px;width:auto}
+@media print{
+  html,body{background:#fff!important;color:#000!important}
+  .top,.nav,.bar2,.tabs,#board,#view,.welcome,dialog,#toast,.noprint,.dp{display:none!important}
+  #sec{display:block!important;max-width:none!important;padding:0!important;animation:none!important}
+  .panel,.kpi{border:1px solid #ddd!important;background:#fff!important;backdrop-filter:none!important;box-shadow:none!important;break-inside:avoid}
+  .aitext{border:0!important;background:#fff!important;padding:0!important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -348,6 +364,8 @@ label:has(>input[type=date]){cursor:pointer}
       <div class="full"><span class="lab">Aparência</span><div class="seg3" id="sth"><button type="button" data-th="auto">Automático</button><button type="button" data-th="light">Claro</button><button type="button" data-th="dark">Escuro</button></div></div>
     </div>
     <div class="pn2" id="inst"><b>Instalar o Pauta</b><p class="sub2" id="insttx" style="margin:0"></p><button type="button" class="btn primary" id="instbtn" hidden>Instalar agora</button></div>
+    <div class="pn2" id="aibox" hidden><b>Inteligência artificial (Gemini)</b><p class="sub2" style="margin:0">Cole a chave gratuita do Google AI Studio. Ela fica salva no Firebase e libera a IA para todos que usam o Pauta.</p><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Chave da API<input id="aikey" type="password" autocomplete="off" autocapitalize="none"></label><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Modelo<input id="aimodel" value="gemini-3.5-flash-lite" autocapitalize="none"></label><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="aisave">Salvar IA</button><button type="button" class="btn" id="aitest">Testar</button></div></div>
+    <p class="sub2" id="aistat" style="margin-top:8px"></p>
     <p class="sub2" id="sver" style="margin-top:10px"></p>
     <div class="acts" style="flex-wrap:wrap">
       <button type="button" class="btn" id="sver2" hidden>Reenviar e-mail de confirmação</button>
@@ -473,7 +491,7 @@ const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
 const fmt=s=>s.slice(8)+"/"+s.slice(5,7);
 const ini=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 const hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%5;return [330,285,12,305,350][h]};
-let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],ivs=[],notes=[],sheets=[],curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,unsubI,unsubN,unsubS,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
+let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],ivs=[],notes=[],sheets=[],cfg={},curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,unsubI,unsubN,unsubS,unsubCfg,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
 
 function seed(){
   const L=[["l1","A fazer"],["l2","Em andamento"],["l3","Em revisão"],["l4","Concluída",1]].map(([id,name,done])=>({id,name,done:!!done}));
@@ -532,7 +550,7 @@ function render(){
   newId=null;renderView();
 }
 
-function addCard(){const ta=$("#cq"),t=ta.value.trim();if(!t){ta.focus();return}const id="c"+(++uid);data.cards.push({id,l:compL,t,d:"",p:"",o:"",pr:"",due:""});newId=id;save();focusNext=true;render()}
+function addCard(){const ta=$("#cq"),t=ta.value.trim();if(!t){ta.focus();return}const id="c"+(++uid);data.cards.push({id,l:compL,t,d:"",p:"",o:"",pr:"",due:"",cat:Date.now()});newId=id;save();focusNext=true;render()}
 function addList(){const v=$("#nl").value.trim();if(!v){$("#nl").focus();return}data.lists.push({id:"l"+(++uid),name:v,done:false});addingList=false;save();render();const b=$("#board");b.scrollTo({left:b.scrollWidth,behavior:"smooth"})}
 
 function openDlg(id){
@@ -546,16 +564,16 @@ function openDlg(id){
 }
 function toggleDone(id){
   const c=data.cards.find(x=>x.id===id);
-  if(!c){const a=allCards.find(x=>x.id===id);if(a){const nd2=!cardDone(a);updateDoc(doc(db,"cards",id),{done:nd2}).catch(fail);if(nd2)setTimeout(()=>fx(id),350)}return}
+  if(!c){const a=allCards.find(x=>x.id===id);if(a){const nd2=!cardDone(a);updateDoc(doc(db,"cards",id),{done:nd2,doneAt:nd2?Date.now():0}).catch(fail);if(nd2)setTimeout(()=>fx(id),350)}return}
   const cl0=data.lists.find(l=>l.id===c.l),isDone=!!(c.done||(cl0&&cl0.done));
-  if(isDone){c.done=false;if(cl0&&cl0.done){let t=data.lists.find(l=>!l.done);if(!t){t={id:"l"+(++uid),name:"A fazer",done:false};data.lists.unshift(t)}c.l=t.id}}
-  else{c.done=true;let d=data.lists.find(l=>l.done);if(!d){d={id:"l"+(++uid),name:"Concluída",done:true};data.lists.push(d)}c.l=d.id}
+  if(isDone){c.done=false;c.doneAt=0;if(cl0&&cl0.done){let t=data.lists.find(l=>!l.done);if(!t){t={id:"l"+(++uid),name:"A fazer",done:false};data.lists.unshift(t)}c.l=t.id}}
+  else{c.done=true;c.doneAt=Date.now();let d=data.lists.find(l=>l.done);if(!d){d={id:"l"+(++uid),name:"Concluída",done:true};data.lists.push(d)}c.l=d.id}
   data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();if(!isDone)fx(id);
 }
 function moveCard(id,dir){
   const c=data.cards.find(x=>x.id===id);if(!c)return;
   const i=data.lists.findIndex(l=>l.id===c.l),n=data.lists[i+dir];if(!n)return;
-  c.l=n.id;c.done=!!n.done;data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
+  c.l=n.id;c.done=!!n.done;c.doneAt=n.done?(c.doneAt||Date.now()):0;data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
 }
 $("#fin").onclick=()=>{if(editing){const id=editing.id;$("#dlg").close();toggleDone(id)}};
 $("#new").onclick=()=>openDlg();
@@ -563,8 +581,8 @@ $("#cancel").onclick=()=>$("#dlg").close();
 $("#del").onclick=()=>{if(editing&&confirm("Excluir esta tarefa?")){data.cards=data.cards.filter(c=>c.id!==editing.id);save();$("#dlg").close();render()}};
 $("#form").addEventListener("submit",()=>{
   const v={t:$("#t").value.trim(),d:$("#d").value.trim(),l:$("#l").value,pr:$("#pr").value,p:$("#p").value.trim(),o:ownerName($("#o").value),aEmail:ownerEmail($("#o").value),due:$("#due").value};
-  if(editing){editing=data.cards.find(c=>c.id===editing.id)||editing;const moved=editing.l!==v.l;Object.assign(editing,v);if(!editing.serie)mkSeries(editing,v);if(moved){editing.done=!!(data.lists.find(l=>l.id===v.l)||{}).done;data.cards=data.cards.filter(c=>c!==editing);data.cards.push(editing)}}
-  else{const id="c"+(++uid),nc={id,...v};data.cards.push(nc);newId=id;mkSeries(nc,v)}
+  if(editing){editing=data.cards.find(c=>c.id===editing.id)||editing;const moved=editing.l!==v.l;Object.assign(editing,v);if(!editing.serie)mkSeries(editing,v);if(moved){{const dn=!!(data.lists.find(l=>l.id===v.l)||{}).done;editing.done=dn;editing.doneAt=dn?(editing.doneAt||Date.now()):0}data.cards=data.cards.filter(c=>c!==editing);data.cards.push(editing)}}
+  else{const id="c"+(++uid),nc={id,...v,cat:Date.now()};data.cards.push(nc);newId=id;mkSeries(nc,v)}
   save();render();
 });
 $("#q").addEventListener("input",render);$("#fo").addEventListener("change",render);
@@ -620,7 +638,7 @@ board.addEventListener("drop",e=>{
   const lid=ph.parentNode.dataset.cards;let nx=ph.nextElementSibling;
   while(nx&&(!nx.dataset.id||nx.dataset.id===drag.id))nx=nx.nextElementSibling;
   const i=data.cards.findIndex(c=>c.id===drag.id);if(i<0)return;
-  const [c]=data.cards.splice(i,1);c.l=lid;c.done=!!(data.lists.find(l=>l.id===lid)||{}).done;
+  const [c]=data.cards.splice(i,1);c.l=lid;{const dn=!!(data.lists.find(l=>l.id===lid)||{}).done;c.done=dn;c.doneAt=dn?(c.doneAt||Date.now()):0}
   const bi=nx?data.cards.findIndex(x=>x.id===nx.dataset.id):-1;
   if(bi>=0)data.cards.splice(bi,0,c);else data.cards.push(c);
   save();
@@ -716,7 +734,7 @@ function ownerName(v){v=v.trim();return v.includes("@")?v.split("@")[0]:v}
 function ownerEmail(v){v=v.trim().toLowerCase();return v.includes("@")?v:""}
 function applyRemote(){if(drag)return;render()}
 function defaultLists(){return [["A fazer"],["Em andamento"],["Em revisão"],["Concluída",1]].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))}
-function cardObj(c,i){const ae=c.aEmail||"";return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:ae,by:c.by||me.email,done:!!c.done,serie:c.serie||"",boardId:bd.id,ord:i,readers:[...new Set([...(bd.memberEmails||[]),ae].filter(Boolean))].sort()}}
+function cardObj(c,i){const ae=c.aEmail||"";return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:ae,by:c.by||me.email,done:!!c.done,doneAt:c.doneAt||0,cat:c.cat||0,serie:c.serie||"",boardId:bd.id,ord:i,readers:[...new Set([...(bd.memberEmails||[]),ae].filter(Boolean))].sort()}}
 function persist(){
   if(!bd||!me)return;
   const b=writeBatch(db);let n=0;
@@ -738,7 +756,7 @@ function rebuildCards(){
   assigned=allCards.filter(c=>c.aEmail===me.email&&c.boardId!==bd.id);
   synced.cards={};data.cards.forEach(c=>{synced.cards[c.id]=JSON.stringify(cardObj(c,c.ord||0))});
 }
-function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null;allCards=[];procs=[];ivs=[];notes=[];sheets=[];curSh=null;[unsubP,unsubI,unsubN,unsubS].forEach(f=>f&&f());unsubP=unsubI=unsubN=unsubS=null}
+function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null;allCards=[];procs=[];ivs=[];notes=[];sheets=[];curSh=null;[unsubP,unsubI,unsubN,unsubS,unsubCfg].forEach(f=>f&&f());unsubP=unsubI=unsubN=unsubS=unsubCfg=null;cfg={}}
 function start(){
   const pid="u_"+me.uid;
   unsubB=onSnapshot(query(collection(db,"boards"),where("memberEmails","array-contains",me.email)),snap=>{
@@ -757,6 +775,7 @@ function start(){
   unsubI=onSnapshot(query(collection(db,"interviews"),where("readers","array-contains",me.email)),snap=>{ivs=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar entrevistas ("+e.code+")"));
   unsubN=onSnapshot(query(collection(db,"notes"),where("readers","array-contains",me.email)),snap=>{notes=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar notas ("+e.code+")"));
   unsubS=onSnapshot(query(collection(db,"sheets"),where("readers","array-contains",me.email)),snap=>{sheets=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar planilhas ("+e.code+")"));
+  unsubCfg=onSnapshot(doc(db,"config","ai"),sn=>{cfg=sn.exists()?sn.data():{}},()=>{cfg={}});
 }
 async function invite(){if((bd.memberEmails||[]).length>=6){toast("Limite atingido: o quadro pode ser compartilhado com até 5 pessoas.");return}
   const e=(prompt("Participantes: "+(bd.memberEmails||[]).join(", ")+"\n\nE-mail da pessoa para convidar:")||"").trim().toLowerCase();
@@ -782,7 +801,7 @@ $("#tin").onclick=()=>setMode("in");$("#tup").onclick=()=>setMode("up");
 $("#eye").onclick=()=>{const p=$("#ap"),s=p.type==="password";p.type=s?"text":"password";$("#eye").textContent=s?"Ocultar":"Mostrar"};
 $("#af").addEventListener("submit",async e=>{e.preventDefault();am("");const em=$("#ae").value.trim(),pw=$("#ap").value,b=$("#asub");if(mode==="up"&&pw.length<6){am("A senha precisa ter ao menos 6 caracteres.");return}b.disabled=true;fromLogin=true;try{if(mode==="in")await signInWithEmailAndPassword(auth,em,pw);else{const cr=await createUserWithEmailAndPassword(auth,em,pw);try{await sendEmailVerification(cr.user);toast("Enviamos um e-mail para confirmar o seu endereço. Veja também o spam.")}catch(e){}}}catch(x){fromLogin=false;am(msg(x))}b.disabled=false});
 $("#afg").onclick=async()=>{const em=$("#ae").value.trim();if(!em){am("Digite seu e-mail acima e toque de novo.");return}try{await sendPasswordResetEmail(auth,em);am("Se existir uma conta com esse e-mail, enviamos o link para redefinir a senha. Veja também a caixa de spam.")}catch(x){am(msg(x))}};
-const SECS=[["home","Início"],["mine","Minhas tarefas"],["proj","Projetos"],["adm","Admissão"],["dem","Demissão"],["iv","Entrevistas"],["note","Notas"],["find","Buscar"]];
+const SECS=[["home","Início"],["mine","Minhas tarefas"],["proj","Projetos"],["adm","Admissão"],["dem","Demissão"],["iv","Entrevistas"],["note","Notas"],["rep","Relatório"],["find","Buscar"]];
 const procF={adm:"all",dem:"all"};
 const A0=["Coletar documentos pessoais (RG, CPF, CTPS, comprovante de residência)","Agendar exame médico admissional","Registrar a admissão no eSocial antes do início das atividades","Assinar o contrato de trabalho","Coletar dados bancários para o salário","Cadastrar benefícios (VT, VR/VA, plano de saúde)","Cadastrar no ponto e na folha de pagamento","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Assinar termos (confidencialidade, LGPD, políticas internas)","Realizar a integração e apresentar à equipe","Definir gestor e plano dos primeiros 30 dias","Acompanhar o período de experiência"];
 const D0=["Formalizar a comunicação (aviso prévio ou pedido de demissão)","Definir a data e o tipo de desligamento","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Emitir documentos para FGTS e seguro-desemprego","Recolher equipamentos, crachá e chaves","Desativar e-mail e acessos aos sistemas","Cancelar benefícios (VT, VR/VA, plano de saúde)","Realizar a entrevista de desligamento","Atualizar folha e ponto","Arquivar a pasta do funcionário"];
@@ -922,8 +941,8 @@ function shareDoc(coll,id,list){
 }
 
 function drawSec(){
-  const a=document.activeElement,had=a&&a.id==="fq";
-  $("#sec").innerHTML=!me?"":({home:homeHtml,mine:mineHtml,adm:()=>procHtml("adm"),dem:()=>procHtml("dem"),iv:ivHtml,note:noteHtml,find:findHtml})[curSec]();
+  const a=document.activeElement,had=a&&a.id==="fq";if(a&&a.id==="repai")return;
+  $("#sec").innerHTML=!me?"":({home:homeHtml,mine:mineHtml,adm:()=>procHtml("adm"),dem:()=>procHtml("dem"),iv:ivHtml,note:noteHtml,rep:repHtml,find:findHtml})[curSec]();
   if(had){const f=$("#fq");f.focus();f.setSelectionRange(f.value.length,f.value.length)}
 }
 
@@ -1073,7 +1092,7 @@ function openProfileExtra(){
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   const on=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
   $("#insttx").textContent=on?"O Pauta já está instalado neste aparelho.":dip?"Instale o Pauta como aplicativo neste aparelho.":ios?"No iPhone ou iPad: toque em Compartilhar (quadrado com seta) e depois em Adicionar à Tela de Início.":"No computador (Chrome ou Edge): clique no ícone de instalar na barra de endereço, ou em Menu > Instalar Pauta. No Android: Menu > Instalar app. No Safari do Mac: Arquivo > Adicionar ao Dock.";
-  $("#instbtn").hidden=!dip;
+  $("#instbtn").hidden=!dip;const adm=me.email===ADMIN;$("#aibox").hidden=!adm;if(adm){$("#aikey").value=cfg.key||"";$("#aimodel").value=cfg.model||"gemini-3.5-flash-lite"}$("#aistat").textContent=cfg.key?"A IA do relatório está ativa.":"A IA do relatório ainda não foi ativada.";
 }
 $("#instbtn").onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$("#instbtn").hidden=true};
 
@@ -1106,7 +1125,7 @@ function mkSeries(base,v){
   const cut=dates.length>59;dates=dates.slice(0,59);
   const sid="s"+(++uid);base.serie=sid;
   const lst=data.lists.find(l=>l.id===v.l),lid=lst&&lst.done?(data.lists.find(l=>!l.done)||lst).id:v.l;
-  dates.forEach(d=>data.cards.push({id:"c"+(++uid),l:lid,t:v.t,d:v.d,p:v.p,o:v.o,pr:v.pr,due:d,aEmail:v.aEmail,serie:sid,done:false}));
+  dates.forEach(d=>data.cards.push({id:"c"+(++uid),l:lid,t:v.t,d:v.d,p:v.p,o:v.o,pr:v.pr,due:d,aEmail:v.aEmail,serie:sid,done:false,cat:Date.now()}));
   toast(dates.length?("Programadas "+(dates.length+1)+" ocorrências"+(cut?" (limite de 60)":"")+"."):"Nenhuma data nova no período escolhido.");
 }
 
@@ -1445,6 +1464,90 @@ $("#view").addEventListener("change",e=>{
   else if(t.id==="shimp"&&t.files[0]){shImport(t.files[0]);t.value=""}
 });
 addEventListener("pagehide",shFlush);
+// ---- relatório semanal + IA
+const ADMIN="falecom.beatrizsc@gmail.com";
+let repW=0,repAI={},repTitles=false,aiBusy=false;
+function weekRange(off){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+off*7);const a=new Date(d),b=new Date(d);b.setDate(b.getDate()+6);b.setHours(23,59,59,999);return [a,b]}
+function repData(){
+  const [a,b]=weekRange(repW),A=a.getTime(),B=b.getTime(),ai=iso(a),bi=iso(b),today=iso(new Date());
+  const done=allCards.filter(c=>c.doneAt&&c.doneAt>=A&&c.doneAt<=B),created=allCards.filter(c=>c.cat&&c.cat>=A&&c.cat<=B);
+  const open=allCards.filter(c=>!cardDone(c)),late=open.filter(c=>c.due&&c.due<today),nxt=iso(new Date(b.getTime()+7*864e5));
+  const next=open.filter(c=>c.due&&c.due>bi&&c.due<=nxt);
+  const perDay=[0,1,2,3,4,5,6].map(i=>{const s=new Date(a);s.setDate(s.getDate()+i);const t0=s.getTime();return done.filter(c=>c.doneAt>=t0&&c.doneAt<t0+864e5).length});
+  const grp=(arr,f)=>{const m={};arr.forEach(c=>{const n=f(c)||"Sem responsável";m[n]=(m[n]||0)+1});return Object.entries(m).sort((x,y)=>y[1]-x[1])};
+  const own=grp(open,c=>c.o||c.aEmail),prj=grp(open,c=>boardName(c.boardId)||"Projeto");
+  const pr=t=>{const l=procs.filter(p=>p.tipo===t);return{tot:l.length,and:l.filter(p=>pct(p)<100).length,ok:l.filter(p=>pct(p)===100).length,nw:l.filter(p=>p.createdAt>=A&&p.createdAt<=B).length}};
+  const adm=pr("adm"),dem=pr("dem");
+  const wiv=ivs.filter(i=>i.data&&i.data>=ai&&i.data<=bi),cs=s=>wiv.filter(i=>(i.status||"Em análise")===s).length;
+  const iv={n:wiv.length,ap:cs("Aprovado(a)"),rp:cs("Reprovado(a)"),an:cs("Em análise"),bt:cs("Banco de talentos")};
+  const DN=["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"],label=fmt(ai)+" a "+fmt(bi)+" de "+b.getFullYear();
+  const base=["Tarefas concluídas na semana: "+done.length,"Tarefas criadas na semana: "+created.length,"Tarefas em aberto: "+open.length+" (atrasadas: "+late.length+")","Tarefas com prazo na semana seguinte: "+next.length,"Concluídas por dia: "+DN.map((n,i)=>n+" "+perDay[i]).join(", "),"Admissões: "+adm.tot+" no total, "+adm.and+" em andamento, "+adm.ok+" concluídas, "+adm.nw+" iniciadas na semana","Demissões: "+dem.tot+" no total, "+dem.and+" em andamento, "+dem.ok+" concluídas, "+dem.nw+" iniciadas na semana","Entrevistas na semana: "+iv.n+" (aprovados "+iv.ap+", reprovados "+iv.rp+", em análise "+iv.an+", banco de talentos "+iv.bt+")"];
+  const projL="Tarefas em aberto por projeto: "+(prj.slice(0,6).map(x=>x[0]+" "+x[1]).join("; ")||"nenhuma"),ownL="Tarefas em aberto por responsável: "+(own.slice(0,6).map(x=>x[0]+" "+x[1]).join("; ")||"nenhuma");
+  return {label,done,created,open,late,next,perDay,own,prj,adm,dem,iv,DN,ownL,lines:[...base,projL,ownL],aiLines:[...base,projL],titles:"Títulos das tarefas concluídas: "+(done.slice(0,15).map(c=>c.t).join("; ")||"nenhuma")};
+}
+function repText(d){return ("Pauta - Relatório semanal ("+d.label+")\n\n"+d.lines.join("\n")+(repAI[repW]?"\n\nResumo executivo\n"+repAI[repW]:"")).trim()}
+function repPrompt(d){
+  return "Você é analista de RH e gestão de projetos. Escreva, em português do Brasil, um relatório semanal para gestores usando EXCLUSIVAMENTE os dados abaixo. Não invente números nem fatos. Estrutura: 1) Resumo executivo (até 3 frases); 2) Destaques positivos; 3) Pontos de atenção; 4) Próximos passos recomendados (3 itens). Tom profissional e objetivo. Use listas curtas com hífen e não use asteriscos nem markdown.\n\nPeríodo: "+d.label+"\nDados:\n"+d.aiLines.join("\n")+(repTitles?"\n"+d.ownL+"\n"+d.titles:"");
+}
+function repHtml(){
+  const d=repData(),mx=Math.max(1,...d.perDay);
+  const row=(t,x)=>`<div class="rw" style="display:flex;justify-content:space-between;gap:8px;background:var(--surface);border-radius:12px;padding:9px 12px;margin-bottom:6px;font-weight:700"><span>${t}</span><span style="color:var(--muted)">${x}</span></div>`;
+  return `<div class="sech noprint"><div><h2 class="sh">Relatório semanal</h2><p class="sub2">Indicadores da semana e resumo escrito pela IA, prontos para enviar aos gestores.</p></div><div class="seg3" style="margin:0"><button data-w="0" aria-pressed="${repW===0}">Esta semana</button><button data-w="-1" aria-pressed="${repW===-1}">Semana passada</button></div></div>
+  <div id="repdoc"><div class="rephead"><b>Pauta · Relatório semanal</b><span>${d.label}</span></div>
+  <div class="kpis">${kpi(d.done.length,"Concluídas na semana")}${kpi(d.created.length,"Criadas na semana")}${kpi(d.open.length,"Em aberto")}${kpi(d.late.length,"Atrasadas",d.late.length?"warn":"")}${kpi(d.next.length,"Prazo na semana seguinte")}${kpi(d.adm.and,"Admissões em andamento")}${kpi(d.dem.and,"Demissões em andamento")}${kpi(d.iv.n,"Entrevistas na semana")}</div>
+  <div class="grid2">
+   <div class="panel"><h2>Concluídas por dia</h2><div class="cols">${d.perDay.map((n,i)=>`<div class="cl"><b>${n||""}</b><i style="height:${Math.round(n/mx*100)}px"></i><span>${d.DN[i]}</span></div>`).join("")}</div></div>
+   <div class="panel"><h2>Em aberto por responsável</h2>${bars(d.own.slice(0,6).map(([n,v])=>[n,v,`hsl(${hue(n)} 52% 46%)`]),d.own[0]?d.own[0][1]:0)}</div>
+   <div class="panel"><h2>Em aberto por projeto</h2>${bars(d.prj.slice(0,6).map(([n,v],i)=>[n,v,COLORS[i%6]]),d.prj[0]?d.prj[0][1]:0)}</div>
+   <div class="panel"><h2>RH e seleção</h2>${row("Admissões",d.adm.and+" em andamento · "+d.adm.ok+" concluídas")}${row("Demissões",d.dem.and+" em andamento · "+d.dem.ok+" concluídas")}${row("Entrevistas na semana",d.iv.n+" (aprov. "+d.iv.ap+", reprov. "+d.iv.rp+", em análise "+d.iv.an+")")}</div>
+  </div>
+  <div class="panel" style="margin-top:12px"><h2>Resumo executivo</h2><div id="repai" class="aitext" contenteditable="true" data-ph="Toque em “Gerar resumo com IA” para escrever o resumo desta semana. Você pode editar o texto antes de enviar.">${esc(repAI[repW]||"")}</div></div></div>
+  <div class="panel noprint" style="margin-top:12px"><label class="repchk"><input type="checkbox" id="rept" ${repTitles?"checked":""}><span>Incluir nomes dos responsáveis e títulos das tarefas concluídas no envio à IA. Por padrão, a IA recebe só totais e indicadores.</span></label>
+   <div class="repact"><button class="btn primary" data-repgen>Gerar resumo com IA</button><button class="btn" data-repcopy>Copiar</button><button class="btn" data-repmail>E-mail</button><button class="btn" data-repshare>Compartilhar</button><button class="btn" data-repprint>Imprimir / PDF</button><button class="btn" data-repsheet>Criar planilha</button></div>
+   <p class="sub2" style="margin:10px 0 0">As conclusões passam a ser contadas a partir desta atualização. O relatório não é gerado sozinho toda semana: gere na segunda-feira ou crie o lembrete semanal.</p>
+   <div class="repact"><button class="btn" data-repremind>Criar lembrete toda segunda</button></div></div>`;
+}
+async function aiAsk(prompt,over){
+  const c=over||cfg,key=c.key,model=c.model||"gemini-3.5-flash-lite";
+  if(!key){toast("A IA ainda não foi ativada. "+(me.email===ADMIN?"Cole a chave em Perfil e configurações.":"Peça à administradora para configurar."));return null}
+  try{
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{temperature:.4,maxOutputTokens:2000}})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){const m=(j.error&&j.error.message)||("erro "+r.status);toast(r.status===429?"Limite gratuito da IA atingido. Tente de novo em alguns minutos.":r.status===404?"Modelo não encontrado. Troque o nome do modelo em Perfil e configurações.":"Erro da IA: "+m.slice(0,140));return null}
+    const t=((j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[]).map(p=>p.text||"").join("");
+    if(!t.trim()){toast("A IA não devolveu texto. Tente de novo.");return null}
+    return t;
+  }catch(e){toast("Não foi possível falar com a IA. Verifique a internet.");return null}
+}
+async function repGen(){
+  if(aiBusy)return;aiBusy=true;toast("Gerando o resumo… pode levar alguns segundos.");
+  const t=await aiAsk(repPrompt(repData()));aiBusy=false;
+  if(t){repAI[repW]=t.trim();renderView();toast("Resumo pronto. Revise e edite, se quiser.")}
+}
+async function repRemind(){
+  const pid="u_"+me.uid,pb=boards.find(b=>b.id===pid),lst=pb&&((pb.lists||[]).find(l=>!l.done)||(pb.lists||[])[0]);
+  if(!lst){toast("Seu quadro pessoal ainda não carregou. Tente de novo.");return}
+  const n=new Date();n.setHours(12,0,0,0);do{n.setDate(n.getDate()+1)}while(n.getDay()!==1);
+  const b=writeBatch(db),sid="s"+(++uid);
+  for(let i=0;i<12;i++){const d=new Date(n);d.setDate(d.getDate()+7*i);b.set(doc(db,"cards","c"+(++uid)),{t:"Gerar o relatório semanal do Pauta e enviar aos gestores",d:"",l:lst.id,p:"",o:"",pr:"media",due:iso(d),aEmail:"",by:me.email,done:false,doneAt:0,cat:Date.now(),serie:sid,boardId:pid,ord:9000+i,readers:pb.memberEmails||[me.email]})}
+  try{await b.commit();toast("Lembrete criado: toda segunda-feira, nas próximas 12 semanas, em Minhas tarefas.")}catch(e){fail(e)}
+}
+$("#sec").addEventListener("click",async e=>{
+  if(curSec!=="rep")return;
+  let el;
+  if(el=e.target.closest("[data-w]")){repW=+el.dataset.w;renderView();return}
+  if(e.target.closest("[data-repgen]")){repGen();return}
+  if(e.target.closest("[data-repcopy]")){try{await navigator.clipboard.writeText(repText(repData()));toast("Relatório copiado.")}catch(x){toast("Não foi possível copiar. Selecione o texto e copie manualmente.")}return}
+  if(e.target.closest("[data-repmail]")){const d=repData(),t=repText(d);location.href="mailto:?subject="+encodeURIComponent("Relatório semanal - "+d.label)+"&body="+encodeURIComponent(t.length>1800?t.slice(0,1800)+"\n\n(texto cortado; use Copiar para o relatório completo)":t);return}
+  if(e.target.closest("[data-repshare]")){const d=repData(),t=repText(d);if(navigator.share){navigator.share({title:"Relatório semanal - "+d.label,text:t}).catch(()=>{})}else{try{await navigator.clipboard.writeText(t);toast("Relatório copiado.")}catch(x){toast("Seu navegador não permite compartilhar.")}}return}
+  if(e.target.closest("[data-repprint]")){window.print();return}
+  if(e.target.closest("[data-repsheet]")){const d=repData();curSec="proj";view="sheet";shCreate("Indicadores "+d.label,[["Indicador","Valor"],...d.lines.map(l=>{const i=l.indexOf(":");return [l.slice(0,i),l.slice(i+1).trim()]})]);return}
+  if(e.target.closest("[data-repremind]"))repRemind();
+});
+$("#sec").addEventListener("input",e=>{if(e.target.id==="repai")repAI[repW]=e.target.innerText});
+$("#sec").addEventListener("change",e=>{if(e.target.id==="rept")repTitles=e.target.checked});
+$("#aisave").onclick=()=>setDoc(doc(db,"config","ai"),{key:$("#aikey").value.trim(),model:$("#aimodel").value.trim()||"gemini-3.5-flash-lite"}).then(()=>toast("IA configurada.")).catch(fail);
+$("#aitest").onclick=async()=>{const t=await aiAsk("Responda apenas com a palavra: funcionando.",{key:$("#aikey").value.trim(),model:$("#aimodel").value.trim()||"gemini-3.5-flash-lite"});if(t)toast("A IA respondeu: "+t.trim().slice(0,60))};
 onAuthStateChanged(auth,u=>{
   document.body.classList.remove("boot");stopAll();
   if(!u){me=null;data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}

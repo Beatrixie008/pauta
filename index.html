@@ -278,6 +278,24 @@ label:has(>input[type=date]){cursor:pointer}
 .dpd.sel i{background:var(--accent-ink)}
 .dpf{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .dpf button{border:1.5px solid color-mix(in srgb,var(--accent) 40%,transparent);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:700}
+.shtitle{flex:1;min-width:140px;font-size:18px;font-weight:800;background:transparent;border:0;border-bottom:2px solid var(--line);color:var(--ink);padding:6px 2px}
+.shex{display:flex;gap:6px;flex-wrap:wrap}
+.shbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.shbar button{border:1.5px solid color-mix(in srgb,var(--accent) 40%,transparent);background:var(--surface);color:var(--ink);border-radius:10px;min-width:36px;height:34px;padding:0 10px;font-weight:700}
+.shsw{display:inline-flex;gap:4px;align-items:center;padding:0 4px}
+.shsw i{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(0,0,0,.2);cursor:pointer;font-style:normal;font-size:12px;color:#555}
+.shsw i.shno{background:#fff}
+.shfx{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.shfx span{flex:none;min-width:44px;text-align:center;background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;font-weight:800;font-size:13px}
+.shfx input{flex:1;min-width:0;background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink)}
+.shwrap{overflow:auto;max-height:60dvh;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:#1b1b1b;outline:none}
+.sgt{border-collapse:separate;border-spacing:0;font-size:14px;user-select:none}
+.sgt th{position:sticky;top:0;z-index:2;background:#f3eff4;color:#6b5a70;font-size:12px;font-weight:700;border-right:1px solid #e3dfe3;border-bottom:1px solid #e3dfe3;padding:4px 6px;min-width:96px}
+.sgt th.rn{position:sticky;left:0;z-index:1;top:auto;min-width:40px;text-align:center}
+.sgt th.cn{left:0;z-index:3;min-width:40px}
+.sgt td{height:30px;min-width:96px;max-width:260px;padding:0 6px;border-right:1px solid #ece8ec;border-bottom:1px solid #ece8ec;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:cell}
+.sgt td.sel{outline:2px solid #d6336c;outline-offset:-2px;background-color:#fff5fa}
+.sgt .ci{width:100%;height:100%;border:0;outline:0;background:#fff;color:#1b1b1b;font:inherit;padding:0;box-sizing:border-box}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -442,7 +460,7 @@ label:has(>input[type=date]){cursor:pointer}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,sendPasswordResetEmail,GoogleAuthProvider,signInWithPopup,updateProfile,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,updateDoc,onSnapshot,query,where,writeBatch,arrayUnion,arrayRemove,getDocs,deleteDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,updateDoc,onSnapshot,query,where,writeBatch,arrayUnion,arrayRemove,getDocs,deleteDoc,deleteField} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyBYO8VYOqq6gvFamJum91XxB6SurnKY1jI",authDomain:"pauta-697de.firebaseapp.com",projectId:"pauta-697de",storageBucket:"pauta-697de.firebasestorage.app",messagingSenderId:"824847154234",appId:"1:824847154234:web:661dc0dc0e633c27410903"};
 const fbApp=initializeApp(firebaseConfig);
 let db;try{db=initializeFirestore(fbApp,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}catch(e){db=getFirestore(fbApp)}
@@ -455,7 +473,7 @@ const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
 const fmt=s=>s.slice(8)+"/"+s.slice(5,7);
 const ini=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 const hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%5;return [330,285,12,305,350][h]};
-let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],ivs=[],notes=[],curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,unsubI,unsubN,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
+let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],ivs=[],notes=[],sheets=[],curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,unsubI,unsubN,unsubS,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
 
 function seed(){
   const L=[["l1","A fazer"],["l2","Em andamento"],["l3","Em revisão"],["l4","Concluída",1]].map(([id,name,done])=>({id,name,done:!!done}));
@@ -610,7 +628,7 @@ board.addEventListener("drop",e=>{
 board.addEventListener("dragend",()=>{drag=null;const ph=$("#ph");if(ph)ph.remove();render()});
 
 let view="board",cal=new Date(),selDay=iso(new Date()),presetDue="";cal.setDate(1);
-const VIEWS=[["board","Quadro"],["cal","Calendário"],["dash","Painel"],["chart","Gráficos"]];
+const VIEWS=[["board","Quadro"],["cal","Calendário"],["dash","Painel"],["chart","Gráficos"],["sheet","Planilhas"]];
 const COLORS=["#d6336c","#a77bf3","#ff9a5c","#3fb68b","#f472b6","#6f9cf5"];
 const pcol=c=>"var(--"+(PC[c.pr]||"low")+")";
 $("#tabs").innerHTML=VIEWS.map(([k,n])=>`<button role="tab" data-v="${k}">${n}</button>`).join("");
@@ -678,6 +696,7 @@ function renderView0(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===view));
   if(view==="board")return;
   const ctx={cs:data.cards.filter(vis),doneIds:new Set(data.lists.filter(l=>l.done).map(l=>l.id)),today:iso(new Date())};
+  if(view==="sheet"){drawSheets();return}
   $("#view").innerHTML=view==="cal"?calHtml(ctx):view==="dash"?dashHtml(ctx):chartHtml(ctx);
 }
 $("#view").addEventListener("click",e=>{
@@ -708,7 +727,7 @@ function persist(){
   if(n)b.commit().catch(fail);
 }
 function switchBoard(b){
-  bd=b;curId=b.id;try{localStorage.setItem("pauta.board",b.id)}catch(e){}
+  bd=b;curId=b.id;curSh=null;try{localStorage.setItem("pauta.board",b.id)}catch(e){}
   data={lists:(b.lists||[]).map(x=>({...x})),cards:[]};
   synced={cards:{},lists:JSON.stringify(data.lists)};compL=null;addingList=false;
   rebuildCards();
@@ -719,7 +738,7 @@ function rebuildCards(){
   assigned=allCards.filter(c=>c.aEmail===me.email&&c.boardId!==bd.id);
   synced.cards={};data.cards.forEach(c=>{synced.cards[c.id]=JSON.stringify(cardObj(c,c.ord||0))});
 }
-function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null;allCards=[];procs=[];ivs=[];notes=[];[unsubP,unsubI,unsubN].forEach(f=>f&&f());unsubP=unsubI=unsubN=null}
+function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null;allCards=[];procs=[];ivs=[];notes=[];sheets=[];curSh=null;[unsubP,unsubI,unsubN,unsubS].forEach(f=>f&&f());unsubP=unsubI=unsubN=unsubS=null}
 function start(){
   const pid="u_"+me.uid;
   unsubB=onSnapshot(query(collection(db,"boards"),where("memberEmails","array-contains",me.email)),snap=>{
@@ -737,15 +756,16 @@ function start(){
   unsubP=onSnapshot(query(collection(db,"processes"),where("readers","array-contains",me.email)),snap=>{procs=snap.docs.map(d=>({id:d.id,...d.data()}));if(pd&&pd.id&&$("#pdlg").open){const r=procs.find(p=>p.id===pd.id);if(r&&JSON.stringify(r.itens)!==JSON.stringify(pd.itens)){pd.itens=JSON.parse(JSON.stringify(r.itens||[]));drawItems()}}applyRemote()},e=>toast("Erro ao carregar processos ("+e.code+")"));
   unsubI=onSnapshot(query(collection(db,"interviews"),where("readers","array-contains",me.email)),snap=>{ivs=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar entrevistas ("+e.code+")"));
   unsubN=onSnapshot(query(collection(db,"notes"),where("readers","array-contains",me.email)),snap=>{notes=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar notas ("+e.code+")"));
+  unsubS=onSnapshot(query(collection(db,"sheets"),where("readers","array-contains",me.email)),snap=>{sheets=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar planilhas ("+e.code+")"));
 }
 async function invite(){if((bd.memberEmails||[]).length>=6){toast("Limite atingido: o quadro pode ser compartilhado com até 5 pessoas.");return}
   const e=(prompt("Participantes: "+(bd.memberEmails||[]).join(", ")+"\n\nE-mail da pessoa para convidar:")||"").trim().toLowerCase();
   if(!e.includes("@"))return;
-  try{const bt=writeBatch(db);bt.update(doc(db,"boards",bd.id),{memberEmails:arrayUnion(e)});allCards.filter(c=>c.boardId===bd.id).forEach(c=>bt.update(doc(db,"cards",c.id),{readers:arrayUnion(e)}));await bt.commit();toast(e+" agora tem acesso. Avise a pessoa para entrar com esse e-mail.")}catch(x){fail(x)}
+  try{const bt=writeBatch(db);bt.update(doc(db,"boards",bd.id),{memberEmails:arrayUnion(e)});allCards.filter(c=>c.boardId===bd.id).forEach(c=>bt.update(doc(db,"cards",c.id),{readers:arrayUnion(e)}));sheets.filter(x=>x.boardId===bd.id).forEach(x=>bt.update(doc(db,"sheets",x.id),{readers:arrayUnion(e)}));await bt.commit();toast(e+" agora tem acesso. Avise a pessoa para entrar com esse e-mail.")}catch(x){fail(x)}
 }
 async function delBoard(){
   if(!bd||bd.personal||bd.owner!==me.uid||!confirm("Excluir o quadro “"+bd.name+"” e todas as tarefas dele?"))return;
-  try{const b=writeBatch(db);allCards.filter(c=>c.boardId===bd.id).forEach(c=>b.delete(doc(db,"cards",c.id)));b.delete(doc(db,"boards",bd.id));curId="u_"+me.uid;await b.commit()}catch(e){fail(e)}
+  try{const b=writeBatch(db);allCards.filter(c=>c.boardId===bd.id).forEach(c=>b.delete(doc(db,"cards",c.id)));sheets.filter(x=>x.boardId===bd.id).forEach(x=>b.delete(doc(db,"sheets",x.id)));b.delete(doc(db,"boards",bd.id));curId="u_"+me.uid;await b.commit()}catch(e){fail(e)}
 }
 $("#bsel").addEventListener("change",e=>{
   const v=e.target.value;
@@ -1128,6 +1148,303 @@ document.addEventListener("close",e=>{if(e.target.tagName==="DIALOG")dpClose()},
 addEventListener("scroll",()=>{if(!dp.hidden)dpPlace()},true);
 addEventListener("resize",()=>{if(!dp.hidden)dpPlace()});
 $("#due").addEventListener("change",()=>{if($("#rp").value==="w"&&rpDays.size<=1){rpDays.clear();rpUi(false)}if($("#rp").value)rpUi(true)});
+// ---- planilhas (dentro de Projetos)
+let curSh=null,shSel={r:1,c:1},shEd=false,shMeta=false,shTimer=0,shTapped="";
+const shDirty=new Set();
+const COLN=n=>{let s="";while(n>0){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s};
+const ck=(r,c)=>COLN(c)+r;
+function parseRef(s){const m=/^([A-Z]+)(\d+)$/.exec(s);if(!m)return null;let c=0;for(const ch of m[1])c=c*26+ch.charCodeAt(0)-64;return{r:+m[2],c}}
+const isNum=v=>/^-?\d+([.,]\d+)?$/.test(String(v).trim());
+const toNum=v=>Number(String(v).trim().replace(",","."));
+function shVal(sh,key,stack){
+  const raw=sh.cells[key];
+  if(raw==null||raw==="")return "";
+  if(raw[0]!=="=")return isNum(raw)?toNum(raw):raw;
+  if(stack.includes(key))return "#REF!";
+  try{return evalF(sh,raw.slice(1),[...stack,key])}catch(e){return e.message||"#ERRO!"}
+}
+function shDisp(v){if(v===true)return "VERDADEIRO";if(v===false)return "FALSO";if(typeof v==="number")return String(Math.round(v*1e8)/1e8).replace(".",",");return String(v)}
+function evalF(sh,src,stack){
+  const T=[],re=/\s*(?:(\d+(?:\.\d+)?)|"((?:[^"]|"")*)"|([A-Za-z][A-Za-z0-9]*)|(<>|<=|>=|[-+*\/^&=<>(),:;]))/y;
+  let p=0,m;
+  while(p<src.length){
+    re.lastIndex=p;m=re.exec(src);
+    if(!m){if(/^\s*$/.test(src.slice(p)))break;throw new Error("#ERRO!")}
+    p=re.lastIndex;
+    if(m[1]!=null)T.push(["n",+m[1]]);else if(m[2]!=null)T.push(["s",m[2].replace(/""/g,'"')]);else if(m[3]!=null)T.push(["w",m[3].toUpperCase()]);else T.push(["o",m[4]]);
+  }
+  let i=0;
+  const isO=o=>T[i]&&T[i][0]==="o"&&T[i][1]===o,nx=()=>T[i++],flat=a=>a.flat(Infinity);
+  const num=v=>{if(typeof v==="number")return v;if(v===""||v==null)return 0;if(typeof v==="boolean")return v?1:0;const n=Number(String(v).replace(",","."));if(isNaN(n))throw new Error("#VALOR!");return n};
+  function call(f,a){
+    const nums=()=>flat(a).filter(v=>typeof v==="number");
+    switch(f){
+      case "SUM":return nums().reduce((x,y)=>x+y,0);
+      case "AVERAGE":{const n=nums();if(!n.length)throw new Error("#DIV/0!");return n.reduce((x,y)=>x+y,0)/n.length}
+      case "MIN":{const n=nums();return n.length?Math.min(...n):0}
+      case "MAX":{const n=nums();return n.length?Math.max(...n):0}
+      case "COUNT":return nums().length;
+      case "COUNTA":return flat(a).filter(v=>v!=="").length;
+      case "IF":return a[0]?a[1]:(a.length>2?a[2]:false);
+      case "ROUND":{const d=Math.pow(10,num(a[1]||0));return Math.round(num(a[0])*d)/d}
+      case "ABS":return Math.abs(num(a[0]));
+      case "CONCAT":return flat(a).join("");
+      case "LEN":return String(a[0]).length;
+      case "UPPER":return String(a[0]).toUpperCase();
+      case "LOWER":return String(a[0]).toLowerCase();
+      default:throw new Error("#NOME?");
+    }
+  }
+  function pr(){
+    const t=nx();if(!t)throw new Error("#ERRO!");
+    if(t[0]==="n"||t[0]==="s")return t[1];
+    if(t[0]==="o"&&t[1]==="("){const v=cmp();if(!isO(")"))throw new Error("#ERRO!");nx();return v}
+    if(t[0]==="w"){
+      if(isO("(")){nx();const a=[];if(!isO(")")){a.push(cmp());while(isO(",")||isO(";")){nx();a.push(cmp())}}if(!isO(")"))throw new Error("#ERRO!");nx();return call(t[1],a)}
+      if(t[1]==="TRUE")return true;if(t[1]==="FALSE")return false;
+      const a=parseRef(t[1]);if(!a)throw new Error("#NOME?");
+      if(isO(":")){nx();const t2=nx(),b=t2&&t2[0]==="w"?parseRef(t2[1]):null;if(!b)throw new Error("#REF!");const rows=[];for(let r=Math.min(a.r,b.r);r<=Math.max(a.r,b.r);r++){const row=[];for(let c=Math.min(a.c,b.c);c<=Math.max(a.c,b.c);c++)row.push(shVal(sh,ck(r,c),stack));rows.push(row)}return rows}
+      return shVal(sh,t[1],stack);
+    }
+    throw new Error("#ERRO!");
+  }
+  function un(){if(isO("-")){nx();return -num(un())}if(isO("+")){nx();return num(un())}return pr()}
+  function pw(){let a=un();while(isO("^")){nx();a=Math.pow(num(a),num(un()))}return a}
+  function mul(){let a=pw();while(isO("*")||isO("/")){const o=nx()[1],b=pw();if(o==="*")a=num(a)*num(b);else{if(num(b)===0)throw new Error("#DIV/0!");a=num(a)/num(b)}}return a}
+  function add(){let a=mul();while(isO("+")||isO("-")||isO("&")){const o=nx()[1],b=mul();a=o==="+"?num(a)+num(b):o==="-"?num(a)-num(b):String(a)+String(b)}return a}
+  function cmp(){let a=add();while(T[i]&&T[i][0]==="o"&&["=","<>","<=",">=","<",">"].includes(T[i][1])){const o=nx()[1],b=add();a=o==="="?a==b:o==="<>"?a!=b:o==="<"?a<b:o===">"?a>b:o==="<="?a<=b:a>=b}return a}
+  const v=cmp();if(i<T.length)throw new Error("#ERRO!");
+  return Array.isArray(v)?v[0][0]:v;
+}
+function shUsed(s){let R=0,C=0;Object.keys(s.cells).forEach(k=>{const a=parseRef(k);if(a){R=Math.max(R,a.r);C=Math.max(C,a.c)}});return [R,C]}
+function shTable(){
+  const s=curSh;let h='<table class="sgt"><thead><tr><th class="cn"></th>';
+  for(let c=1;c<=s.cols;c++)h+=`<th>${COLN(c)}</th>`;
+  h+="</tr></thead><tbody>";
+  for(let r=1;r<=s.rows;r++){h+=`<tr><th class="rn">${r}</th>`;for(let c=1;c<=s.cols;c++)h+=`<td data-k="${ck(r,c)}" data-r="${r}" data-c="${c}"></td>`;h+="</tr>"}
+  return h+"</tbody></table>";
+}
+function shEditor(){
+  return `<div class="sech" style="margin-bottom:8px"><button class="btn" data-shback>← Planilhas</button><input id="sht" class="shtitle" value="${esc(curSh.title)}" aria-label="Nome da planilha"><div class="shex"><button class="btn" data-ex="xlsx">Excel</button><button class="btn" data-ex="pdf">PDF</button><button class="btn" data-ex="csv">CSV</button><button class="btn danger" data-shdel>Excluir</button></div></div>
+  <div class="shbar"><button data-sty="b" aria-label="Negrito"><b>N</b></button><button data-sty="i" aria-label="Itálico"><i>I</i></button><button data-sty="al:left" aria-label="Alinhar à esquerda">⇤</button><button data-sty="al:center" aria-label="Centralizar">↔</button><button data-sty="al:right" aria-label="Alinhar à direita">⇥</button><span class="shsw">${["#fde1ee","#e8d4ff","#ffe2d2","#d8f3e6","#fff3bf"].map(c=>`<i data-bg="${c}" style="background:${c}"></i>`).join("")}<i data-bg="" class="shno" title="Sem cor">×</i></span><button data-sty="hd">Cabeçalho</button><button data-addr>+ Linha</button><button data-addc2>+ Coluna</button></div>
+  <div class="shfx"><span id="shname">A1</span><input id="fxb" placeholder="Valor ou fórmula, ex.: =SUM(B2:B6)" autocomplete="off" autocapitalize="none"></div>
+  <div class="shwrap" id="shg" tabindex="0">${shTable()}</div>
+  <p class="sub2" style="margin-top:8px">Toque numa célula para selecionar e toque de novo para editar. Fórmulas: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, IF, ROUND, ABS, CONCAT, LEN, UPPER, LOWER. Cores e negrito saem no PDF, mas não no Excel.</p>`;
+}
+function shList(){
+  const L=sheets.filter(s=>s.boardId===curId).sort((a,b)=>(b.updated||0)-(a.updated||0));
+  return `<div class="sech"><div><h2 class="sh">Planilhas do projeto</h2><p class="sub2">${bd&&bd.personal?"Suas planilhas pessoais.":"Quem participa deste projeto vê e edita as mesmas planilhas, em tempo real."}</p></div></div>
+  <div class="panel" style="margin-bottom:12px"><h2>Criar ou receber</h2><div class="seg3" style="flex-wrap:wrap;overflow:visible;margin-bottom:0"><button data-newsh="blank">Em branco</button><button data-newsh="orc">Orçamento</button><button data-newsh="cron">Cronograma</button><button data-newsh="tasks">Tarefas do projeto</button><button data-imp>Importar Excel ou CSV</button></div><input type="file" id="shimp" accept=".xlsx,.xls,.csv,text/csv" hidden></div>
+  <div class="pgrid">${L.map(s=>`<button class="pc" data-shopen="${s.id}"><b>${esc(s.title||"Planilha")}</b><div class="pcf"><span>${s.rows}×${s.cols}</span><span>${s.updated?new Date(s.updated).toLocaleDateString("pt-BR"):""}</span></div></button>`).join("")||'<p class="empty">Nenhuma planilha neste projeto ainda.</p>'}</div>`;
+}
+function drawSheets(){
+  if(curSh&&$("#shg")){shRemote();return}
+  $("#view").innerHTML=curSh?shEditor():shList();
+  if(curSh)shMount();
+}
+function shMount(){shPaint();shSelect(shSel.r,shSel.c,true)}
+function shPaint(){
+  const g=$("#shg");if(!g||!curSh)return;
+  g.querySelectorAll("td[data-k]").forEach(td=>{
+    if(td.firstElementChild&&td.firstElementChild.tagName==="INPUT")return;
+    const k=td.dataset.k,v=shVal(curSh,k,[]),st=curSh.st[k]||{},al=st.al||(typeof v==="number"?"right":"");
+    td.textContent=shDisp(v);
+    td.style.cssText=(st.b?"font-weight:800;":"")+(st.i?"font-style:italic;":"")+(st.bg?"background:"+st.bg+";":"")+(al?"text-align:"+al+";":"");
+  });
+}
+function shSelect(r,c,quiet){
+  shSel={r:Math.min(Math.max(1,r),curSh.rows),c:Math.min(Math.max(1,c),curSh.cols)};
+  const g=$("#shg");if(!g)return;
+  g.querySelectorAll("td.sel").forEach(t=>t.classList.remove("sel"));
+  const k=ck(shSel.r,shSel.c),td=g.querySelector(`td[data-k="${k}"]`);
+  if(td){td.classList.add("sel");if(!quiet)td.scrollIntoView({block:"nearest",inline:"nearest"})}
+  $("#shname").textContent=k;$("#fxb").value=curSh.cells[k]||"";
+}
+function shMove(dr,dc){shSelect(shSel.r+dr,shSel.c+dc)}
+function shEdit(init){
+  const k=ck(shSel.r,shSel.c),td=$(`#shg td[data-k="${k}"]`);
+  if(!td||shEd)return;
+  shEd=true;const raw=init!=null?init:(curSh.cells[k]||"");
+  td.innerHTML=`<input class="ci" value="${esc(raw)}" autocomplete="off" autocapitalize="none">`;
+  const i=td.firstElementChild;i.focus();i.setSelectionRange(raw.length,raw.length);
+}
+function shEndEdit(commit){
+  if(!shEd)return;shEd=false;
+  const k=ck(shSel.r,shSel.c),td=$(`#shg td[data-k="${k}"]`),i=td&&td.querySelector("input"),v=i?i.value:"";
+  if(td)td.textContent="";
+  if(commit)shCommit(k,v);else shPaint();
+}
+function shCommit(k,v){
+  v=(v||"").trim();
+  if(v===(curSh.cells[k]||"")){shPaint();return}
+  if(v==="")delete curSh.cells[k];else curSh.cells[k]=v;
+  shDirty.add("c"+k);shPaint();shSelect(shSel.r,shSel.c,true);shSaveSoon();
+}
+function shStyle(kind){
+  const k=ck(shSel.r,shSel.c);
+  const setS=(key,fn)=>{const s={...(curSh.st[key]||{})};fn(s);if(Object.keys(s).length)curSh.st[key]=s;else delete curSh.st[key];shDirty.add("s"+key)};
+  if(kind==="hd"){for(let c=1;c<=curSh.cols;c++)setS(ck(1,c),s=>{s.b=1;s.bg="#fde1ee"})}
+  else if(kind==="b")setS(k,s=>{if(s.b)delete s.b;else s.b=1});
+  else if(kind==="i")setS(k,s=>{if(s.i)delete s.i;else s.i=1});
+  else if(kind.startsWith("al:"))setS(k,s=>{s.al=kind.slice(3)});
+  else if(kind.startsWith("bg:"))setS(k,s=>{const c=kind.slice(3);if(c)s.bg=c;else delete s.bg});
+  shPaint();shSaveSoon();
+}
+function shSaveSoon(){clearTimeout(shTimer);shTimer=setTimeout(shFlush,700)}
+function shFlush(){
+  if(!curSh||(!shDirty.size&&!shMeta))return;
+  const u={updated:Date.now()};curSh.updated=u.updated;
+  shDirty.forEach(x=>{const key=x.slice(1);if(x[0]==="c")u["cells."+key]=curSh.cells[key]!=null?curSh.cells[key]:deleteField();else{const s=curSh.st[key];u["st."+key]=s&&Object.keys(s).length?s:deleteField()}});
+  if(shMeta){u.rows=curSh.rows;u.cols=curSh.cols;u.title=curSh.title}
+  shDirty.clear();shMeta=false;
+  updateDoc(doc(db,"sheets",curSh.id),u).catch(fail);
+}
+function shRemote(){
+  const r=sheets.find(x=>x.id===curSh.id);
+  if(!r){if(Date.now()-(curSh._p||0)>6000){curSh=null;$("#view").innerHTML=shList()}return}
+  const c=JSON.parse(JSON.stringify(r.cells||{})),st=JSON.parse(JSON.stringify(r.st||{}));
+  shDirty.forEach(x=>{const key=x.slice(1);if(x[0]==="c"){if(curSh.cells[key]!=null)c[key]=curSh.cells[key];else delete c[key]}else{if(curSh.st[key])st[key]=curSh.st[key];else delete st[key]}});
+  const dims=!shMeta&&(r.rows!==curSh.rows||r.cols!==curSh.cols);
+  curSh.cells=c;curSh.st=st;
+  if(!shMeta){curSh.rows=r.rows;curSh.cols=r.cols;curSh.title=r.title||curSh.title}
+  if(shEd)return;
+  if(dims){$("#view").innerHTML=shEditor();shMount()}
+  else{shPaint();const t=$("#sht");if(t&&document.activeElement!==t)t.value=curSh.title;const f=$("#fxb");if(f&&document.activeElement!==f)f.value=curSh.cells[ck(shSel.r,shSel.c)]||""}
+}
+function openSheet(id){const r=sheets.find(x=>x.id===id);if(!r)return;curSh=JSON.parse(JSON.stringify(r));curSh.cells=curSh.cells||{};curSh.st=curSh.st||{};shSel={r:1,c:1};render()}
+function mkCells(rows,hdr){
+  const cells={},st={};
+  rows.forEach((row,i)=>row.forEach((v,j)=>{if(v!==""&&v!=null)cells[ck(i+1,j+1)]=String(v)}));
+  if(hdr)(rows[0]||[]).forEach((_,j)=>{st[ck(1,j+1)]={b:1,bg:"#fde1ee"}});
+  return {cells,st,r:rows.length,c:Math.max(0,...rows.map(x=>x.length))};
+}
+async function shCreate(title,rows,hdr=true,open=true){
+  const m=mkCells(rows,hdr),id="s"+(++uid);
+  if(JSON.stringify(m.cells).length>700000){toast("Planilha grande demais (limite de cerca de 700 KB).");return null}
+  const o={title,boardId:curId,rows:Math.min(500,Math.max(30,m.r+10)),cols:Math.min(26,Math.max(8,m.c)),cells:m.cells,st:m.st,owner:me.uid,ownerEmail:me.email,readers:(bd.memberEmails||[me.email]).slice(0,6),createdAt:Date.now(),updated:Date.now()};
+  try{await setDoc(doc(db,"sheets",id),o);if(open){curSh={id,_p:Date.now(),...o};shSel={r:1,c:1};render()}return id}catch(e){fail(e);return null}
+}
+function newSheet(k){
+  const f=d=>d?d.split("-").reverse().join("/"):"";
+  if(k==="blank")return shCreate("Planilha sem título",[],false);
+  if(k==="orc")return shCreate("Orçamento do projeto",[["Item","Previsto (R$)","Realizado (R$)","Diferença (R$)"],["Mão de obra","0","0","=B2-C2"],["Materiais","0","0","=B3-C3"],["Serviços","0","0","=B4-C4"],["Outros","0","0","=B5-C5"],["Total","=SUM(B2:B5)","=SUM(C2:C5)","=B6-C6"]]);
+  if(k==="cron")return shCreate("Cronograma do projeto",[["Etapa","Responsável","Início","Fim","Status","% concluído"],["Planejamento","","","","Não iniciado","0"],["Execução","","","","Não iniciado","0"],["Revisão","","","","Não iniciado","0"],["Entrega","","","","Não iniciado","0"],["Média de conclusão","","","","","=AVERAGE(F2:F5)"]]);
+  if(k==="tasks"){
+    const ls=Object.fromEntries((bd.lists||[]).map(l=>[l.id,l.name]));
+    return shCreate("Tarefas — "+(bd.personal?"Meu quadro":bd.name),[["Título","Responsável","Prazo","Status","Prioridade","Lista"],...data.cards.map(c=>[c.t,c.o||c.aEmail||"",f(c.due),cardDone(c)?"Concluída":"Em aberto",PRI[c.pr]||"",ls[c.l]||""])]);
+  }
+}
+function csvParse(t){
+  t=t.replace(/^\ufeff/,"");
+  const first=t.split(/\r?\n/)[0]||"",d=(first.match(/;/g)||[]).length>=(first.match(/,/g)||[]).length?";":",",rows=[];
+  let row=[],f="",q=false;
+  for(let i=0;i<t.length;i++){
+    const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
+    else if(ch==='"')q=true;
+    else if(ch===d){row.push(f);f=""}
+    else if(ch==="\n"){row.push(f.replace(/\r$/,""));rows.push(row);row=[];f=""}
+    else f+=ch;
+  }
+  if(f!==""||row.length){row.push(f.replace(/\r$/,""));rows.push(row)}
+  return rows;
+}
+function loadJs(src){return new Promise((res,rej)=>{if(document.querySelector('script[src="'+src+'"]'))return res();const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("lib"));document.head.appendChild(s)})}
+const XL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",JP="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",JA="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js";
+const safeName=s=>(s||"planilha").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\w\-]+/g,"_");
+function saveBlob(b,name){const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000)}
+function shCsv(){
+  const s=curSh,[R,C]=shUsed(s);if(!R){toast("A planilha está vazia.");return}
+  const q=v=>{v=String(v);return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v},L=[];
+  for(let r=1;r<=R;r++){const row=[];for(let c=1;c<=C;c++)row.push(q(shDisp(shVal(s,ck(r,c),[]))));L.push(row.join(";"))}
+  saveBlob(new Blob(["\ufeff"+L.join("\r\n")],{type:"text/csv;charset=utf-8"}),safeName(s.title)+".csv");
+}
+async function shXlsx(){
+  const s=curSh,[R,C]=shUsed(s);if(!R){toast("A planilha está vazia.");return}
+  try{await loadJs(XL)}catch(e){toast("Não foi possível carregar o gerador de Excel. Verifique a internet.");return}
+  const ws={};
+  for(let r=1;r<=R;r++)for(let c=1;c<=C;c++){
+    const k=ck(r,c),raw=s.cells[k];if(raw==null||raw==="")continue;
+    const ref=XLSX.utils.encode_cell({r:r-1,c:c-1});
+    if(raw[0]==="="){const v=shVal(s,k,[]),f=raw.slice(1).replace(/;/g,",");ws[ref]=typeof v==="number"?{t:"n",f,v}:{t:"s",f,v:String(v)}}
+    else ws[ref]=isNum(raw)?{t:"n",v:toNum(raw)}:{t:"s",v:String(raw)};
+  }
+  ws["!ref"]=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:R-1,c:C-1}});
+  ws["!cols"]=Array.from({length:C},()=>({wch:18}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,(s.title||"Planilha").slice(0,31).replace(/[\\\/?*\[\]:]/g," "));
+  XLSX.writeFile(wb,safeName(s.title)+".xlsx");
+}
+async function shPdf(){
+  const s=curSh,[R,C]=shUsed(s);if(!R){toast("A planilha está vazia.");return}
+  try{await loadJs(JP);await loadJs(JA)}catch(e){toast("Não foi possível gerar o PDF agora. Verifique a internet.");return}
+  const J=window.jspdf.jsPDF,d=new J({orientation:C>6?"landscape":"portrait",unit:"pt",format:"a4"});
+  d.setFontSize(14);d.text(s.title||"Planilha",30,36);
+  const hex=h=>h?[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]:undefined,body=[];
+  for(let r=1;r<=R;r++){const row=[];for(let c=1;c<=C;c++){const k=ck(r,c),st=s.st[k]||{},sty={};if(st.b)sty.fontStyle=st.i?"bolditalic":"bold";else if(st.i)sty.fontStyle="italic";if(st.bg)sty.fillColor=hex(st.bg);if(st.al)sty.halign=st.al;row.push({content:shDisp(shVal(s,k,[])),styles:sty})}body.push(row)}
+  d.autoTable({startY:50,body,theme:"grid",styles:{fontSize:9,cellPadding:4,overflow:"linebreak",lineColor:[220,214,220]},margin:{left:30,right:30}});
+  d.save(safeName(s.title)+".pdf");
+}
+async function shImport(file){
+  const ext=(file.name.split(".").pop()||"").toLowerCase(),base=file.name.replace(/\.[^.]+$/,"");
+  try{
+    if(ext==="csv"||ext==="txt"){
+      const rows=csvParse(await file.text()).slice(0,500).map(r=>r.slice(0,26));
+      const id=await shCreate(base,rows,true);if(id)toast("Planilha importada. Já pode editar.");return;
+    }
+    await loadJs(XL);
+    const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}),names=wb.SheetNames.slice(0,5);let n=0;
+    for(let i=0;i<names.length;i++){
+      const ws=wb.Sheets[names[i]];if(!ws||!ws["!ref"])continue;
+      const g=XLSX.utils.decode_range(ws["!ref"]),R=Math.min(g.e.r,g.s.r+499),Cc=Math.min(g.e.c,g.s.c+25),rows=[];
+      for(let r=g.s.r;r<=R;r++){const row=[];for(let c=g.s.c;c<=Cc;c++){const a=ws[XLSX.utils.encode_cell({r,c})];row.push(!a?"":a.f?"="+a.f:(a.t==="n"?a.v:(a.w!=null?a.w:a.v)))}rows.push(row)}
+      const id=await shCreate(names.length>1?base+" - "+names[i]:base,rows,true,n===0);if(id)n++;
+    }
+    toast(n?(n+" planilha"+(n>1?"s":"")+" importada"+(n>1?"s":"")+". Já pode editar."):"Não encontrei dados nesse arquivo.");
+  }catch(e){toast("Não foi possível ler esse arquivo. Use .xlsx, .xls ou .csv.")}
+}
+$("#view").addEventListener("click",e=>{
+  if(view!=="sheet"||e.target.closest(".ci"))return;
+  let el;
+  if(el=e.target.closest("td[data-k]")){const k=el.dataset.k;if(shTapped===k&&!shEd&&curSh)shEdit();else shSelect(+el.dataset.r,+el.dataset.c);shTapped=k;return}
+  if(el=e.target.closest("[data-shopen]")){openSheet(el.dataset.shopen);return}
+  if(el=e.target.closest("[data-newsh]")){newSheet(el.dataset.newsh);return}
+  if(e.target.closest("[data-imp]")){$("#shimp").click();return}
+  if(e.target.closest("[data-shback]")){shFlush();curSh=null;render();return}
+  if(el=e.target.closest("[data-ex]")){shFlush();const k=el.dataset.ex;if(k==="xlsx")shXlsx();else if(k==="pdf")shPdf();else shCsv();return}
+  if(e.target.closest("[data-shdel]")){if(confirm("Excluir esta planilha?")){deleteDoc(doc(db,"sheets",curSh.id)).catch(fail);curSh=null;render()}return}
+  if(el=e.target.closest("[data-sty]")){shStyle(el.dataset.sty);return}
+  if(el=e.target.closest("[data-bg]")){shStyle("bg:"+el.dataset.bg);return}
+  if(e.target.closest("[data-addr]")){curSh.rows=Math.min(500,curSh.rows+10);shMeta=true;shSaveSoon();$("#view").innerHTML=shEditor();shMount();return}
+  if(e.target.closest("[data-addc2]")){curSh.cols=Math.min(26,curSh.cols+1);shMeta=true;shSaveSoon();$("#view").innerHTML=shEditor();shMount()}
+});
+$("#view").addEventListener("keydown",e=>{
+  if(view!=="sheet"||!curSh)return;
+  const t=e.target;
+  if(t.id==="fxb"){if(e.key==="Enter"){e.preventDefault();shCommit(ck(shSel.r,shSel.c),t.value);$("#shg").focus()}return}
+  if(t.id==="sht"){if(e.key==="Enter")t.blur();return}
+  if(t.classList&&t.classList.contains("ci")){
+    if(e.key==="Enter"){e.preventDefault();shEndEdit(true);shMove(1,0);$("#shg").focus()}
+    else if(e.key==="Tab"){e.preventDefault();shEndEdit(true);shMove(0,e.shiftKey?-1:1);$("#shg").focus()}
+    else if(e.key==="Escape"){e.preventDefault();shEndEdit(false);$("#shg").focus()}
+    return;
+  }
+  if(!t.closest||!t.closest("#shg"))return;
+  const k=e.key;
+  if(k==="ArrowDown"){e.preventDefault();shMove(1,0)}else if(k==="ArrowUp"){e.preventDefault();shMove(-1,0)}
+  else if(k==="ArrowLeft"){e.preventDefault();shMove(0,-1)}else if(k==="ArrowRight"){e.preventDefault();shMove(0,1)}
+  else if(k==="Enter"||k==="F2"){e.preventDefault();shEdit()}
+  else if(k==="Delete"||k==="Backspace"){e.preventDefault();shCommit(ck(shSel.r,shSel.c),"")}
+  else if(k.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();shEdit(k)}
+});
+$("#view").addEventListener("focusout",e=>{if(e.target.classList&&e.target.classList.contains("ci"))shEndEdit(true)});
+$("#view").addEventListener("change",e=>{
+  if(view!=="sheet")return;
+  const t=e.target;
+  if(t.id==="fxb"&&curSh)shCommit(ck(shSel.r,shSel.c),t.value);
+  else if(t.id==="sht"&&curSh){curSh.title=t.value.trim()||"Planilha sem título";shMeta=true;shSaveSoon()}
+  else if(t.id==="shimp"&&t.files[0]){shImport(t.files[0]);t.value=""}
+});
+addEventListener("pagehide",shFlush);
 onAuthStateChanged(auth,u=>{
   document.body.classList.remove("boot");stopAll();
   if(!u){me=null;data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<script>try{var t=localStorage.getItem("pauta.theme");if(t&&t!=="auto")document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("pauta.theme");if(t&&t!=="auto"&&localStorage.getItem("pauta.in")==="1")document.documentElement.dataset.theme=t}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Gerenciador de atividades com quadro, calendário, painel e gráficos.">
 <meta name="theme-color" content="#f3d9ec" media="(prefers-color-scheme: light)">
@@ -312,6 +312,16 @@ body.sec-rep #new{display:none}
   .aitext{border:0!important;background:#fff!important;padding:0!important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+:root[data-theme="blue"]{--bgc:#123a8a;--grad:linear-gradient(135deg,#0f2557 0%,#1d4ed8 55%,#2b78d9 100%);--glass:rgba(255,255,255,.12);--edge:rgba(255,255,255,.26);--surface:#27489f;--ink:#eef4ff;--muted:#b9caf0;--line:#3a5db3;--accent:#7cc4ff;--accent-ink:#06264d;--high:#ff7a8a;--mid:#ffb74d;--low:#9db8ff;--ok:#5eead4;--shadow:none;--lift:0 10px 22px rgba(0,10,40,.45)}
+:root[data-theme="blue"] .nav button[aria-selected=true],:root[data-theme="blue"] .welcome{background:linear-gradient(135deg,#38bdf8,#2563eb);color:#fff}
+:root[data-theme="blue"] .mark{background:linear-gradient(135deg,#38bdf8,#2563eb);box-shadow:0 8px 20px rgba(37,99,235,.4)}
+:root[data-theme="blue"] .welcome .mark.big{background:#fff;color:#2563eb}
+:root[data-theme="blue"] .hero2{background:linear-gradient(135deg,#1e40af 0%,#2563eb 55%,#0ea5e9 100%);box-shadow:0 18px 40px rgba(14,60,160,.35)}
+:root[data-theme="blue"] .hero2 svg{display:none}
+:root[data-theme="blue"] .bt i,:root[data-theme="blue"] .mini i{background:linear-gradient(90deg,#38bdf8,#2563eb)!important}
+.card{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+body.dgmode,body.dgmode *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
+.card.ghost{opacity:.95;transition:none!important}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -361,7 +371,7 @@ body.sec-rep #new{display:none}
     <div class="f">
       <label class="full">Como você quer ser chamado(a)<input id="sname" maxlength="40"></label>
       <label class="full">E-mail<input id="smail" disabled></label>
-      <div class="full"><span class="lab">Aparência</span><div class="seg3" id="sth"><button type="button" data-th="auto">Automático</button><button type="button" data-th="light">Claro</button><button type="button" data-th="dark">Escuro</button></div></div>
+      <div class="full"><span class="lab">Aparência</span><div class="seg3" id="sth"><button type="button" data-th="auto">Automático</button><button type="button" data-th="light">Claro</button><button type="button" data-th="dark">Escuro</button><button type="button" data-th="blue">Azul</button></div></div>
     </div>
     <div class="pn2" id="inst"><b>Instalar o Pauta</b><p class="sub2" id="insttx" style="margin:0"></p><button type="button" class="btn primary" id="instbtn" hidden>Instalar agora</button></div>
     <div class="pn2" id="aibox" hidden><b>Inteligência artificial (Gemini)</b><p class="sub2" style="margin:0">Cole a chave gratuita do Google AI Studio. Ela fica salva no Firebase e libera a IA para todos que usam o Pauta.</p><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Chave da API<input id="aikey" type="password" autocomplete="off" autocapitalize="none"></label><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Modelo<input id="aimodel" value="gemini-3.5-flash-lite" autocapitalize="none"></label><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="aisave">Salvar IA</button><button type="button" class="btn" id="aitest">Testar</button></div></div>
@@ -512,7 +522,7 @@ function vis(c){const q=$("#q").value.trim().toLowerCase(),o=$("#fo").value;retu
 
 function cardHtml(c,done){
   const late=!done&&c.due&&c.due<iso(new Date());
-  return `<article class="card${c.id===newId?" new":""}${done?" done":""}" draggable="${c.boardId&&c.boardId!==curId?"false":"true"}" data-id="${c.id}" tabindex="0" aria-label="Abrir ${esc(c.t)}">
+  return `<article class="card${c.id===newId?" new":""}${done?" done":""}" draggable="false" data-id="${c.id}" tabindex="0" aria-label="Abrir ${esc(c.t)}">
     ${c.pr?`<span class="chip" style="--c:var(--${PC[c.pr]})">${PRI[c.pr]}</span>`:""}
     <div class="ct"><button class="chk${done?" on":""}" data-chk="${c.id}" aria-label="${done?"Reabrir":"Concluir"} tarefa" title="${done?"Reabrir":"Concluir"}">${done?"✓":""}</button><h3>${esc(c.t)}</h3></div>
     <div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${c.serie?'<span title="Tarefa recorrente">↻</span>':""}${c.boardId&&c.boardId!==curId&&c.by?`<span>de ${esc(c.by.split("@")[0])}</span>`:""}${c.due?`<span class="due ${late?"late":done?"ok":""}">${late?"Atrasada · ":done?"✓ ":""}${fmt(c.due)}</span>`:""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>${c.boardId&&c.boardId!==curId?"":`<div class="mv"><button data-mv="-1" aria-label="Mover para a lista anterior">‹</button><button data-mv="1" aria-label="Mover para a próxima lista">›</button></div>`}
@@ -732,7 +742,7 @@ function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clea
 const fail=e=>toast("Não foi possível salvar ("+(e.code||e.message)+")");
 function ownerName(v){v=v.trim();return v.includes("@")?v.split("@")[0]:v}
 function ownerEmail(v){v=v.trim().toLowerCase();return v.includes("@")?v:""}
-function applyRemote(){if(drag)return;render()}
+function applyRemote(){if(drag||(dg&&dg.started))return;render()}
 function defaultLists(){return [["A fazer"],["Em andamento"],["Em revisão"],["Concluída",1]].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))}
 function cardObj(c,i){const ae=c.aEmail||"";return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:ae,by:c.by||me.email,done:!!c.done,doneAt:c.doneAt||0,cat:c.cat||0,serie:c.serie||"",boardId:bd.id,ord:i,readers:[...new Set([...(bd.memberEmails||[]),ae].filter(Boolean))].sort()}}
 function persist(){
@@ -918,7 +928,7 @@ function welcome(){const w=$("#welcome");$("#wname").textContent=me.name;w.hidde
 $("#mark").onclick=()=>{curSec="home";render();swapCur();window.scrollTo({top:0,behavior:"smooth"})};
 
 function themePref(){try{return localStorage.getItem("pauta.theme")||"auto"}catch(e){return "auto"}}
-function setTheme(t){try{localStorage.setItem("pauta.theme",t)}catch(e){}if(t==="auto")delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===t))}
+function setTheme(t){try{localStorage.setItem("pauta.theme",t)}catch(e){}applyTheme();document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===t))}
 function openProfile(){
   $("#sname").value=me.full||me.name;$("#smail").value=me.email;
   document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===themePref()));
@@ -1548,11 +1558,82 @@ $("#sec").addEventListener("input",e=>{if(e.target.id==="repai")repAI[repW]=e.ta
 $("#sec").addEventListener("change",e=>{if(e.target.id==="rept")repTitles=e.target.checked});
 $("#aisave").onclick=()=>setDoc(doc(db,"config","ai"),{key:$("#aikey").value.trim(),model:$("#aimodel").value.trim()||"gemini-3.5-flash-lite"}).then(()=>toast("IA configurada.")).catch(fail);
 $("#aitest").onclick=async()=>{const t=await aiAsk("Responda apenas com a palavra: funcionando.",{key:$("#aikey").value.trim(),model:$("#aimodel").value.trim()||"gemini-3.5-flash-lite"});if(t)toast("A IA respondeu: "+t.trim().slice(0,60))};
+// ---- tema aplicado só depois do login
+function applyTheme(){const t=themePref();if(me&&t!=="auto")document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}
+
+// ---- arrastar cartões entre as listas (mouse e toque)
+let dg=null,dgBlock=false;
+board.addEventListener("pointerdown",e=>{
+  if(e.pointerType==="mouse"&&e.button!==0)return;
+  const card=e.target.closest(".card");
+  if(!card||card.closest(".list.me")||e.target.closest("button,input,textarea,select,a"))return;
+  dg={id:card.dataset.id,el:card,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,started:false,type:e.pointerType,pid:e.pointerId,timer:null};
+  if(e.pointerType!=="mouse")dg.timer=setTimeout(dgStart,320);
+});
+function dgStart(){
+  if(!dg||dg.started)return;dg.started=true;
+  const r=dg.el.getBoundingClientRect();
+  dg.ox=dg.x-r.left;dg.oy=dg.y-r.top;
+  const g=dg.el.cloneNode(true);g.className="card ghost";g.removeAttribute("data-id");
+  g.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;z-index:300;pointer-events:none;margin:0;transform:rotate(2deg);box-shadow:0 18px 40px rgba(0,0,0,.3)`;
+  document.body.appendChild(g);dg.ghost=g;dg.el.classList.add("dragging");document.body.classList.add("dgmode");
+  const ph=document.createElement("div");ph.id="ph";ph.className="ph";ph.style.height=r.height+"px";dg.el.after(ph);dg.ph=ph;
+  dg.raf=setInterval(()=>{if(!dg)return;const br=board.getBoundingClientRect();if(dg.x<br.left+60)board.scrollLeft-=12;else if(dg.x>br.right-60)board.scrollLeft+=12},16);
+  if(navigator.vibrate)try{navigator.vibrate(15)}catch(_){}
+}
+function dgMove(){
+  dg.ghost.style.left=(dg.x-dg.ox)+"px";dg.ghost.style.top=(dg.y-dg.oy)+"px";
+  const el=document.elementFromPoint(dg.x,dg.y),list=el&&el.closest(".list:not(.me)");
+  document.querySelectorAll(".list.over").forEach(n=>n!==list&&n.classList.remove("over"));
+  if(!list)return;
+  list.classList.add("over");
+  const box=list.querySelector(".cards"),after=[...box.querySelectorAll(".card:not(.dragging)")].find(c=>{const r=c.getBoundingClientRect();return dg.y<r.top+r.height/2});
+  if(after){if(dg.ph.nextElementSibling!==after)box.insertBefore(dg.ph,after)}else if(box.lastElementChild!==dg.ph)box.appendChild(dg.ph);
+}
+document.addEventListener("pointermove",e=>{
+  if(!dg||e.pointerId!==dg.pid)return;
+  dg.x=e.clientX;dg.y=e.clientY;
+  if(!dg.started){
+    const dist=Math.hypot(e.clientX-dg.sx,e.clientY-dg.sy);
+    if(dg.type==="mouse"){if(dist>6)dgStart()}else if(dist>10){clearTimeout(dg.timer);dg=null}
+    if(!dg||!dg.started)return;
+  }
+  e.preventDefault();dgMove();
+},{passive:false});
+document.addEventListener("touchmove",e=>{if(dg&&dg.started)e.preventDefault()},{passive:false});
+document.addEventListener("contextmenu",e=>{if(dg)e.preventDefault()});
+function dgDrop(){
+  const ph=dg.ph;if(!ph||!ph.parentNode)return;
+  const lid=ph.parentNode.dataset.cards;if(!lid)return;
+  let nx=ph.nextElementSibling;while(nx&&(!nx.dataset.id||nx.dataset.id===dg.id))nx=nx.nextElementSibling;
+  const i=data.cards.findIndex(c=>c.id===dg.id);if(i<0)return;
+  const [c]=data.cards.splice(i,1);c.l=lid;
+  {const dn=!!(data.lists.find(l=>l.id===lid)||{}).done;c.done=dn;c.doneAt=dn?(c.doneAt||Date.now()):0}
+  const bi=nx?data.cards.findIndex(x=>x.id===nx.dataset.id):-1;
+  if(bi>=0)data.cards.splice(bi,0,c);else data.cards.push(c);
+  save();
+}
+function dgClean(){
+  if(!dg)return;
+  clearTimeout(dg.timer);clearInterval(dg.raf);
+  if(dg.ghost)dg.ghost.remove();
+  const ph=$("#ph");if(ph)ph.remove();
+  document.querySelectorAll(".dragging,.list.over").forEach(n=>n.classList.remove("dragging","over"));
+  document.body.classList.remove("dgmode");
+  const was=dg.started;dg=null;if(was)render();
+}
+document.addEventListener("pointerup",e=>{
+  if(!dg||e.pointerId!==dg.pid)return;
+  if(dg.started){dgDrop();dgBlock=true;setTimeout(()=>{dgBlock=false},80)}
+  dgClean();
+});
+document.addEventListener("pointercancel",e=>{if(dg&&e.pointerId===dg.pid)dgClean()});
+board.addEventListener("click",e=>{if(dgBlock){e.stopPropagation();e.preventDefault()}},true);
 onAuthStateChanged(auth,u=>{
   document.body.classList.remove("boot");stopAll();
-  if(!u){me=null;data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}
+  if(!u){try{localStorage.removeItem("pauta.in")}catch(e){}me=null;applyTheme();data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}
   document.body.classList.remove("anon");
-  me={uid:u.uid,email:u.email.toLowerCase(),name:(u.displayName||u.email.split("@")[0]).split(" ")[0],full:u.displayName||"",verified:u.emailVerified,pw:u.providerData.some(p=>p.providerId==="password")};$("#who").textContent=me.email;$("#pav").textContent=(me.name[0]||"P").toUpperCase();if(fromLogin){fromLogin=false;welcome()}
+  me={uid:u.uid,email:u.email.toLowerCase(),name:(u.displayName||u.email.split("@")[0]).split(" ")[0],full:u.displayName||"",verified:u.emailVerified,pw:u.providerData.some(p=>p.providerId==="password")};$("#who").textContent=me.email;try{localStorage.setItem("pauta.in","1")}catch(e){}applyTheme();$("#pav").textContent=(me.name[0]||"P").toUpperCase();if(fromLogin){fromLogin=false;welcome()}
   try{curId=localStorage.getItem("pauta.board")||""}catch(e){}
   start();
 });

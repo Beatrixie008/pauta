@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<script>try{var t=localStorage.getItem("pauta.theme");if(t&&t!=="auto"&&localStorage.getItem("pauta.in")==="1")document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{if(localStorage.getItem("pauta.in")==="1"){var t=localStorage.getItem("pauta.theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;var c=localStorage.getItem("pauta.css");if(c){document.documentElement.dataset.color=localStorage.getItem("pauta.color")||"";var st=document.createElement("style");st.id="thm";st.textContent=c;document.head.appendChild(st)}}}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Gerenciador de atividades com quadro, calendário, painel e gráficos.">
 <meta name="theme-color" content="#f3d9ec" media="(prefers-color-scheme: light)">
@@ -312,16 +312,27 @@ body.sec-rep #new{display:none}
   .aitext{border:0!important;background:#fff!important;padding:0!important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
-:root[data-theme="blue"]{--bgc:#123a8a;--grad:linear-gradient(135deg,#0f2557 0%,#1d4ed8 55%,#2b78d9 100%);--glass:rgba(255,255,255,.12);--edge:rgba(255,255,255,.26);--surface:#27489f;--ink:#eef4ff;--muted:#b9caf0;--line:#3a5db3;--accent:#7cc4ff;--accent-ink:#06264d;--high:#ff7a8a;--mid:#ffb74d;--low:#9db8ff;--ok:#5eead4;--shadow:none;--lift:0 10px 22px rgba(0,10,40,.45)}
-:root[data-theme="blue"] .nav button[aria-selected=true],:root[data-theme="blue"] .welcome{background:linear-gradient(135deg,#38bdf8,#2563eb);color:#fff}
-:root[data-theme="blue"] .mark{background:linear-gradient(135deg,#38bdf8,#2563eb);box-shadow:0 8px 20px rgba(37,99,235,.4)}
-:root[data-theme="blue"] .welcome .mark.big{background:#fff;color:#2563eb}
-:root[data-theme="blue"] .hero2{background:linear-gradient(135deg,#1e40af 0%,#2563eb 55%,#0ea5e9 100%);box-shadow:0 18px 40px rgba(14,60,160,.35)}
-:root[data-theme="blue"] .hero2 svg{display:none}
-:root[data-theme="blue"] .bt i,:root[data-theme="blue"] .mini i{background:linear-gradient(90deg,#38bdf8,#2563eb)!important}
 .card{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 body.dgmode,body.dgmode *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
 .card.ghost{opacity:.95;transition:none!important}
+.psec{margin-top:14px}
+.psh{display:flex;justify-content:space-between;align-items:center;font-weight:800;margin-bottom:4px;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.psh span{color:var(--muted);font-size:13px}
+.pgrip{border:0;background:transparent;color:var(--muted);font-size:18px;cursor:grab;touch-action:none;padding:0 4px;line-height:1;flex:none}
+.pmv{flex:none;border:1.5px solid var(--line);background:transparent;color:var(--muted);border-radius:8px;font-size:12px;font-weight:800;padding:2px 7px}
+.pph{border:2px dashed var(--accent);border-radius:10px;background:color-mix(in srgb,var(--accent) 12%,transparent);margin:4px 0}
+.pdrag{display:none!important}
+.pghost{display:flex;gap:10px;align-items:center;font-weight:600}
+.swgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.swc{display:grid;gap:4px;justify-items:center;border:0;background:transparent;color:var(--ink);font-size:12px;font-weight:700;padding:4px 0}
+.swc i{width:34px;height:34px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 2px var(--line);transition:box-shadow .15s,transform .15s}
+.swc:hover i{transform:scale(1.08)}
+.swc[aria-pressed=true] i{box-shadow:0 0 0 3px var(--accent)}
+.sgt td{position:relative}
+.sgt td.rng{box-shadow:inset 0 0 0 100px rgba(214,51,108,.12)}
+.sgt td.rngend::after{content:"";position:absolute;right:0;bottom:0;width:8px;height:8px;background:#d6336c;border:1px solid #fff;cursor:crosshair}
+.sgt td.fillp{box-shadow:inset 0 0 0 100px rgba(214,51,108,.08);outline:1px dashed #d6336c;outline-offset:-1px}
+body.shpaint .sgt td{cursor:copy}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -371,7 +382,8 @@ body.dgmode,body.dgmode *{cursor:grabbing!important;user-select:none!important;-
     <div class="f">
       <label class="full">Como você quer ser chamado(a)<input id="sname" maxlength="40"></label>
       <label class="full">E-mail<input id="smail" disabled></label>
-      <div class="full"><span class="lab">Aparência</span><div class="seg3" id="sth"><button type="button" data-th="auto">Automático</button><button type="button" data-th="light">Claro</button><button type="button" data-th="dark">Escuro</button><button type="button" data-th="blue">Azul</button></div></div>
+      <div class="full"><span class="lab">Cor do tema</span><div class="swgrid" id="sco"></div></div>
+      <div class="full"><span class="lab">Modo</span><div class="seg3" id="sth"><button type="button" data-th="auto">Automático</button><button type="button" data-th="light">Claro</button><button type="button" data-th="dark">Escuro</button></div></div>
     </div>
     <div class="pn2" id="inst"><b>Instalar o Pauta</b><p class="sub2" id="insttx" style="margin:0"></p><button type="button" class="btn primary" id="instbtn" hidden>Instalar agora</button></div>
     <div class="pn2" id="aibox" hidden><b>Inteligência artificial (Gemini)</b><p class="sub2" style="margin:0">Cole a chave gratuita do Google AI Studio. Ela fica salva no Firebase e libera a IA para todos que usam o Pauta.</p><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Chave da API<input id="aikey" type="password" autocomplete="off" autocapitalize="none"></label><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Modelo<input id="aimodel" value="gemini-3.5-flash-lite" autocapitalize="none"></label><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="aisave">Salvar IA</button><button type="button" class="btn" id="aitest">Testar</button></div></div>
@@ -448,10 +460,10 @@ body.dgmode,body.dgmode *{cursor:grabbing!important;user-select:none!important;-
     </div>
     <label class="full" id="ptw" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted);margin-top:12px">Modelo de checklist<select id="ptp"></select></label>
     <div class="plist">
-      <div class="plh"><span>Checklist</span><span id="ppct"></span></div>
+      <div class="plh"><span>Progresso geral</span><span id="ppct"></span></div>
       <div class="bt"><i id="pbar" style="background:linear-gradient(90deg,#f93fd0,#ff9f55)"></i></div>
       <div id="pitems"></div>
-      <div class="padd"><input id="pnew" placeholder="Adicionar etapa" maxlength="120"><button type="button" class="btn" id="paddb">Adicionar</button></div>
+      
     </div>
     <div class="acts" style="flex-wrap:wrap">
       <button type="button" class="btn danger" id="pdel">Excluir</button>
@@ -813,11 +825,13 @@ $("#af").addEventListener("submit",async e=>{e.preventDefault();am("");const em=
 $("#afg").onclick=async()=>{const em=$("#ae").value.trim();if(!em){am("Digite seu e-mail acima e toque de novo.");return}try{await sendPasswordResetEmail(auth,em);am("Se existir uma conta com esse e-mail, enviamos o link para redefinir a senha. Veja também a caixa de spam.")}catch(x){am(msg(x))}};
 const SECS=[["home","Início"],["mine","Minhas tarefas"],["proj","Projetos"],["adm","Admissão"],["dem","Demissão"],["iv","Entrevistas"],["note","Notas"],["rep","Relatório"],["find","Buscar"]];
 const procF={adm:"all",dem:"all"};
+const FS_ADM=[...["Consultar Lono","Autorizar abertura de vaga","Solicitar Documentação - Seleção","Solicitar carta de recomendação","Solicitar ASO","Termo de Autodeclaração Étnico Racial","Envio de E-mail para DP - Docs disponível no Seleção","Abrir chamado - Solicitar Máquina","Solicitar Criação de E-mail Corporativo","Envio de Informações de Acesso ao E-mail","Confecção de crachá + Assinatura de E-mail","Enviar integração para Gestor e Colaborador","Abrir chamado p/ criação de Usuário de Rede","Integração"].map(t=>[t,"rh"]),...["Envio do NDA e Contrato de Trabalho","Envio da Admissão para o E-social","Solicitação de VA e VT","Conferência de Adesão ao Plano de Saúde e Odonto","Cadastro no Ponto","Liberação de acesso ao Ponto","Envio das demais Documentações","Conferência de Abertura de Conta Bancária"].map(t=>[t,"dp"])];
+const FS_DEM=["Carta de demissão","E-mail de comunicação - Fluxo interno","E-mail para o Colaborador","Solicitação do ASO Demissional","Recebimento do ASO Demissional","Recolhimento de Equipamento de Trabalho","Bloqueio de Acessos","Desligamento"].map(t=>[t,"rh"]);
 const A0=["Coletar documentos pessoais (RG, CPF, CTPS, comprovante de residência)","Agendar exame médico admissional","Registrar a admissão no eSocial antes do início das atividades","Assinar o contrato de trabalho","Coletar dados bancários para o salário","Cadastrar benefícios (VT, VR/VA, plano de saúde)","Cadastrar no ponto e na folha de pagamento","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Assinar termos (confidencialidade, LGPD, políticas internas)","Realizar a integração e apresentar à equipe","Definir gestor e plano dos primeiros 30 dias","Acompanhar o período de experiência"];
 const D0=["Formalizar a comunicação (aviso prévio ou pedido de demissão)","Definir a data e o tipo de desligamento","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Emitir documentos para FGTS e seguro-desemprego","Recolher equipamentos, crachá e chaves","Desativar e-mail e acessos aos sistemas","Cancelar benefícios (VT, VR/VA, plano de saúde)","Realizar a entrevista de desligamento","Atualizar folha e ponto","Arquivar a pasta do funcionário"];
-const PTPL={adm:{"CLT":A0,"Estágio":["Coletar documentos pessoais e da instituição de ensino","Assinar o Termo de Compromisso de Estágio","Conferir o seguro de acidentes pessoais","Cadastrar no ponto","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Realizar a integração e apresentar à equipe","Definir supervisor e plano de atividades","Agendar as avaliações periódicas"],"Jovem Aprendiz":["Coletar documentos pessoais e do responsável legal, se menor de idade","Confirmar a matrícula e a frequência escolar","Confirmar a vinculação ao curso de aprendizagem","Agendar exame médico admissional","Registrar a admissão no eSocial antes do início das atividades","Assinar o contrato de aprendizagem","Cadastrar benefícios (VT, VR/VA)","Cadastrar no ponto e na folha de pagamento","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Realizar a integração e apresentar à equipe","Definir o tutor e o plano de atividades","Acompanhar a frequência escolar e as avaliações do curso"],"PJ / Prestador":["Coletar dados da empresa (CNPJ, contrato social)","Definir escopo, prazo e valor","Assinar o contrato de prestação de serviços","Coletar dados bancários e orientar sobre nota fiscal","Assinar termo de confidencialidade","Criar e-mail e acessos aos sistemas","Realizar a integração e apresentar à equipe"]},
-dem:{"Sem justa causa":D0,"Pedido de demissão":["Receber a carta de pedido de demissão","Definir a data e o cumprimento do aviso prévio","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Recolher equipamentos, crachá e chaves","Desativar e-mail e acessos aos sistemas","Cancelar benefícios","Realizar a entrevista de desligamento","Atualizar folha e ponto","Arquivar a pasta do funcionário"],"Término de contrato":["Confirmar a data de término do contrato","Comunicar o funcionário e o gestor","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Recolher equipamentos e crachá","Desativar acessos e cancelar benefícios","Arquivar a pasta do funcionário"]}};
-function tplItems(tipo,k){return PTPL[tipo][k].map(t=>({id:"i"+(++uid),t,done:false}))}
+const PTPL={adm:{"Padrão FSBR":FS_ADM,"CLT":A0,"Estágio":["Coletar documentos pessoais e da instituição de ensino","Assinar o Termo de Compromisso de Estágio","Conferir o seguro de acidentes pessoais","Cadastrar no ponto","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Realizar a integração e apresentar à equipe","Definir supervisor e plano de atividades","Agendar as avaliações periódicas"],"Jovem Aprendiz":["Coletar documentos pessoais e do responsável legal, se menor de idade","Confirmar a matrícula e a frequência escolar","Confirmar a vinculação ao curso de aprendizagem","Agendar exame médico admissional","Registrar a admissão no eSocial antes do início das atividades","Assinar o contrato de aprendizagem","Cadastrar benefícios (VT, VR/VA)","Cadastrar no ponto e na folha de pagamento","Criar e-mail e acessos aos sistemas","Entregar equipamentos e crachá","Realizar a integração e apresentar à equipe","Definir o tutor e o plano de atividades","Acompanhar a frequência escolar e as avaliações do curso"],"PJ / Prestador":["Coletar dados da empresa (CNPJ, contrato social)","Definir escopo, prazo e valor","Assinar o contrato de prestação de serviços","Coletar dados bancários e orientar sobre nota fiscal","Assinar termo de confidencialidade","Criar e-mail e acessos aos sistemas","Realizar a integração e apresentar à equipe"]},
+dem:{"Padrão FSBR":FS_DEM,"Sem justa causa":D0,"Pedido de demissão":["Receber a carta de pedido de demissão","Definir a data e o cumprimento do aviso prévio","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Recolher equipamentos, crachá e chaves","Desativar e-mail e acessos aos sistemas","Cancelar benefícios","Realizar a entrevista de desligamento","Atualizar folha e ponto","Arquivar a pasta do funcionário"],"Término de contrato":["Confirmar a data de término do contrato","Comunicar o funcionário e o gestor","Agendar exame médico demissional","Calcular as verbas rescisórias","Assinar o termo de rescisão","Pagar as verbas rescisórias dentro do prazo legal","Registrar o desligamento no eSocial","Recolher equipamentos e crachá","Desativar acessos e cancelar benefícios","Arquivar a pasta do funcionário"]}};
+function tplItems(tipo,k){return PTPL[tipo][k].map(x=>Array.isArray(x)?{id:"i"+(++uid),t:x[0],setor:x[1],done:false}:{id:"i"+(++uid),t:x,setor:"rh",done:false})}
 let pd=null;
 $("#nav").innerHTML=SECS.filter(x=>x[0]!=="find").map(([k,n])=>`<button data-s="${k}" role="tab">${n}</button>`).join("");
 $("#nav").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b){curSec=b.dataset.s;render();swapCur()}});
@@ -853,7 +867,7 @@ function mineHtml(){
 function procHtml(tipo){
   const adm=tipo==="adm",all=procs.filter(p=>p.tipo===tipo).sort((a,b)=>(b.data||"").localeCompare(a.data||"")),f=procF[tipo];
   const list=all.filter(p=>f==="all"||(f==="open"?pct(p)<100:pct(p)===100)),nOpen=all.filter(p=>pct(p)<100).length;
-  const card=p=>{const c=pct(p),it=p.itens||[],n=it.filter(x=>x.done).length;return `<button class="pc" data-proc="${p.id}"><div class="pch"><span class="av" style="background:hsl(${hue(p.nome)} 52% 46%);margin:0">${esc(ini(p.nome))}</span><div><b>${esc(p.nome)}</b><small>${esc([p.cargo,p.contrato||p.depto].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${c===100?"ok":c>0?"go":""}">${c===100?"Concluído":c>0?"Em andamento":"Não iniciado"}</span></div><div class="bt"><i style="width:${c}%;background:linear-gradient(90deg,#f93fd0,#ff9f55)"></i></div><div class="pcf"><span>${n}/${it.length} etapas</span><span>${p.data?(adm?"Admissão ":"Demissão ")+fmt(p.data):""}</span></div></button>`};
+  const card=p=>{const c=pct(p),it=p.itens||[],n=it.filter(x=>x.done).length;return `<button class="pc" data-proc="${p.id}"><div class="pch"><span class="av" style="background:hsl(${hue(p.nome)} 52% 46%);margin:0">${esc(ini(p.nome))}</span><div><b>${esc(p.nome)}</b><small>${esc([p.cargo,p.contrato||p.depto].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${c===100?"ok":c>0?"go":""}">${c===100?"Concluído":c>0?"Em andamento":"Não iniciado"}</span></div><div class="bt"><i style="width:${c}%;background:linear-gradient(90deg,#f93fd0,#ff9f55)"></i></div><div class="pcf"><span>${secTxt(it)}</span><span>${p.data?(adm?"Admissão ":"Demissão ")+fmt(p.data):""}</span></div></button>`};
   const fb=(k,n)=>`<button data-f="${tipo}:${k}" aria-pressed="${f===k}">${n}</button>`;
   return `<div class="sech"><div><h2 class="sh">${adm?"Processo de admissão":"Processo de demissão"}</h2><p class="sub2">Checklist por funcionário. Evite registrar dados sensíveis, como CPF.</p></div><button class="btn primary" data-newproc="${tipo}">${adm?"Nova admissão":"Nova demissão"}</button></div>
   ${shareBar(tipo)}<div class="kpis">${kpi(all.length,"Total")}${kpi(nOpen,"Em andamento")}${kpi(all.length-nOpen,"Concluídos")}</div>
@@ -879,11 +893,6 @@ $("#sec").addEventListener("click",e=>{
   if(el=e.target.closest("[data-q]")){const q=el.dataset.q;if(q==="task"){curSec="proj";render();openDlg()}else openProc(null,q)}
 });
 
-function drawItems(){
-  const it=pd.itens,n=it.filter(x=>x.done).length,p=it.length?Math.round(n/it.length*100):0;
-  $("#ppct").textContent=n+"/"+it.length+" · "+p+"%";$("#pbar").style.width=p+"%";
-  $("#pitems").innerHTML=it.map(x=>`<div class="pi${x.done?" on":""}"><button type="button" class="chk${x.done?" on":""}" data-pt="${x.id}" aria-label="Marcar etapa">${x.done?"✓":""}</button><span>${esc(x.t)}</span><button type="button" class="x" data-pxd="${x.id}" aria-label="Remover etapa">×</button></div>`).join("");
-}
 function saveItems(){if(pd.id)updateDoc(doc(db,"processes",pd.id),{itens:pd.itens}).catch(fail)}
 function openProc(id,tipo){
   const ex=id?procs.find(p=>p.id===id):null;
@@ -895,16 +904,39 @@ function openProc(id,tipo){
   $("#pmw").hidden=adm;$("#pdel").hidden=!ex||ex.owner!==me.uid;$("#pshare").hidden=!ex;
   $("#ptw").hidden=!!ex;$("#ptp").innerHTML=Object.keys(PTPL[pd.tipo]).map(k=>`<option>${k}</option>`).join("");drawItems();$("#pdlg").showModal();
 }
+function rowItem(x){
+  const o=(x.setor||"rh")==="rh"?"DP":"RH";
+  return `<div class="pi${x.done?" on":""}" data-i="${x.id}"><button type="button" class="pgrip" data-pgrip aria-label="Arrastar para mudar a ordem">⠿</button><button type="button" class="chk${x.done?" on":""}" data-pt="${x.id}" aria-label="Marcar etapa">${x.done?"✓":""}</button><span>${esc(x.t)}</span><button type="button" class="pmv" data-pmv="${x.id}" title="Mover para o checklist ${o}">⇄ ${o}</button><button type="button" class="x" data-pxd="${x.id}" aria-label="Remover etapa">×</button></div>`;
+}
+function drawItems(){
+  const it=pd.itens,n=it.filter(x=>x.done).length,p=it.length?Math.round(n/it.length*100):0;
+  $("#ppct").textContent=n+"/"+it.length+" · "+p+"%";$("#pbar").style.width=p+"%";
+  const sec=(k,t)=>{const l=it.filter(x=>(x.setor||"rh")===k),d=l.filter(x=>x.done).length;return `<div class="psec" data-sec="${k}"><div class="psh"><b>${t}</b><span>${d}/${l.length}</span></div><div class="pitems">${l.map(rowItem).join("")||'<div class="sub2" style="margin:6px 0">Nenhuma etapa. Adicione abaixo.</div>'}</div><div class="padd"><input data-pnew="${k}" placeholder="Adicionar etapa em ${t}" maxlength="120"><button type="button" class="btn" data-padd="${k}">Adicionar</button></div></div>`};
+  $("#pitems").innerHTML=sec("rh","Checklist RH")+sec("dp","Checklist DP");
+}
+function addItem(k){
+  const inp=$('#pitems [data-pnew="'+k+'"]'),v=inp?inp.value.trim():"";if(!v)return;
+  pd.itens.push({id:"i"+(++uid),t:v,setor:k,done:false});drawItems();saveItems();
+  const n=$('#pitems [data-pnew="'+k+'"]');if(n)n.focus();
+}
+function moveItem(id,beforeId,setor){
+  const i=pd.itens.findIndex(x=>x.id===id);if(i<0)return;
+  const [it]=pd.itens.splice(i,1);it.setor=setor;
+  let at=beforeId?pd.itens.findIndex(x=>x.id===beforeId):-1;
+  if(at<0){let last=-1;pd.itens.forEach((x,j)=>{if((x.setor||"rh")===setor)last=j});at=last+1}
+  pd.itens.splice(at,0,it);
+}
 $("#pitems").addEventListener("click",e=>{
-  const t=e.target.closest("[data-pt]"),d=e.target.closest("[data-pxd]");
+  const t=e.target.closest("[data-pt]"),d=e.target.closest("[data-pxd]"),m=e.target.closest("[data-pmv]"),a=e.target.closest("[data-padd]");
   if(t){const x=pd.itens.find(i=>i.id===t.dataset.pt);if(x){x.done=!x.done;cel=x.done?x.id:""}}
   else if(d)pd.itens=pd.itens.filter(i=>i.id!==d.dataset.pxd);
+  else if(m){const x=pd.itens.find(i=>i.id===m.dataset.pmv);if(x)x.setor=(x.setor||"rh")==="rh"?"dp":"rh"}
+  else if(a){addItem(a.dataset.padd);return}
   else return;
-  drawItems();saveItems();if(cel){const el=document.querySelector('#pitems [data-pt="'+cel+'"]');if(el)burst(el);cel=""}
+  drawItems();saveItems();
+  if(cel){const el=document.querySelector('#pitems [data-pt="'+cel+'"]');if(el)burst(el);cel=""}
 });
-function addItem(){const v=$("#pnew").value.trim();if(!v)return;pd.itens.push({id:"i"+(++uid),t:v,done:false});$("#pnew").value="";drawItems();saveItems()}
-$("#paddb").onclick=addItem;
-$("#pnew").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addItem()}});
+$("#pitems").addEventListener("keydown",e=>{const i=e.target.closest("[data-pnew]");if(i&&e.key==="Enter"){e.preventDefault();addItem(i.dataset.pnew)}});
 $("#pcancel").onclick=()=>$("#pdlg").close();
 $("#pf").addEventListener("submit",()=>{
   const v={nome:$("#pn").value.trim(),cargo:$("#pcg").value.trim(),contrato:$("#pdp").value.trim(),data:$("#pdt").value,motivo:pd.tipo==="dem"?$("#pm").value:"",itens:pd.itens};
@@ -927,11 +959,11 @@ function fx(id){requestAnimationFrame(()=>{const el=document.querySelector('[dat
 function welcome(){const w=$("#welcome");$("#wname").textContent=me.name;w.hidden=false;w.classList.remove("out");document.body.classList.add("enter");setTimeout(()=>w.classList.add("out"),1100);setTimeout(()=>{w.hidden=true;document.body.classList.remove("enter")},1800)}
 $("#mark").onclick=()=>{curSec="home";render();swapCur();window.scrollTo({top:0,behavior:"smooth"})};
 
-function themePref(){try{return localStorage.getItem("pauta.theme")||"auto"}catch(e){return "auto"}}
+function themePref(){try{const t=localStorage.getItem("pauta.theme")||"auto";return t==="blue"?"auto":t}catch(e){return "auto"}}
 function setTheme(t){try{localStorage.setItem("pauta.theme",t)}catch(e){}applyTheme();document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===t))}
 function openProfile(){
   $("#sname").value=me.full||me.name;$("#smail").value=me.email;
-  document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===themePref()));
+  document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===themePref()));markColors();
   const need=me.pw&&!me.verified;$("#sver").textContent=need?"Seu e-mail ainda não foi confirmado.":"";$("#sver2").hidden=!need;
   openProfileExtra();$("#sdlg").showModal();
 }
@@ -1255,10 +1287,10 @@ function shTable(){
 }
 function shEditor(){
   return `<div class="sech" style="margin-bottom:8px"><button class="btn" data-shback>← Planilhas</button><input id="sht" class="shtitle" value="${esc(curSh.title)}" aria-label="Nome da planilha"><div class="shex"><button class="btn" data-ex="xlsx">Excel</button><button class="btn" data-ex="pdf">PDF</button><button class="btn" data-ex="csv">CSV</button><button class="btn danger" data-shdel>Excluir</button></div></div>
-  <div class="shbar"><button data-sty="b" aria-label="Negrito"><b>N</b></button><button data-sty="i" aria-label="Itálico"><i>I</i></button><button data-sty="al:left" aria-label="Alinhar à esquerda">⇤</button><button data-sty="al:center" aria-label="Centralizar">↔</button><button data-sty="al:right" aria-label="Alinhar à direita">⇥</button><span class="shsw">${["#fde1ee","#e8d4ff","#ffe2d2","#d8f3e6","#fff3bf"].map(c=>`<i data-bg="${c}" style="background:${c}"></i>`).join("")}<i data-bg="" class="shno" title="Sem cor">×</i></span><button data-sty="hd">Cabeçalho</button><button data-addr>+ Linha</button><button data-addc2>+ Coluna</button></div>
+  <div class="shbar"><button data-sty="b" aria-label="Negrito"><b>N</b></button><button data-sty="i" aria-label="Itálico"><i>I</i></button><button data-sty="al:left" aria-label="Alinhar à esquerda">⇤</button><button data-sty="al:center" aria-label="Centralizar">↔</button><button data-sty="al:right" aria-label="Alinhar à direita">⇥</button><span class="shsw">${["#fde1ee","#e8d4ff","#ffe2d2","#d8f3e6","#fff3bf"].map(c=>`<i data-bg="${c}" style="background:${c}"></i>`).join("")}<i data-bg="" class="shno" title="Sem cor">×</i></span><button data-sty="hd">Cabeçalho</button><button data-sty="paint" title="Pincel de formatação: copia o formato de uma célula para outras">Pincel</button><button data-sty="clr">Limpar formato</button><button data-sty="cp">Copiar</button><button data-sty="ps">Colar</button><button data-sty="fd" title="Preencher para baixo (Ctrl+D)">↓ Preencher</button><button data-sty="fr">→ Preencher</button><button data-addr>+ Linha</button><button data-addc2>+ Coluna</button></div>
   <div class="shfx"><span id="shname">A1</span><input id="fxb" placeholder="Valor ou fórmula, ex.: =SUM(B2:B6)" autocomplete="off" autocapitalize="none"></div>
   <div class="shwrap" id="shg" tabindex="0">${shTable()}</div>
-  <p class="sub2" style="margin-top:8px">Toque numa célula para selecionar e toque de novo para editar. Fórmulas: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, IF, ROUND, ABS, CONCAT, LEN, UPPER, LOWER. Cores e negrito saem no PDF, mas não no Excel.</p>`;
+  <p class="sub2" style="margin-top:8px">Toque numa célula para selecionar e toque de novo para editar. No computador, arraste para selecionar várias células e arraste o quadradinho do canto para preencher. Fórmulas: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, IF, ROUND, ABS, CONCAT, LEN, UPPER, LOWER. Cores e negrito saem no PDF, mas não no Excel.</p>`;
 }
 function shList(){
   const L=sheets.filter(s=>s.boardId===curId).sort((a,b)=>(b.updated||0)-(a.updated||0));
@@ -1281,14 +1313,6 @@ function shPaint(){
     td.style.cssText=(st.b?"font-weight:800;":"")+(st.i?"font-style:italic;":"")+(st.bg?"background:"+st.bg+";":"")+(al?"text-align:"+al+";":"");
   });
 }
-function shSelect(r,c,quiet){
-  shSel={r:Math.min(Math.max(1,r),curSh.rows),c:Math.min(Math.max(1,c),curSh.cols)};
-  const g=$("#shg");if(!g)return;
-  g.querySelectorAll("td.sel").forEach(t=>t.classList.remove("sel"));
-  const k=ck(shSel.r,shSel.c),td=g.querySelector(`td[data-k="${k}"]`);
-  if(td){td.classList.add("sel");if(!quiet)td.scrollIntoView({block:"nearest",inline:"nearest"})}
-  $("#shname").textContent=k;$("#fxb").value=curSh.cells[k]||"";
-}
 function shMove(dr,dc){shSelect(shSel.r+dr,shSel.c+dc)}
 function shEdit(init){
   const k=ck(shSel.r,shSel.c),td=$(`#shg td[data-k="${k}"]`);
@@ -1308,16 +1332,6 @@ function shCommit(k,v){
   if(v===(curSh.cells[k]||"")){shPaint();return}
   if(v==="")delete curSh.cells[k];else curSh.cells[k]=v;
   shDirty.add("c"+k);shPaint();shSelect(shSel.r,shSel.c,true);shSaveSoon();
-}
-function shStyle(kind){
-  const k=ck(shSel.r,shSel.c);
-  const setS=(key,fn)=>{const s={...(curSh.st[key]||{})};fn(s);if(Object.keys(s).length)curSh.st[key]=s;else delete curSh.st[key];shDirty.add("s"+key)};
-  if(kind==="hd"){for(let c=1;c<=curSh.cols;c++)setS(ck(1,c),s=>{s.b=1;s.bg="#fde1ee"})}
-  else if(kind==="b")setS(k,s=>{if(s.b)delete s.b;else s.b=1});
-  else if(kind==="i")setS(k,s=>{if(s.i)delete s.i;else s.i=1});
-  else if(kind.startsWith("al:"))setS(k,s=>{s.al=kind.slice(3)});
-  else if(kind.startsWith("bg:"))setS(k,s=>{const c=kind.slice(3);if(c)s.bg=c;else delete s.bg});
-  shPaint();shSaveSoon();
 }
 function shSaveSoon(){clearTimeout(shTimer);shTimer=setTimeout(shFlush,700)}
 function shFlush(){
@@ -1434,7 +1448,7 @@ async function shImport(file){
 $("#view").addEventListener("click",e=>{
   if(view!=="sheet"||e.target.closest(".ci"))return;
   let el;
-  if(el=e.target.closest("td[data-k]")){const k=el.dataset.k;if(shTapped===k&&!shEd&&curSh)shEdit();else shSelect(+el.dataset.r,+el.dataset.c);shTapped=k;return}
+  if(el=e.target.closest("td[data-k]")){if(shMoved){shMoved=false;return}const k=el.dataset.k,r=+el.dataset.r,c=+el.dataset.c;if(shPaintMode){shSelect(r,c,true);shApplyPainter();return}const R=shRange(),one=R.r1===R.r2&&R.c1===R.c2;if(shTapped===k&&!shEd&&curSh&&one)shEdit();else shSelect(r,c,false,e.shiftKey);shTapped=k;return}
   if(el=e.target.closest("[data-shopen]")){openSheet(el.dataset.shopen);return}
   if(el=e.target.closest("[data-newsh]")){newSheet(el.dataset.newsh);return}
   if(e.target.closest("[data-imp]")){$("#shimp").click();return}
@@ -1458,12 +1472,15 @@ $("#view").addEventListener("keydown",e=>{
     return;
   }
   if(!t.closest||!t.closest("#shg"))return;
-  const k=e.key;
-  if(k==="ArrowDown"){e.preventDefault();shMove(1,0)}else if(k==="ArrowUp"){e.preventDefault();shMove(-1,0)}
-  else if(k==="ArrowLeft"){e.preventDefault();shMove(0,-1)}else if(k==="ArrowRight"){e.preventDefault();shMove(0,1)}
+  const k=e.key,mod=e.ctrlKey||e.metaKey,mv=(dr,dc)=>{e.preventDefault();shSelect(shSel.r+dr,shSel.c+dc,false,e.shiftKey)};
+  if(k==="ArrowDown")mv(1,0);else if(k==="ArrowUp")mv(-1,0);else if(k==="ArrowLeft")mv(0,-1);else if(k==="ArrowRight")mv(0,1);
+  else if(mod&&k.toLowerCase()==="c"){e.preventDefault();shCopy(false)}
+  else if(mod&&k.toLowerCase()==="x"){e.preventDefault();shCopy(true)}
+  else if(mod&&k.toLowerCase()==="d"){e.preventDefault();shStyle("fd")}
+  else if(mod)return;
   else if(k==="Enter"||k==="F2"){e.preventDefault();shEdit()}
-  else if(k==="Delete"||k==="Backspace"){e.preventDefault();shCommit(ck(shSel.r,shSel.c),"")}
-  else if(k.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();shEdit(k)}
+  else if(k==="Delete"||k==="Backspace"){e.preventDefault();shClearRange()}
+  else if(k.length===1&&!e.altKey){e.preventDefault();shEdit(k)}
 });
 $("#view").addEventListener("focusout",e=>{if(e.target.classList&&e.target.classList.contains("ci"))shEndEdit(true)});
 $("#view").addEventListener("change",e=>{
@@ -1559,7 +1576,6 @@ $("#sec").addEventListener("change",e=>{if(e.target.id==="rept")repTitles=e.targ
 $("#aisave").onclick=()=>setDoc(doc(db,"config","ai"),{key:$("#aikey").value.trim(),model:$("#aimodel").value.trim()||"gemini-3.5-flash-lite"}).then(()=>toast("IA configurada.")).catch(fail);
 $("#aitest").onclick=async()=>{const t=await aiAsk("Responda apenas com a palavra: funcionando.",{key:$("#aikey").value.trim(),model:$("#aimodel").value.trim()||"gemini-3.5-flash-lite"});if(t)toast("A IA respondeu: "+t.trim().slice(0,60))};
 // ---- tema aplicado só depois do login
-function applyTheme(){const t=themePref();if(me&&t!=="auto")document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}
 
 // ---- arrastar cartões entre as listas (mouse e toque)
 let dg=null,dgBlock=false;
@@ -1629,6 +1645,187 @@ document.addEventListener("pointerup",e=>{
 });
 document.addEventListener("pointercancel",e=>{if(dg&&e.pointerId===dg.pid)dgClean()});
 board.addEventListener("click",e=>{if(dgBlock){e.stopPropagation();e.preventDefault()}},true);
+// ---- cores do tema (cada usuário escolhe a sua; claro e escuro de cada cor)
+const PAL=[{k:"rosa",n:"Rosa",h:333,a:"#d6336c",ad:"#f472b6"},{k:"azul",n:"Azul",h:215,a:"#2563eb",ad:"#7cc4ff"},{k:"roxo",n:"Roxo",h:268,a:"#7c3aed",ad:"#b794f6"},{k:"verde",n:"Verde",h:150,a:"#15803d",ad:"#4ade80"},{k:"turquesa",n:"Turquesa",h:185,a:"#0e7490",ad:"#22d3ee"},{k:"laranja",n:"Laranja",h:25,a:"#c2410c",ad:"#fb923c"},{k:"vermelho",n:"Vermelho",h:355,a:"#c62839",ad:"#ff7a8a"},{k:"grafite",n:"Grafite",h:220,a:"#475569",ad:"#cbd5e1",s:.18}];
+let thm=document.getElementById("thm");if(!thm){thm=document.createElement("style");thm.id="thm"}document.head.appendChild(thm);
+function themeCss(p){
+  const h=p.h,s=p.s||1,S=v=>Math.round(v*s),H=x=>((x%360)+360)%360;
+  const L=`--grad:linear-gradient(135deg,hsl(${h} ${S(100)}% 91%) 0%,hsl(${H(h-60)} ${S(85)}% 92%) 48%,hsl(${H(h+50)} ${S(100)}% 91%) 100%);--bgc:hsl(${h} ${S(70)}% 90%);--glass:rgba(255,255,255,.58);--edge:rgba(255,255,255,.7);--surface:#fff;--ink:hsl(${h} ${S(35)}% 20%);--muted:hsl(${h} ${S(18)}% 42%);--line:hsl(${h} ${S(55)}% 94%);--accent:${p.a};--accent-ink:#fff;--shadow:0 2px 6px rgba(20,20,40,.12);--lift:0 10px 22px rgba(20,20,40,.2);--g1:hsl(${h} ${S(85)}% 60%);--g2:hsl(${H(h+30)} ${S(70)}% 42%);--g3:hsl(${H(h-20)} ${S(80)}% 36%)`;
+  const D=`--grad:linear-gradient(135deg,hsl(${H(h-48)} ${S(45)}% 13%) 0%,hsl(${H(h-73)} ${S(40)}% 14%) 50%,hsl(${H(h-3)} ${S(45)}% 13%) 100%);--bgc:hsl(${H(h-48)} ${S(45)}% 13%);--glass:rgba(255,255,255,.07);--edge:rgba(255,255,255,.1);--surface:hsl(${H(h-45)} ${S(32)}% 19%);--ink:hsl(${H(h-40)} ${S(60)}% 94%);--muted:hsl(${H(h-45)} ${S(28)}% 72%);--line:hsl(${H(h-45)} ${S(25)}% 27%);--accent:${p.ad};--accent-ink:hsl(${h} ${S(70)}% 12%);--shadow:none;--lift:0 10px 22px rgba(0,0,0,.4)`;
+  return `:root[data-color]{${L}}
+@media (prefers-color-scheme:dark){:root[data-color]:not([data-theme="light"]){${D}}}
+:root[data-color][data-theme="dark"]{${D}}
+:root[data-color] .nav button[aria-selected=true]{background:linear-gradient(135deg,var(--g2),var(--g3));border-color:transparent;color:#fff}
+:root[data-color] .welcome{background:linear-gradient(135deg,var(--g2),var(--g3))}
+:root[data-color] .mark{background:linear-gradient(135deg,var(--g2),var(--g3));box-shadow:0 8px 20px rgba(0,0,0,.25)}
+:root[data-color] .welcome .mark.big{background:#fff;color:var(--g2)}
+:root[data-color] .hero2{background:linear-gradient(135deg,var(--g2),var(--g3));box-shadow:0 18px 40px rgba(0,0,0,.2)}
+:root[data-color] .hero2 svg{display:none}
+:root[data-color] .bt i,:root[data-color] .mini i{background:linear-gradient(90deg,var(--g1),var(--g2))!important}`;
+}
+function colorPref(){try{const c=localStorage.getItem("pauta.color");if(c)return c;return localStorage.getItem("pauta.theme")==="blue"?"azul":"rosa"}catch(e){return "rosa"}}
+function applyTheme(){
+  const root=document.documentElement,m=themePref(),c=colorPref(),p=PAL.find(x=>x.k===c);
+  if(me&&m!=="auto")root.dataset.theme=m;else delete root.dataset.theme;
+  if(me&&p&&c!=="rosa"){const css=themeCss(p);root.dataset.color=c;thm.textContent=css;try{localStorage.setItem("pauta.css",css);localStorage.setItem("pauta.color",c)}catch(e){}}
+  else{delete root.dataset.color;thm.textContent="";if(me)try{localStorage.removeItem("pauta.css");localStorage.setItem("pauta.color",c)}catch(e){}}
+}
+function markColors(){document.querySelectorAll("#sco button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.co===colorPref()))}
+function setColor(c){try{localStorage.setItem("pauta.color",c)}catch(e){}applyTheme();markColors()}
+$("#sco").innerHTML=PAL.map(p=>`<button type="button" class="swc" data-co="${p.k}" aria-pressed="false" title="${p.n}"><i style="background:linear-gradient(135deg,${p.a} 50%,${p.ad} 50%)"></i>${p.n}</button>`).join("");
+$("#sco").addEventListener("click",e=>{const b=e.target.closest("[data-co]");if(b)setColor(b.dataset.co)});
+function secTxt(it){const rh=it.filter(x=>(x.setor||"rh")==="rh"),dp=it.filter(x=>x.setor==="dp"),f=a=>a.filter(x=>x.done).length+"/"+a.length;return "RH "+f(rh)+(dp.length?" · DP "+f(dp):"")}
+
+// ---- arrastar etapas do checklist (mouse e toque)
+let pg=null;
+$("#pitems").addEventListener("pointerdown",e=>{
+  const g=e.target.closest("[data-pgrip]");if(!g||(e.pointerType==="mouse"&&e.button!==0))return;
+  e.preventDefault();
+  const row=g.closest(".pi"),r=row.getBoundingClientRect(),ghost=row.cloneNode(true);
+  ghost.className="pi pghost";ghost.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;z-index:300;pointer-events:none;background:var(--surface);color:var(--ink);box-shadow:0 12px 28px rgba(0,0,0,.28);border-radius:12px;padding:7px 8px`;
+  $("#pdlg").appendChild(ghost);
+  const ph=document.createElement("div");ph.className="pph";ph.style.height=r.height+"px";row.after(ph);row.classList.add("pdrag");
+  pg={id:row.dataset.i,row,ghost,ph,oy:e.clientY-r.top,sec:row.closest(".psec"),pid:e.pointerId};
+  try{g.setPointerCapture(e.pointerId)}catch(_){}
+});
+document.addEventListener("pointermove",e=>{
+  if(!pg||e.pointerId!==pg.pid)return;
+  e.preventDefault();pg.ghost.style.top=(e.clientY-pg.oy)+"px";
+  const list=pg.sec.querySelector(".pitems"),after=[...list.querySelectorAll(".pi:not(.pdrag)")].find(x=>{const b=x.getBoundingClientRect();return e.clientY<b.top+b.height/2});
+  if(after){if(pg.ph.nextElementSibling!==after)list.insertBefore(pg.ph,after)}else if(list.lastElementChild!==pg.ph)list.appendChild(pg.ph);
+},{passive:false});
+document.addEventListener("touchmove",e=>{if(pg)e.preventDefault()},{passive:false});
+function pgEnd(ok){
+  if(!pg)return;
+  const nx=pg.ph.nextElementSibling,setor=pg.sec.dataset.sec,id=pg.id;
+  pg.ghost.remove();pg.ph.remove();pg.row.classList.remove("pdrag");pg=null;
+  if(ok){moveItem(id,nx&&nx.dataset.i?nx.dataset.i:null,setor);drawItems();saveItems()}
+}
+document.addEventListener("pointerup",e=>{if(pg&&e.pointerId===pg.pid)pgEnd(true)});
+document.addEventListener("pointercancel",e=>{if(pg&&e.pointerId===pg.pid)pgEnd(false)});
+
+// ---- planilha: seleção em bloco, preencher, copiar, colar e pincel de formatação
+let shAnc={r:1,c:1},shDrag=0,shMoved=false,shPaintMode=null,shClip=null,shFill=null;
+function shRange(){return {r1:Math.min(shAnc.r,shSel.r),r2:Math.max(shAnc.r,shSel.r),c1:Math.min(shAnc.c,shSel.c),c2:Math.max(shAnc.c,shSel.c)}}
+function shSelect(r,c,quiet,ext){
+  shSel={r:Math.min(Math.max(1,r),curSh.rows),c:Math.min(Math.max(1,c),curSh.cols)};
+  if(!ext)shAnc={...shSel};
+  const g=$("#shg");if(!g)return;
+  const R=shRange(),multi=R.r1!==R.r2||R.c1!==R.c2;
+  g.querySelectorAll("td").forEach(td=>{const r0=+td.dataset.r,c0=+td.dataset.c,inR=r0>=R.r1&&r0<=R.r2&&c0>=R.c1&&c0<=R.c2;td.classList.toggle("rng",inR&&multi);td.classList.toggle("sel",r0===shSel.r&&c0===shSel.c);td.classList.toggle("rngend",r0===R.r2&&c0===R.c2)});
+  const k=ck(shSel.r,shSel.c),td=g.querySelector(`td[data-k="${k}"]`);
+  if(td&&!quiet)td.scrollIntoView({block:"nearest",inline:"nearest"});
+  $("#shname").textContent=multi?ck(R.r1,R.c1)+":"+ck(R.r2,R.c2):k;$("#fxb").value=curSh.cells[k]||"";
+}
+function shiftF(f,dr,dc){return f.replace(/("(?:[^"]|"")*")|\b([A-Z]{1,2})(\d+)\b/g,(m,q,col,row)=>{if(q)return q;const a=parseRef(col+row);if(!a)return m;const nr=a.r+dr,nc=a.c+dc;if(nr<1||nc<1||nc>26)return "#REF!";return ck(nr,nc)})}
+function shCopyCell(src,dst,dr,dc){
+  const raw=curSh.cells[src];
+  if(raw==null||raw==="")delete curSh.cells[dst];else curSh.cells[dst]=String(raw)[0]==="="?shiftF(String(raw),dr,dc):raw;
+  shDirty.add("c"+dst);
+  const st=curSh.st[src];if(st&&Object.keys(st).length)curSh.st[dst]={...st};else delete curSh.st[dst];
+  shDirty.add("s"+dst);
+}
+function shFillBtn(d){
+  const R=shRange();
+  if(d==="d"){if(R.r1===R.r2){toast("Selecione mais de uma linha.");return}for(let c=R.c1;c<=R.c2;c++)for(let r=R.r1+1;r<=R.r2;r++)shCopyCell(ck(R.r1,c),ck(r,c),r-R.r1,0)}
+  else{if(R.c1===R.c2){toast("Selecione mais de uma coluna.");return}for(let r=R.r1;r<=R.r2;r++)for(let c=R.c1+1;c<=R.c2;c++)shCopyCell(ck(r,R.c1),ck(r,c),0,c-R.c1)}
+}
+function shFillPreview(){
+  const g=$("#shg");if(!g||!shFill||!shFill.to)return;
+  const R=shFill.R,to=shFill.to,down=Math.abs(to.r-R.r2)>=Math.abs(to.c-R.c2);
+  g.querySelectorAll("td.fillp").forEach(t=>t.classList.remove("fillp"));
+  const r2=down?Math.max(R.r2,to.r):R.r2,c2=down?R.c2:Math.max(R.c2,to.c);
+  g.querySelectorAll("td").forEach(t=>{const r=+t.dataset.r,c=+t.dataset.c;if(r>=R.r1&&r<=r2&&c>=R.c1&&c<=c2&&!(r<=R.r2&&c<=R.c2))t.classList.add("fillp")});
+}
+function shDoFill(){
+  const g=$("#shg");if(g)g.querySelectorAll("td.fillp").forEach(t=>t.classList.remove("fillp"));
+  const R=shFill.R,to=shFill.to;if(!to)return;
+  const down=Math.abs(to.r-R.r2)>=Math.abs(to.c-R.c2),nr=R.r2-R.r1+1,nc=R.c2-R.c1+1;
+  if(down&&to.r>R.r2){for(let c=R.c1;c<=R.c2;c++)for(let r=R.r2+1;r<=Math.min(curSh.rows,to.r);r++){const sr=R.r1+((r-R.r1)%nr);shCopyCell(ck(sr,c),ck(r,c),r-sr,0)}shAnc={r:R.r1,c:R.c1};shSelect(Math.min(curSh.rows,to.r),R.c2,true,true)}
+  else if(!down&&to.c>R.c2){for(let r=R.r1;r<=R.r2;r++)for(let c=R.c2+1;c<=Math.min(curSh.cols,to.c);c++){const sc=R.c1+((c-R.c1)%nc);shCopyCell(ck(r,sc),ck(r,c),0,c-sc)}shAnc={r:R.r1,c:R.c1};shSelect(R.r2,Math.min(curSh.cols,to.c),true,true)}
+  else return;
+  shPaint();shSaveSoon();
+}
+function shClearRange(){const R=shRange();for(let r=R.r1;r<=R.r2;r++)for(let c=R.c1;c<=R.c2;c++){const k=ck(r,c);delete curSh.cells[k];shDirty.add("c"+k)}shPaint();shSelect(shSel.r,shSel.c,true,true);shSaveSoon()}
+function shCopy(cut){
+  const R=shRange(),cells=[],sts=[];
+  for(let r=R.r1;r<=R.r2;r++){const row=[],srow=[];for(let c=R.c1;c<=R.c2;c++){const k=ck(r,c);row.push(curSh.cells[k]||"");srow.push(curSh.st[k]?{...curSh.st[k]}:null)}cells.push(row);sts.push(srow)}
+  const tsv=cells.map((row,i)=>row.map((v,j)=>String(v)[0]==="="?shDisp(shVal(curSh,ck(R.r1+i,R.c1+j),[])):v).join("\t")).join("\n");
+  shClip={cells,sts,r0:R.r1,c0:R.c1,tsv};
+  try{navigator.clipboard.writeText(tsv)}catch(_){}
+  if(cut)shClearRange();
+  toast(cut?"Recortado.":"Copiado.");
+}
+function shPasteInternal(){
+  if(!shClip)return false;
+  const R=shRange();
+  shClip.cells.forEach((row,i)=>row.forEach((v,j)=>{
+    const r=R.r1+i,c=R.c1+j;if(r>curSh.rows||c>curSh.cols)return;
+    const k=ck(r,c);
+    if(v==="")delete curSh.cells[k];else curSh.cells[k]=String(v)[0]==="="?shiftF(String(v),r-(shClip.r0+i),c-(shClip.c0+j)):v;
+    shDirty.add("c"+k);
+    const st=shClip.sts[i][j];if(st)curSh.st[k]={...st};else delete curSh.st[k];
+    shDirty.add("s"+k);
+  }));
+  shPaint();shSaveSoon();return true;
+}
+function shApplyPainter(){
+  const R=shRange(),st=shPaintMode;shPaintMode=null;document.body.classList.remove("shpaint");
+  for(let r=R.r1;r<=R.r2;r++)for(let c=R.c1;c<=R.c2;c++){const k=ck(r,c);if(Object.keys(st).length)curSh.st[k]={...st};else delete curSh.st[k];shDirty.add("s"+k)}
+  shPaint();shSaveSoon();toast("Formato aplicado.");
+}
+function shStyle(kind){
+  const R=shRange();
+  const each=fn=>{for(let r=R.r1;r<=R.r2;r++)for(let c=R.c1;c<=R.c2;c++)fn(ck(r,c))};
+  const setS=(key,fn)=>{const s={...(curSh.st[key]||{})};fn(s);if(Object.keys(s).length)curSh.st[key]=s;else delete curSh.st[key];shDirty.add("s"+key)};
+  if(kind==="paint"){
+    if(shPaintMode){shPaintMode=null;document.body.classList.remove("shpaint");toast("Pincel desativado.");return}
+    shPaintMode={...(curSh.st[ck(R.r1,R.c1)]||{})};document.body.classList.add("shpaint");toast("Pincel ativo: selecione as células que vão receber o formato.");return;
+  }
+  if(kind==="cp"){shCopy(false);return}
+  if(kind==="ps"){if(!shPasteInternal())toast("Copie algo primeiro, ou use Ctrl+V.");return}
+  if(kind==="fd"){shFillBtn("d")}
+  else if(kind==="fr"){shFillBtn("r")}
+  else if(kind==="clr")each(k=>{delete curSh.st[k];shDirty.add("s"+k)});
+  else if(kind==="hd"){for(let c=1;c<=curSh.cols;c++)setS(ck(1,c),s=>{s.b=1;s.bg="#fde1ee"})}
+  else if(kind==="b"){const on=!(curSh.st[ck(R.r1,R.c1)]||{}).b;each(k=>setS(k,s=>{if(on)s.b=1;else delete s.b}))}
+  else if(kind==="i"){const on=!(curSh.st[ck(R.r1,R.c1)]||{}).i;each(k=>setS(k,s=>{if(on)s.i=1;else delete s.i}))}
+  else if(kind.startsWith("al:")){const v=kind.slice(3);each(k=>setS(k,s=>{s.al=v}))}
+  else if(kind.startsWith("bg:")){const v=kind.slice(3);each(k=>setS(k,s=>{if(v)s.bg=v;else delete s.bg}))}
+  shPaint();shSaveSoon();
+}
+$("#view").addEventListener("pointerdown",e=>{
+  if(view!=="sheet"||!curSh||e.pointerType!=="mouse"||e.button!==0||shEd)return;
+  const td=e.target.closest("td[data-k]");if(!td)return;
+  const b=td.getBoundingClientRect(),r=+td.dataset.r,c=+td.dataset.c;
+  if(td.classList.contains("rngend")&&e.clientX>b.right-12&&e.clientY>b.bottom-12){shFill={R:shRange()};shDrag=2;shMoved=true;e.preventDefault();return}
+  shDrag=1;shMoved=false;
+  if(e.shiftKey){shSelect(r,c,true,true);shMoved=true}else shSelect(r,c,true,false);
+});
+$("#view").addEventListener("pointermove",e=>{
+  if(!shDrag||e.pointerType!=="mouse")return;
+  const el=document.elementFromPoint(e.clientX,e.clientY),td=el&&el.closest&&el.closest("td[data-k]");if(!td)return;
+  const r=+td.dataset.r,c=+td.dataset.c;
+  if(shDrag===1){if(r!==shSel.r||c!==shSel.c){shMoved=true;shSelect(r,c,true,true)}}
+  else{shFill.to={r,c};shFillPreview()}
+});
+document.addEventListener("pointerup",()=>{
+  if(!shDrag)return;const d=shDrag;shDrag=0;
+  if(!curSh)return;
+  if(d===2&&shFill){shDoFill();shFill=null}
+  else if(shPaintMode)shApplyPainter();
+});
+document.addEventListener("paste",e=>{
+  if(view!=="sheet"||!curSh||shEd||!$("#shg"))return;
+  const a=document.activeElement;if(a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"))return;
+  const txt=(e.clipboardData&&e.clipboardData.getData("text"))||"";e.preventDefault();
+  if(shClip&&txt===shClip.tsv){shPasteInternal();return}
+  if(!txt)return;
+  const rows=txt.replace(/\r/g,"").split("\n");if(rows.length>1&&rows[rows.length-1]==="")rows.pop();
+  const R=shRange();let any=false;
+  rows.forEach((line,i)=>line.split("\t").forEach((v,j)=>{const r=R.r1+i,c=R.c1+j;if(r>curSh.rows||c>curSh.cols)return;const k=ck(r,c);v=v.trim();if(v==="")delete curSh.cells[k];else curSh.cells[k]=v;shDirty.add("c"+k);any=true}));
+  if(any){shPaint();shSaveSoon()}
+});
 onAuthStateChanged(auth,u=>{
   document.body.classList.remove("boot");stopAll();
   if(!u){try{localStorage.removeItem("pauta.in")}catch(e){}me=null;applyTheme();data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}

@@ -333,6 +333,10 @@ body.dgmode,body.dgmode *{cursor:grabbing!important;user-select:none!important;-
 .sgt td.rngend::after{content:"";position:absolute;right:0;bottom:0;width:8px;height:8px;background:#d6336c;border:1px solid #fff;cursor:crosshair}
 .sgt td.fillp{box-shadow:inset 0 0 0 100px rgba(214,51,108,.08);outline:1px dashed #d6336c;outline-offset:-1px}
 body.shpaint .sgt td{cursor:copy}
+.psec .pi{cursor:grab}
+.psec .pi button,.psec .pi input{cursor:pointer}
+body:not(.sec-proj) #bshare{display:none}
+.sgt td.movep{outline:2px dashed #2563eb;outline-offset:-2px;box-shadow:inset 0 0 0 100px rgba(37,99,235,.10)}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -346,7 +350,8 @@ body.shpaint .sgt td{cursor:copy}
   <button class="iconbtn" id="srch" aria-label="Buscar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button><button class="btn primary" id="new">Nova tarefa</button><span id="who" hidden></span><button id="out" hidden></button><button class="avbtn" id="prof" aria-label="Perfil e configurações"><span id="pav">P</span></button>
 </header>
 <nav class="nav" id="nav" role="tablist" aria-label="Seções"></nav>
-<div class="bar2"><select class="field" id="bsel" aria-label="Quadro"></select><button class="btn" id="inv" hidden>Convidar</button><button class="btn danger" id="delb" hidden>Excluir quadro</button></div>
+<div class="bar2"><select class="field" id="bsel" aria-label="Quadro"></select><button class="btn" id="inv" hidden>Compartilhar</button><button class="btn danger" id="delb" hidden>Excluir quadro</button></div>
+<div class="sharebar" id="bshare" style="padding:0 18px"></div>
 <nav class="tabs" id="tabs" role="tablist" aria-label="Visualizações"></nav>
 <main class="board intro" id="board"></main>
 <section class="view" id="view" hidden></section>
@@ -462,6 +467,7 @@ body.shpaint .sgt td{cursor:copy}
     <div class="plist">
       <div class="plh"><span>Progresso geral</span><span id="ppct"></span></div>
       <div class="bt"><i id="pbar" style="background:linear-gradient(90deg,#f93fd0,#ff9f55)"></i></div>
+      <p class="sub2" style="margin:6px 0 0">Para mudar a ordem, arraste a etapa pelo ícone ⠿ (no computador, pode arrastar a linha toda) ou use os botões ↑ e ↓.</p>
       <div id="pitems"></div>
       
     </div>
@@ -543,11 +549,11 @@ function cardHtml(c,done){
 
 function render(){
   const b=$("#board"),sx=b.scrollLeft,today=iso(new Date());
-  const bs=$("#bsel"),ob=[...boards.filter(x=>x.personal),...boards.filter(x=>!x.personal).sort((x,y)=>(x.name||"").localeCompare(y.name||"","pt-BR"))];
-  bs.innerHTML=ob.map(x=>`<option value="${x.id}">${x.personal?"Meu quadro":esc(x.name||"Quadro")}</option>`).join("")+'<option value="__new">+ Novo quadro compartilhado…</option>';
+  const bs=$("#bsel"),ob=[...boards.filter(x=>x.personal).sort((a,b)=>(b.owner===me.uid)-(a.owner===me.uid)),...boards.filter(x=>!x.personal).sort((x,y)=>(x.name||"").localeCompare(y.name||"","pt-BR"))];
+  bs.innerHTML=ob.map(x=>`<option value="${x.id}">${esc(boardLabel(x))}</option>`).join("")+'<option value="__new">+ Novo quadro compartilhado…</option>';
   if(bd)bs.value=bd.id;
-  $("#inv").hidden=!bd||!!bd.personal;$("#delb").hidden=!(bd&&!bd.personal&&me&&bd.owner===me.uid);
-  const asg=bd&&bd.personal?assigned.filter(c=>c.boardId!==curId&&vis(c)):[];
+  $("#inv").hidden=!bd;$("#bshare").innerHTML=bd&&me?boardShareBar(bd):"";$("#delb").hidden=!(bd&&!bd.personal&&me&&bd.owner===me.uid);
+  const asg=bd&&bd.id==="u_"+me.uid?assigned.filter(c=>c.boardId!==curId&&vis(c)):[];
   const vl=asg.length?`<section class="list me"><div class="lh"><span class="ln">Atribuídas a mim</span><span class="cnt">${asg.length}</span></div><div class="cards">${asg.map(c=>cardHtml(c,c.done)).join("")}</div></section>`:"";
   const hadCq=document.activeElement&&document.activeElement.id==="cq",dv=$("#cq")?$("#cq").value:"";
   const uniq=k=>[...new Set(data.cards.map(c=>c[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
@@ -799,11 +805,42 @@ function start(){
   unsubS=onSnapshot(query(collection(db,"sheets"),where("readers","array-contains",me.email)),snap=>{sheets=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar planilhas ("+e.code+")"));
   unsubCfg=onSnapshot(doc(db,"config","ai"),sn=>{cfg=sn.exists()?sn.data():{}},()=>{cfg={}});
 }
-async function invite(){if((bd.memberEmails||[]).length>=6){toast("Limite atingido: o quadro pode ser compartilhado com até 5 pessoas.");return}
-  const e=(prompt("Participantes: "+(bd.memberEmails||[]).join(", ")+"\n\nE-mail da pessoa para convidar:")||"").trim().toLowerCase();
-  if(!e.includes("@"))return;
-  try{const bt=writeBatch(db);bt.update(doc(db,"boards",bd.id),{memberEmails:arrayUnion(e)});allCards.filter(c=>c.boardId===bd.id).forEach(c=>bt.update(doc(db,"cards",c.id),{readers:arrayUnion(e)}));sheets.filter(x=>x.boardId===bd.id).forEach(x=>bt.update(doc(db,"sheets",x.id),{readers:arrayUnion(e)}));await bt.commit();toast(e+" agora tem acesso. Avise a pessoa para entrar com esse e-mail.")}catch(x){fail(x)}
+const boardLabel=b=>b.personal?(me&&b.owner===me.uid?"Meu quadro":"Quadro de "+(((b.memberEmails||[""])[0])||"").split("@")[0]):(b.name||"Quadro");
+function boardShareBar(b){
+  if(!b||!me)return "";
+  const ppl=(b.memberEmails||[]).filter(e=>e!==me.email),own=b.owner===me.uid;
+  return `<div class="sharebar"><span class="lab" style="margin:0">Acompanhando com:</span>${ppl.map(e=>`<span class="chipx">${esc(e)}${own?`<button data-bunshare="${b.id}" data-e="${esc(e)}" aria-label="Remover acesso de ${esc(e)}">×</button>`:""}</span>`).join("")||'<span class="sub2" style="margin:0">ninguém ainda</span>'}<button class="btn" data-bshare="${b.id}">Compartilhar esta aba</button></div>`;
 }
+async function inviteTo(b){
+  if(!b)return;
+  const cur=b.memberEmails||[];
+  if(cur.length>=6){toast("Limite atingido: você pode compartilhar com até 5 pessoas.");return}
+  const e=(prompt("Quem já tem acesso: "+cur.join(", ")+"\n\nE-mail da pessoa para compartilhar (limite de 5 pessoas):")||"").trim().toLowerCase();
+  if(!e.includes("@")||cur.includes(e))return;
+  try{
+    const bt=writeBatch(db);
+    bt.update(doc(db,"boards",b.id),{memberEmails:arrayUnion(e)});
+    allCards.filter(c=>c.boardId===b.id).forEach(c=>bt.update(doc(db,"cards",c.id),{readers:arrayUnion(e)}));
+    sheets.filter(x=>x.boardId===b.id).forEach(x=>bt.update(doc(db,"sheets",x.id),{readers:arrayUnion(e)}));
+    await bt.commit();toast(e+" agora tem acesso. Avise a pessoa para entrar com esse e-mail.");
+  }catch(x){fail(x)}
+}
+async function invite(){inviteTo(bd)}
+async function unshareBoard(b,e){
+  if(!b||b.owner!==me.uid||!confirm("Remover o acesso de "+e+"?"))return;
+  try{
+    const bt=writeBatch(db);
+    bt.update(doc(db,"boards",b.id),{memberEmails:arrayRemove(e)});
+    allCards.filter(c=>c.boardId===b.id&&c.aEmail!==e).forEach(c=>bt.update(doc(db,"cards",c.id),{readers:arrayRemove(e)}));
+    sheets.filter(x=>x.boardId===b.id).forEach(x=>bt.update(doc(db,"sheets",x.id),{readers:arrayRemove(e)}));
+    await bt.commit();toast("Acesso removido.");
+  }catch(x){fail(x)}
+}
+document.addEventListener("click",e=>{
+  const s=e.target.closest("[data-bshare]"),u=e.target.closest("[data-bunshare]");
+  if(s)inviteTo(boards.find(b=>b.id===s.dataset.bshare));
+  else if(u)unshareBoard(boards.find(b=>b.id===u.dataset.bunshare),u.dataset.e);
+});
 async function delBoard(){
   if(!bd||bd.personal||bd.owner!==me.uid||!confirm("Excluir o quadro “"+bd.name+"” e todas as tarefas dele?"))return;
   try{const b=writeBatch(db);allCards.filter(c=>c.boardId===bd.id).forEach(c=>b.delete(doc(db,"cards",c.id)));sheets.filter(x=>x.boardId===bd.id).forEach(x=>b.delete(doc(db,"sheets",x.id)));b.delete(doc(db,"boards",bd.id));curId="u_"+me.uid;await b.commit()}catch(e){fail(e)}
@@ -838,7 +875,7 @@ $("#nav").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b
 const kpi=(n,l,c="")=>`<div class="kpi ${c}"><b>${n}</b><span>${l}</span></div>`;
 const byDue=(a,b)=>(a.due||"9").localeCompare(b.due||"9");
 function cardDone(c){const b=boards.find(x=>x.id===c.boardId),l=b&&(b.lists||[]).find(x=>x.id===c.l);return !!(c.done||(l&&l.done))}
-function boardName(id){const b=boards.find(x=>x.id===id);return !b?"":b.personal?"Meu quadro":b.name}
+function boardName(id){const b=boards.find(x=>x.id===id);return b?boardLabel(b):""}
 function mineList(){return allCards.filter(c=>c.aEmail===me.email||(c.boardId==="u_"+me.uid&&!c.aEmail))}
 function pct(p){const i=p.itens||[];return i.length?Math.round(i.filter(x=>x.done).length/i.length*100):0}
 const pl=(n,s,p)=>n+" "+(n===1?s:p);
@@ -861,7 +898,7 @@ function mineHtml(){
   const G=[["Atrasadas",open.filter(c=>c.due&&c.due<t)],["Hoje",open.filter(c=>c.due===t)],["Próximos 7 dias",open.filter(c=>c.due>t&&c.due<=w)],["Mais tarde",open.filter(c=>c.due>w)],["Sem prazo",open.filter(c=>!c.due)],["Concluídas",done]];
   const tr=c=>{const d=cardDone(c),late=!d&&c.due&&c.due<t;return `<div class="trow"><button class="chk${d?" on":""}" data-chk="${c.id}" aria-label="${d?"Reabrir":"Concluir"} tarefa">${d?"✓":""}</button><button class="tt" data-open="${c.id}"><span class="rt">${esc(c.t)}</span><span class="meta2">${esc(boardName(c.boardId))}${c.by&&c.by!==me.email&&c.aEmail===me.email?" · de "+esc(c.by.split("@")[0]):""}</span></button>${c.due?`<span class="due${late?" late":d?" ok":""}">${fmt(c.due)}</span>`:""}</div>`};
   const body=G.filter(g=>g[1].length).map(([n,l])=>`<div class="panel" style="margin-bottom:12px"><h2>${n} <span class="cnt">${l.length}</span></h2>${l.map(tr).join("")}</div>`).join("");
-  return `<h2 class="sh">Minhas tarefas</h2><p class="sub2">Tarefas atribuídas a você e as do seu quadro pessoal.</p>`+(body||'<p class="empty">Você não tem tarefas por enquanto.</p>');
+  return `<h2 class="sh">Minhas tarefas</h2><p class="sub2">Tarefas atribuídas a você e as do seu quadro pessoal. Compartilhe esta aba para outras pessoas acompanharem e editarem as suas tarefas pessoais.</p>`+boardShareBar(boards.find(x=>x.id==="u_"+me.uid))+(body||'<p class="empty">Você não tem tarefas por enquanto.</p>');
 }
 
 function procHtml(tipo){
@@ -906,7 +943,7 @@ function openProc(id,tipo){
 }
 function rowItem(x){
   const o=(x.setor||"rh")==="rh"?"DP":"RH";
-  return `<div class="pi${x.done?" on":""}" data-i="${x.id}"><button type="button" class="pgrip" data-pgrip aria-label="Arrastar para mudar a ordem">⠿</button><button type="button" class="chk${x.done?" on":""}" data-pt="${x.id}" aria-label="Marcar etapa">${x.done?"✓":""}</button><span>${esc(x.t)}</span><button type="button" class="pmv" data-pmv="${x.id}" title="Mover para o checklist ${o}">⇄ ${o}</button><button type="button" class="x" data-pxd="${x.id}" aria-label="Remover etapa">×</button></div>`;
+  return `<div class="pi${x.done?" on":""}" data-i="${x.id}"><button type="button" class="pgrip" data-pgrip aria-label="Arrastar para mudar a ordem">⠿</button><button type="button" class="chk${x.done?" on":""}" data-pt="${x.id}" aria-label="Marcar etapa">${x.done?"✓":""}</button><span>${esc(x.t)}</span><button type="button" class="pmv" data-pup="${x.id}" aria-label="Subir etapa" title="Subir">↑</button><button type="button" class="pmv" data-pdn="${x.id}" aria-label="Descer etapa" title="Descer">↓</button><button type="button" class="pmv" data-pmv="${x.id}" title="Mover para o checklist ${o}">⇄ ${o}</button><button type="button" class="x" data-pxd="${x.id}" aria-label="Remover etapa">×</button></div>`;
 }
 function drawItems(){
   const it=pd.itens,n=it.filter(x=>x.done).length,p=it.length?Math.round(n/it.length*100):0;
@@ -927,10 +964,11 @@ function moveItem(id,beforeId,setor){
   pd.itens.splice(at,0,it);
 }
 $("#pitems").addEventListener("click",e=>{
-  const t=e.target.closest("[data-pt]"),d=e.target.closest("[data-pxd]"),m=e.target.closest("[data-pmv]"),a=e.target.closest("[data-padd]");
+  const t=e.target.closest("[data-pt]"),d=e.target.closest("[data-pxd]"),m=e.target.closest("[data-pmv]"),a=e.target.closest("[data-padd]"),u=e.target.closest("[data-pup],[data-pdn]");
   if(t){const x=pd.itens.find(i=>i.id===t.dataset.pt);if(x){x.done=!x.done;cel=x.done?x.id:""}}
   else if(d)pd.itens=pd.itens.filter(i=>i.id!==d.dataset.pxd);
   else if(m){const x=pd.itens.find(i=>i.id===m.dataset.pmv);if(x)x.setor=(x.setor||"rh")==="rh"?"dp":"rh"}
+  else if(u){const dir=u.dataset.pup?-1:1,x=pd.itens.find(i=>i.id===(u.dataset.pup||u.dataset.pdn));if(x){const same=pd.itens.filter(i=>(i.setor||"rh")===(x.setor||"rh")),nb=same[same.indexOf(x)+dir];if(nb){pd.itens.splice(pd.itens.indexOf(x),1);const j=pd.itens.indexOf(nb);pd.itens.splice(dir<0?j:j+1,0,x)}}}
   else if(a){addItem(a.dataset.padd);return}
   else return;
   drawItems();saveItems();
@@ -1290,11 +1328,11 @@ function shEditor(){
   <div class="shbar"><button data-sty="b" aria-label="Negrito"><b>N</b></button><button data-sty="i" aria-label="Itálico"><i>I</i></button><button data-sty="al:left" aria-label="Alinhar à esquerda">⇤</button><button data-sty="al:center" aria-label="Centralizar">↔</button><button data-sty="al:right" aria-label="Alinhar à direita">⇥</button><span class="shsw">${["#fde1ee","#e8d4ff","#ffe2d2","#d8f3e6","#fff3bf"].map(c=>`<i data-bg="${c}" style="background:${c}"></i>`).join("")}<i data-bg="" class="shno" title="Sem cor">×</i></span><button data-sty="hd">Cabeçalho</button><button data-sty="paint" title="Pincel de formatação: copia o formato de uma célula para outras">Pincel</button><button data-sty="clr">Limpar formato</button><button data-sty="cp">Copiar</button><button data-sty="ps">Colar</button><button data-sty="fd" title="Preencher para baixo (Ctrl+D)">↓ Preencher</button><button data-sty="fr">→ Preencher</button><button data-addr>+ Linha</button><button data-addc2>+ Coluna</button></div>
   <div class="shfx"><span id="shname">A1</span><input id="fxb" placeholder="Valor ou fórmula, ex.: =SUM(B2:B6)" autocomplete="off" autocapitalize="none"></div>
   <div class="shwrap" id="shg" tabindex="0">${shTable()}</div>
-  <p class="sub2" style="margin-top:8px">Toque numa célula para selecionar e toque de novo para editar. No computador, arraste para selecionar várias células e arraste o quadradinho do canto para preencher. Fórmulas: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, IF, ROUND, ABS, CONCAT, LEN, UPPER, LOWER. Cores e negrito saem no PDF, mas não no Excel.</p>`;
+  <p class="sub2" style="margin-top:8px">Toque numa célula para selecionar e toque de novo para editar. No computador, arraste para selecionar várias células, arraste a borda da seleção para mover e o quadradinho do canto para preencher. Fórmulas: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, IF, ROUND, ABS, CONCAT, LEN, UPPER, LOWER. Cores e negrito saem no PDF, mas não no Excel.</p>`;
 }
 function shList(){
   const L=sheets.filter(s=>s.boardId===curId).sort((a,b)=>(b.updated||0)-(a.updated||0));
-  return `<div class="sech"><div><h2 class="sh">Planilhas do projeto</h2><p class="sub2">${bd&&bd.personal?"Suas planilhas pessoais.":"Quem participa deste projeto vê e edita as mesmas planilhas, em tempo real."}</p></div></div>
+  return `<div class="sech"><div><h2 class="sh">Planilhas do projeto</h2><p class="sub2">${bd&&bd.personal&&bd.owner===me.uid?"Suas planilhas pessoais.":"Quem participa deste projeto vê e edita as mesmas planilhas, em tempo real."}</p></div></div>
   <div class="panel" style="margin-bottom:12px"><h2>Criar ou receber</h2><div class="seg3" style="flex-wrap:wrap;overflow:visible;margin-bottom:0"><button data-newsh="blank">Em branco</button><button data-newsh="orc">Orçamento</button><button data-newsh="cron">Cronograma</button><button data-newsh="tasks">Tarefas do projeto</button><button data-imp>Importar Excel ou CSV</button></div><input type="file" id="shimp" accept=".xlsx,.xls,.csv,text/csv" hidden></div>
   <div class="pgrid">${L.map(s=>`<button class="pc" data-shopen="${s.id}"><b>${esc(s.title||"Planilha")}</b><div class="pcf"><span>${s.rows}×${s.cols}</span><span>${s.updated?new Date(s.updated).toLocaleDateString("pt-BR"):""}</span></div></button>`).join("")||'<p class="empty">Nenhuma planilha neste projeto ainda.</p>'}</div>`;
 }
@@ -1679,13 +1717,13 @@ function secTxt(it){const rh=it.filter(x=>(x.setor||"rh")==="rh"),dp=it.filter(x
 // ---- arrastar etapas do checklist (mouse e toque)
 let pg=null;
 $("#pitems").addEventListener("pointerdown",e=>{
-  const g=e.target.closest("[data-pgrip]");if(!g||(e.pointerType==="mouse"&&e.button!==0))return;
+  let g=e.target.closest("[data-pgrip]");if(!g&&e.pointerType==="mouse"&&e.button===0){const r0=e.target.closest(".pi");if(r0&&!e.target.closest("button,input,textarea,select,a"))g=r0.querySelector("[data-pgrip]")}if(!g||(e.pointerType==="mouse"&&e.button!==0))return;
   e.preventDefault();
   const row=g.closest(".pi"),r=row.getBoundingClientRect(),ghost=row.cloneNode(true);
   ghost.className="pi pghost";ghost.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;z-index:300;pointer-events:none;background:var(--surface);color:var(--ink);box-shadow:0 12px 28px rgba(0,0,0,.28);border-radius:12px;padding:7px 8px`;
   $("#pdlg").appendChild(ghost);
-  const ph=document.createElement("div");ph.className="pph";ph.style.height=r.height+"px";row.after(ph);row.classList.add("pdrag");
-  pg={id:row.dataset.i,row,ghost,ph,oy:e.clientY-r.top,sec:row.closest(".psec"),pid:e.pointerId};
+  const ph=document.createElement("div");ph.className="pph";ph.style.height=r.height+"px";const on0=row.nextElementSibling;row.after(ph);row.classList.add("pdrag");
+  pg={id:row.dataset.i,row,ghost,ph,oy:e.clientY-r.top,sec:row.closest(".psec"),pid:e.pointerId,on:on0&&on0.dataset.i?on0.dataset.i:null};
   try{g.setPointerCapture(e.pointerId)}catch(_){}
 });
 document.addEventListener("pointermove",e=>{
@@ -1697,13 +1735,37 @@ document.addEventListener("pointermove",e=>{
 document.addEventListener("touchmove",e=>{if(pg)e.preventDefault()},{passive:false});
 function pgEnd(ok){
   if(!pg)return;
-  const nx=pg.ph.nextElementSibling,setor=pg.sec.dataset.sec,id=pg.id;
+  const nx=pg.ph.nextElementSibling,setor=pg.sec.dataset.sec,id=pg.id,was=pg.on;
   pg.ghost.remove();pg.ph.remove();pg.row.classList.remove("pdrag");pg=null;
-  if(ok){moveItem(id,nx&&nx.dataset.i?nx.dataset.i:null,setor);drawItems();saveItems()}
+  if(ok&&(nx&&nx.dataset.i?nx.dataset.i:null)!==was){moveItem(id,nx&&nx.dataset.i?nx.dataset.i:null,setor);drawItems();saveItems()}
 }
 document.addEventListener("pointerup",e=>{if(pg&&e.pointerId===pg.pid)pgEnd(true)});
 document.addEventListener("pointercancel",e=>{if(pg&&e.pointerId===pg.pid)pgEnd(false)});
 
+// ---- planilha: mover células arrastando a borda da seleção
+let shMv=null;
+function shEdge(td,e){
+  const R=shRange(),r=+td.dataset.r,c=+td.dataset.c;
+  if(r<R.r1||r>R.r2||c<R.c1||c>R.c2)return false;
+  const b=td.getBoundingClientRect(),m=5;
+  return (r===R.r1&&e.clientY<b.top+m)||(r===R.r2&&e.clientY>b.bottom-m)||(c===R.c1&&e.clientX<b.left+m)||(c===R.c2&&e.clientX>b.right-m);
+}
+function shMovePreview(){
+  const g=$("#shg");if(!g||!shMv||!shMv.to)return;
+  const R=shMv.R,dr=shMv.to.r-shMv.from.r,dc=shMv.to.c-shMv.from.c;
+  g.querySelectorAll("td.movep").forEach(t=>t.classList.remove("movep"));
+  g.querySelectorAll("td").forEach(t=>{const r=+t.dataset.r,c=+t.dataset.c;if(r>=R.r1+dr&&r<=R.r2+dr&&c>=R.c1+dc&&c<=R.c2+dc)t.classList.add("movep")});
+}
+function shDoMove(){
+  const g=$("#shg");if(g)g.querySelectorAll("td.movep").forEach(t=>t.classList.remove("movep"));
+  const m=shMv;if(!m||!m.to)return;
+  const R=m.R,dr=m.to.r-m.from.r,dc=m.to.c-m.from.c;if(!dr&&!dc)return;
+  if(R.r1+dr<1||R.c1+dc<1||R.r2+dr>curSh.rows||R.c2+dc>curSh.cols){toast("Não cabe nessa posição.");return}
+  const tmp=[];
+  for(let r=R.r1;r<=R.r2;r++)for(let c=R.c1;c<=R.c2;c++){const k=ck(r,c);tmp.push([r+dr,c+dc,curSh.cells[k],curSh.st[k]?{...curSh.st[k]}:null]);delete curSh.cells[k];delete curSh.st[k];shDirty.add("c"+k);shDirty.add("s"+k)}
+  tmp.forEach(([r,c,v,st])=>{const k=ck(r,c);if(v!=null&&v!=="")curSh.cells[k]=v;else delete curSh.cells[k];if(st)curSh.st[k]=st;else delete curSh.st[k];shDirty.add("c"+k);shDirty.add("s"+k)});
+  shAnc={r:R.r1+dr,c:R.c1+dc};shSelect(R.r2+dr,R.c2+dc,true,true);shPaint();shSaveSoon();
+}
 // ---- planilha: seleção em bloco, preencher, copiar, colar e pincel de formatação
 let shAnc={r:1,c:1},shDrag=0,shMoved=false,shPaintMode=null,shClip=null,shFill=null;
 function shRange(){return {r1:Math.min(shAnc.r,shSel.r),r2:Math.max(shAnc.r,shSel.r),c1:Math.min(shAnc.c,shSel.c),c2:Math.max(shAnc.c,shSel.c)}}
@@ -1799,20 +1861,22 @@ $("#view").addEventListener("pointerdown",e=>{
   const td=e.target.closest("td[data-k]");if(!td)return;
   const b=td.getBoundingClientRect(),r=+td.dataset.r,c=+td.dataset.c;
   if(td.classList.contains("rngend")&&e.clientX>b.right-12&&e.clientY>b.bottom-12){shFill={R:shRange()};shDrag=2;shMoved=true;e.preventDefault();return}
+  if(shEdge(td,e)){shMv={R:shRange(),from:{r,c}};shDrag=3;shMoved=true;e.preventDefault();return}
   shDrag=1;shMoved=false;
   if(e.shiftKey){shSelect(r,c,true,true);shMoved=true}else shSelect(r,c,true,false);
 });
 $("#view").addEventListener("pointermove",e=>{
-  if(!shDrag||e.pointerType!=="mouse")return;
+  if(!shDrag){const t=e.target.closest&&e.target.closest("td[data-k]"),g=$("#shg");if(g)g.style.cursor=t&&e.pointerType==="mouse"&&shEdge(t,e)?"move":"";return}
+  if(e.pointerType!=="mouse")return;
   const el=document.elementFromPoint(e.clientX,e.clientY),td=el&&el.closest&&el.closest("td[data-k]");if(!td)return;
   const r=+td.dataset.r,c=+td.dataset.c;
   if(shDrag===1){if(r!==shSel.r||c!==shSel.c){shMoved=true;shSelect(r,c,true,true)}}
-  else{shFill.to={r,c};shFillPreview()}
+  else if(shDrag===3){shMv.to={r,c};shMovePreview()}else{shFill.to={r,c};shFillPreview()}
 });
 document.addEventListener("pointerup",()=>{
   if(!shDrag)return;const d=shDrag;shDrag=0;
   if(!curSh)return;
-  if(d===2&&shFill){shDoFill();shFill=null}
+  if(d===3&&shMv){shDoMove();shMv=null}else if(d===2&&shFill){shDoFill();shFill=null}
   else if(shPaintMode)shApplyPainter();
 });
 document.addEventListener("paste",e=>{

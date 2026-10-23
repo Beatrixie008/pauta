@@ -722,7 +722,7 @@ function calMonthHtml({cs,doneIds,today}){
   const sd=by[selDay]||[],nod=cs.filter(c=>!c.due).length;
   return `${cmodeBar("month")}<div class="calh"><button class="btn" data-cm="-1" aria-label="Mês anterior">‹</button><h2>${cal.toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}</h2><button class="btn" data-cm="1" aria-label="Próximo mês">›</button><button class="btn" data-cm="0">Hoje</button></div>
   <div class="wk">${["dom","seg","ter","qua","qui","sex","sáb"].map(d=>`<span>${d}</span>`).join("")}</div><div class="cg">${cells}</div>
-  <div class="panel dayd"><h2>${new Date(selDay+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"})}</h2>${sd.map(c=>rowHtml(c,!doneIds.has(c.l)&&c.due<today)).join("")||'<p class="empty">Nenhuma tarefa neste dia.</p>'}<button class="btn primary" data-newday>Nova tarefa neste dia</button>${nod?`<p class="empty">${nod} tarefa${nod>1?"s":""} sem prazo não aparece${nod>1?"m":""} no calendário.</p>`:""}</div>`;
+  <div class="panel dayd"><h2>${new Date(selDay+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"})}</h2>${sd.map(c=>{const dn=doneIds.has(c.l)||c.done,late=!dn&&c.due<today;return `<div class="trow"><button class="chk${dn?" on":""}" data-chk="${c.id}" aria-label="${dn?"Reabrir":"Concluir"} tarefa">${dn?"✓":""}</button><button class="tt" data-open="${c.id}"><span class="rt">${esc(c.t)}</span></button><span class="due${late?" late":dn?" ok":""}">${fmt(c.due)}</span></div>`}).join("")||'<p class="empty">Nenhuma tarefa neste dia.</p>'}<button class="btn primary" data-newday>Nova tarefa neste dia</button>${nod?`<p class="empty">${nod} tarefa${nod>1?"s":""} sem prazo não aparece${nod>1?"m":""} no calendário.</p>`:""}</div>`;
 }
 
 function dashHtml({cs,doneIds,today}){
@@ -1919,7 +1919,7 @@ function weekHtml({cs,doneIds,today}){
   const a=weekStart(wkOff),days=[0,1,2,3,4,5,6].map(i=>{const d=new Date(a);d.setDate(d.getDate()+i);return d}),isos=days.map(iso);
   const DN=["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"],po={alta:0,media:1,baixa:2},isDone=c=>doneIds.has(c.l)||c.done;
   const by={};cs.forEach(c=>{if(c.due)(by[c.due]=by[c.due]||[]).push(c)});
-  const task=c=>`<div class="wt${isDone(c)?" fin":""}" data-id="${c.id}" data-open="${c.id}" style="--c:${pcol(c)}"><span class="wtt">${esc(c.t)}</span>${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>`;
+  const task=c=>`<div class="wt${isDone(c)?" fin":""}" data-id="${c.id}" data-open="${c.id}" style="--c:${pcol(c)}"><button type="button" class="chk${isDone(c)?" on":""}" data-chk="${c.id}" aria-label="${isDone(c)?"Reabrir":"Concluir"} tarefa" title="${isDone(c)?"Reabrir":"Concluir"}">${isDone(c)?"✓":""}</button><span class="wtt">${esc(c.t)}</span>${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>`;
   const col=(d,i)=>{const k=isos[i],l=(by[k]||[]).slice().sort((x,y)=>(isDone(x)-isDone(y))||((po[x.pr]!=null?po[x.pr]:3)-(po[y.pr]!=null?po[y.pr]:3)));return `<div class="wkday${k===today?" today":""}" data-wd="${k}"><div class="wkdh"><span>${DN[i]}</span><b>${d.getDate()}</b></div><div class="wkl">${l.map(task).join("")}</div><button class="wkadd" data-wadd="${k}" aria-label="Adicionar tarefa em ${fmt(k)}">+ Adicionar</button></div>`};
   const late=cs.filter(c=>!isDone(c)&&c.due&&c.due<isos[0]),none=cs.filter(c=>!c.due);
   const f=d=>d.toLocaleDateString("pt-BR",{day:"numeric",month:"short"}),range=f(days[0])+" – "+f(days[6])+" de "+days[6].getFullYear();
@@ -1979,7 +1979,7 @@ function wkEnd(ok){
 }
 document.addEventListener("pointerup",e=>{if(wkg&&e.pointerId===wkg.pid){if(wkg.started){wkBlock=true;setTimeout(()=>{wkBlock=false},80)}wkEnd(true)}});
 document.addEventListener("pointercancel",e=>{if(wkg&&e.pointerId===wkg.pid)wkEnd(false)});
-$("#view").addEventListener("click",e=>{if(wkBlock){e.stopPropagation();e.preventDefault()}},true);
+$("#view").addEventListener("click",e=>{if(wkBlock){e.stopPropagation();e.preventDefault();return}const c=e.target.closest("[data-chk]");if(c&&view==="cal"){e.stopPropagation();e.preventDefault();toggleDone(c.dataset.chk)}},true);
 onAuthStateChanged(auth,u=>{
   document.body.classList.remove("boot");stopAll();
   if(!u){try{localStorage.removeItem("pauta.in")}catch(e){}me=null;applyTheme();data={lists:[],cards:[]};assigned=[];boards=[];document.body.classList.add("anon");render();return}

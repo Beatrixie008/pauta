@@ -358,6 +358,17 @@ body:not(.sec-proj) #bshare{display:none}
 .wover{outline:2px dashed var(--accent);outline-offset:-2px;background:color-mix(in srgb,var(--accent) 10%,var(--glass))}
 .wdrag{opacity:.35}
 .wghost{background:var(--surface)!important;color:var(--ink)}
+.wkgrid{grid-template-columns:repeat(5,minmax(220px,1fr))}
+.wkday{background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(12px);border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:280px}
+.wkn{flex:1;font-weight:800;font-size:16px;padding:6px 8px}
+.wkn small{color:var(--muted);font-weight:700;margin-left:6px;font-size:13px}
+.wkday.today{box-shadow:0 0 0 2px var(--accent)}
+.wkday.today .wkn small{color:var(--accent)}
+.wkl{gap:8px}
+.wkbox{background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(12px);border-radius:20px;padding:10px}
+.wkbox .wkl{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.wcard .ct h3{font-size:15px}
+.wcard{margin-bottom:0}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -1916,16 +1927,22 @@ let calMode="week",wkOff=0,wkg=null,wkBlock=false;
 const cmodeBar=m=>`<div class="seg3"><button data-cmode="week" aria-pressed="${m==="week"}">Semana</button><button data-cmode="month" aria-pressed="${m==="month"}">Mês</button></div>`;
 function weekStart(off){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+off*7);return d}
 function weekHtml({cs,doneIds,today}){
-  const a=weekStart(wkOff),days=[0,1,2,3,4,5,6].map(i=>{const d=new Date(a);d.setDate(d.getDate()+i);return d}),isos=days.map(iso);
-  const DN=["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"],po={alta:0,media:1,baixa:2},isDone=c=>doneIds.has(c.l)||c.done;
+  const a=weekStart(wkOff),days=[0,1,2,3,4].map(i=>{const d=new Date(a);d.setDate(d.getDate()+i);return d}),isos=days.map(iso);
+  const we=[5,6].map(i=>{const d=new Date(a);d.setDate(d.getDate()+i);return iso(d)});
+  const DN=["Segunda","Terça","Quarta","Quinta","Sexta"],po={alta:0,media:1,baixa:2},isDone=c=>doneIds.has(c.l)||c.done;
   const by={};cs.forEach(c=>{if(c.due)(by[c.due]=by[c.due]||[]).push(c)});
-  const task=c=>`<div class="wt${isDone(c)?" fin":""}" data-id="${c.id}" data-open="${c.id}" style="--c:${pcol(c)}"><button type="button" class="chk${isDone(c)?" on":""}" data-chk="${c.id}" aria-label="${isDone(c)?"Reabrir":"Concluir"} tarefa" title="${isDone(c)?"Reabrir":"Concluir"}">${isDone(c)?"✓":""}</button><span class="wtt">${esc(c.t)}</span>${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>`;
-  const col=(d,i)=>{const k=isos[i],l=(by[k]||[]).slice().sort((x,y)=>(isDone(x)-isDone(y))||((po[x.pr]!=null?po[x.pr]:3)-(po[y.pr]!=null?po[y.pr]:3)));return `<div class="wkday${k===today?" today":""}" data-wd="${k}"><div class="wkdh"><span>${DN[i]}</span><b>${d.getDate()}</b></div><div class="wkl">${l.map(task).join("")}</div><button class="wkadd" data-wadd="${k}" aria-label="Adicionar tarefa em ${fmt(k)}">+ Adicionar</button></div>`};
-  const late=cs.filter(c=>!isDone(c)&&c.due&&c.due<isos[0]),none=cs.filter(c=>!c.due);
-  const f=d=>d.toLocaleDateString("pt-BR",{day:"numeric",month:"short"}),range=f(days[0])+" – "+f(days[6])+" de "+days[6].getFullYear();
+  const sorted=l=>l.slice().sort((x,y)=>(isDone(x)-isDone(y))||((po[x.pr]!=null?po[x.pr]:3)-(po[y.pr]!=null?po[y.pr]:3)));
+  const task=(c,showDue)=>{
+    const dn=isDone(c),late=showDue&&!dn&&c.due&&c.due<today;
+    return `<article class="card wcard${c.pr?" p-"+c.pr:""}${dn?" done":""}" data-id="${c.id}" data-open="${c.id}" tabindex="0">${c.pr?`<span class="chip" style="--c:var(--${PC[c.pr]})">${PRI[c.pr]}</span>`:""}<div class="ct"><button type="button" class="chk${dn?" on":""}" data-chk="${c.id}" aria-label="${dn?"Reabrir":"Concluir"} tarefa" title="${dn?"Reabrir":"Concluir"}">${dn?"✓":""}</button><h3>${esc(c.t)}</h3></div><div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${showDue&&c.due?`<span class="due${late?" late":""}">${late?"Atrasada · ":""}${fmt(c.due)}</span>`:""}${c.serie?'<span title="Tarefa recorrente">↻</span>':""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div></article>`;
+  };
+  const col=(d,i)=>{const k=isos[i],l=sorted(by[k]||[]);return `<div class="wkday${k===today?" today":""}" data-wd="${k}"><div class="lh"><span class="wkn">${DN[i]}<small>${fmt(k)}</small></span><span class="cnt">${l.length}</span></div><div class="wkl">${l.map(c=>task(c,false)).join("")}</div><button class="addc" data-wadd="${k}" aria-label="Adicionar tarefa em ${fmt(k)}">+ Adicionar tarefa</button></div>`};
+  const late=sorted(cs.filter(c=>!isDone(c)&&c.due&&c.due<isos[0])),none=sorted(cs.filter(c=>!c.due)),wk=sorted(cs.filter(c=>c.due&&we.includes(c.due)));
+  const box=(t,hint,l,attr,showDue)=>`<div class="wkbox"${attr}><div class="lh"><span class="wkn">${t}</span><span class="cnt">${l.length}</span></div><p class="sub2" style="margin:0 6px">${hint}</p><div class="wkl">${l.slice(0,40).map(c=>task(c,showDue)).join("")||'<span class="sub2" style="margin:0 6px">Nada por aqui.</span>'}</div></div>`;
+  const f=d=>d.toLocaleDateString("pt-BR",{day:"numeric",month:"short"}),range=f(days[0])+" – "+f(days[4])+" de "+days[4].getFullYear();
   return `${cmodeBar("week")}<div class="calh"><button class="btn" data-wm="-1" aria-label="Semana anterior">‹</button><h2>${range}</h2><button class="btn" data-wm="1" aria-label="Próxima semana">›</button><button class="btn" data-wm="0">Hoje</button></div>
   <div class="wkgrid" id="wkgrid">${days.map(col).join("")}</div>
-  <div class="wkshelf"><div class="wkbox" data-wshelf="none"><h3>Sem prazo <span class="cnt">${none.length}</span></h3><p class="sub2" style="margin:0">Arraste para um dia para agendar. Solte aqui para tirar o prazo.</p><div class="wkl">${none.slice(0,40).map(task).join("")||'<span class="sub2">Nada sem prazo.</span>'}</div></div>${late.length?`<div class="wkbox"><h3>Atrasadas <span class="cnt">${late.length}</span></h3><p class="sub2" style="margin:0">Arraste para um dia para reagendar.</p><div class="wkl">${late.slice(0,40).map(task).join("")}</div></div>`:""}</div>`;
+  <div class="wkshelf">${box("Sem prazo","Arraste para um dia para agendar. Solte aqui para tirar o prazo.",none,' data-wshelf="none"',false)}${late.length?box("Atrasadas","Arraste para um dia para reagendar.",late,"",true):""}${wk.length?box("Fim de semana","Tarefas com prazo no sábado ou domingo. Arraste para um dia útil.",wk,"",true):""}</div>`;
 }
 function calHtml(ctx){return calMode==="week"?weekHtml(ctx):calMonthHtml(ctx)}
 $("#view").addEventListener("click",e=>{
@@ -1937,7 +1954,7 @@ $("#view").addEventListener("click",e=>{
 });
 $("#view").addEventListener("pointerdown",e=>{
   if(view!=="cal"||calMode!=="week"||(e.pointerType==="mouse"&&e.button!==0))return;
-  const t=e.target.closest(".wt");if(!t||e.target.closest("button"))return;
+  const t=e.target.closest(".wcard");if(!t||e.target.closest("button"))return;
   wkg={id:t.dataset.id,el:t,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,started:false,type:e.pointerType,pid:e.pointerId,timer:null,target:null};
   if(e.pointerType!=="mouse")wkg.timer=setTimeout(wkStart,320);
 });

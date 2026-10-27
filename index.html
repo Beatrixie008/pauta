@@ -391,6 +391,8 @@ button.sav:hover{transform:translateY(-2px);z-index:2}
 .nav button,.tabs button{font-size:13px;font-weight:700;padding:6px 12px;box-shadow:none;border-width:1px}
 .bar2{padding:0 18px 8px;gap:6px}
 .bar2 .btn,.bar2 .field{padding:6px 12px;font-size:13px}
+body.sec-proj.ro .addc,body.sec-proj.ro .addl,body.sec-proj.ro .newl,body.sec-proj.ro .x[data-dl],body.sec-proj.ro .mv,body.sec-proj.ro .chk,body.sec-proj.ro #new,body.sec-proj.ro .wkadd,body.sec-proj.ro .shbar,body.sec-proj.ro [data-shdel],body.sec-proj.ro [data-newsh],body.sec-proj.ro [data-imp]{display:none!important}
+body.sec-proj.ro .card,body.sec-proj.ro .wcard{cursor:default}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -404,7 +406,7 @@ button.sav:hover{transform:translateY(-2px);z-index:2}
   <button class="iconbtn" id="srch" aria-label="Buscar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button><button class="btn primary" id="new">Nova tarefa</button><span id="who" hidden></span><button id="out" hidden></button><button class="avbtn" id="prof" aria-label="Perfil e configurações"><span id="pav">P</span></button>
 </header>
 <nav class="nav" id="nav" role="tablist" aria-label="Seções"></nav>
-<div class="bar2"><select class="field" id="bsel" aria-label="Quadro"></select><button class="btn" id="inv" hidden>Compartilhar</button><button class="btn danger" id="delb" hidden>Excluir quadro</button><span id="bshare" class="sharebar" style="margin:0"></span></div>
+<div class="bar2"><select class="field" id="bsel" aria-label="Quadro"></select><button class="btn" id="inv" hidden>Compartilhar</button><button class="btn danger" id="delb" hidden>Excluir quadro</button><span id="bshare" class="sharebar" style="margin:0"></span><span class="pill" id="robadge" hidden>Somente leitura</span></div>
 <nav class="tabs" id="tabs" role="tablist" aria-label="Visualizações"></nav>
 <main class="board intro" id="board"></main>
 <section class="view" id="view" hidden></section>
@@ -482,6 +484,7 @@ button.sav:hover{transform:translateY(-2px);z-index:2}
 <dialog id="ndlg">
   <form method="dialog" id="nf">
     <h2 id="nh" style="margin:0 0 12px">Nova nota</h2>
+    <div id="nwho" style="margin-bottom:10px"></div>
     <div class="f">
       <label class="full" id="ntw">Modelo<select id="ntp"><option value="">Em branco</option><option value="ata">Ata de reunião</option><option value="fb">Feedback 1:1</option><option value="rot">Roteiro de entrevista</option></select></label>
       <label class="full">Título<input id="nt" maxlength="80"></label>
@@ -491,7 +494,7 @@ button.sav:hover{transform:translateY(-2px);z-index:2}
       <button type="button" class="btn danger" id="ndel">Excluir</button>
       <button type="button" class="btn" id="nshare">Compartilhar</button>
       <button type="button" class="btn" id="nclose">Fechar</button>
-      <button type="submit" class="btn primary">Salvar</button>
+      <button type="submit" class="btn primary" id="nsv">Salvar</button>
     </div>
   </form>
 </dialog>
@@ -572,7 +575,7 @@ const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
 const fmt=s=>s.slice(8)+"/"+s.slice(5,7);
 const ini=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 const hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%5;return [330,285,12,305,350][h]};
-let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],ivs=[],notes=[],sheets=[],cfg={},curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,unsubI,unsubN,unsubS,unsubCfg,editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
+let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],ivs=[],notes=[],sheets=[],cfg={},curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,unsubI,unsubN,unsubS,unsubCfg,unsubB2,bM=[],bV=[],editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
 
 function seed(){
   const L=[["l1","A fazer"],["l2","Em andamento"],["l3","Em revisão"],["l4","Concluída",1]].map(([id,name,done])=>({id,name,done:!!done}));
@@ -605,7 +608,7 @@ function render(){
   const bs=$("#bsel"),ob=[...boards.filter(x=>x.personal).sort((a,b)=>(b.owner===me.uid)-(a.owner===me.uid)),...boards.filter(x=>!x.personal).sort((x,y)=>(x.name||"").localeCompare(y.name||"","pt-BR"))];
   bs.innerHTML=ob.map(x=>`<option value="${x.id}">${esc(boardLabel(x))}</option>`).join("")+'<option value="__new">+ Novo quadro compartilhado…</option>';
   if(bd)bs.value=bd.id;
-  $("#inv").hidden=!bd;$("#bshare").innerHTML=bd&&me?boardShareBar(bd,true):"";$("#delb").hidden=!(bd&&!bd.personal&&me&&bd.owner===me.uid);
+  $("#inv").hidden=!bd||readOnly()||bd.owner!==me.uid;$("#robadge").hidden=!readOnly();document.body.classList.toggle("ro",readOnly());$("#bshare").innerHTML=bd&&me?boardShareBar(bd,true):"";$("#delb").hidden=!(bd&&!bd.personal&&me&&bd.owner===me.uid);
   const asg=bd&&bd.id==="u_"+me.uid?assigned.filter(c=>c.boardId!==curId&&vis(c)):[];
   const vl=asg.length?`<section class="list me"><div class="lh"><span class="ln">Atribuídas a mim</span><span class="cnt">${asg.length}</span></div><div class="cards">${asg.map(c=>cardHtml(c,c.done)).join("")}</div></section>`:"";
   const hadCq=document.activeElement&&document.activeElement.id==="cq",dv=$("#cq")?$("#cq").value:"";
@@ -621,7 +624,7 @@ function render(){
   b.innerHTML=vl+data.lists.map(l=>{
     const cs=data.cards.filter(c=>c.l===l.id&&vis(c));
     return `<section class="list" data-list="${l.id}">
-      <div class="lh"><input class="ln" value="${esc(l.name)}" data-rn="${l.id}" aria-label="Nome da lista"><span class="cnt">${cs.length}</span><button class="x" data-dl="${l.id}" aria-label="Excluir lista ${esc(l.name)}">×</button></div>
+      <div class="lh"><input class="ln" value="${esc(l.name)}" data-rn="${l.id}" aria-label="Nome da lista"${readOnly()?" readonly":""}><span class="cnt">${cs.length}</span><button class="x" data-dl="${l.id}" aria-label="Excluir lista ${esc(l.name)}">×</button></div>
       <div class="cards" data-cards="${l.id}">${cs.map(c=>cardHtml(c,l.done||c.done)).join("")}</div>
       ${compL===l.id?`<div class="comp"><textarea id="cq" rows="3" placeholder="Digite um título para o cartão…"></textarea><div class="row"><button class="btn primary" data-ac>Adicionar cartão</button><button class="btn ghost" data-cc aria-label="Cancelar">×</button></div></div>`:`<button class="addc" data-oc="${l.id}">+ Adicionar cartão</button>`}
     </section>`}).join("")+
@@ -631,13 +634,13 @@ function render(){
   newId=null;renderView();
 }
 
-function addCard(){const ta=$("#cq"),t=ta.value.trim();if(!t){ta.focus();return}const id="c"+(++uid);data.cards.push({id,l:compL,t,d:"",p:"",o:"",pr:"",due:"",cat:Date.now()});newId=id;save();focusNext=true;render()}
+function addCard(){if(readOnly())return;const ta=$("#cq"),t=ta.value.trim();if(!t){ta.focus();return}const id="c"+(++uid);data.cards.push({id,l:compL,t,d:"",p:"",o:"",pr:"",due:"",cat:Date.now()});newId=id;save();focusNext=true;render()}
 function addList(){const v=$("#nl").value.trim();if(!v){$("#nl").focus();return}data.lists.push({id:"l"+(++uid),name:v,done:false});addingList=false;save();render();const b=$("#board");b.scrollTo({left:b.scrollWidth,behavior:"smooth"})}
 
-function openDlg(id){
+function openDlg(id){if(!id&&readOnly()){toast("Você tem acesso somente leitura a este quadro.");return}
   if(!data.lists.length){addingList=true;focusNext=true;render();return}
   editing=id?(data.cards.find(c=>c.id===id)||allCards.find(c=>c.id===id)):null;
-  const ro=!!(editing&&editing.boardId&&editing.boardId!==curId);document.querySelectorAll("#form input,#form select,#form textarea").forEach(x=>x.disabled=ro);$("#sv").style.display=ro?"none":"";$("#del").style.display=editing&&!ro?"":"none";const cl=editing&&data.lists.find(l=>l.id===editing.l);$("#fin").style.display=editing?"":"none";$("#fin").textContent=(cl&&cl.done)||(editing&&editing.done)?"Reabrir tarefa":"Concluir tarefa";
+  const ro=!!(editing&&editing.boardId&&editing.boardId!==curId)||readOnly();document.querySelectorAll("#form input,#form select,#form textarea").forEach(x=>x.disabled=ro);$("#sv").style.display=ro?"none":"";$("#del").style.display=editing&&!ro?"":"none";const cl=editing&&data.lists.find(l=>l.id===editing.l);$("#fin").style.display=editing&&!readOnly()?"":"none";$("#fin").textContent=(cl&&cl.done)||(editing&&editing.done)?"Reabrir tarefa":"Concluir tarefa";
   $("#l").innerHTML=data.lists.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join("");
   const c=editing||{t:"",d:"",l:data.lists[0].id,pr:"media",p:"",o:"",due:presetDue||plus(7)};
   $("#t").value=c.t;$("#d").value=c.d;$("#l").value=c.l;rpDays.clear();$("#rp").value="";$("#rpw").hidden=!!(editing&&(editing.serie||ro));rpUi(true);$("#pr").value=c.pr;$("#p").value=c.p;$("#o").value=c.aEmail||c.o;$("#due").value=c.due;
@@ -645,6 +648,7 @@ function openDlg(id){
 }
 function toggleDone(id){
   const c=data.cards.find(x=>x.id===id);
+  if(c&&readOnly()){toast("Você tem acesso somente leitura a este quadro.");return}
   if(!c){const a=allCards.find(x=>x.id===id);if(a){const nd2=!cardDone(a);updateDoc(doc(db,"cards",id),{done:nd2,doneAt:nd2?Date.now():0}).catch(fail);if(nd2)setTimeout(()=>fx(id),350)}return}
   const cl0=data.lists.find(l=>l.id===c.l),isDone=!!(c.done||(cl0&&cl0.done));
   if(isDone){c.done=false;c.doneAt=0;if(cl0&&cl0.done){let t=data.lists.find(l=>!l.done);if(!t){t={id:"l"+(++uid),name:"A fazer",done:false};data.lists.unshift(t)}c.l=t.id}}
@@ -652,7 +656,7 @@ function toggleDone(id){
   data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();if(!isDone)fx(id);
 }
 function moveCard(id,dir){
-  const c=data.cards.find(x=>x.id===id);if(!c)return;
+  const c=data.cards.find(x=>x.id===id);if(!c||readOnly())return;
   const i=data.lists.findIndex(l=>l.id===c.l),n=data.lists[i+dir];if(!n)return;
   c.l=n.id;c.done=!!n.done;c.doneAt=n.done?(c.doneAt||Date.now()):0;data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
 }
@@ -815,9 +819,9 @@ function ownerName(v){v=v.trim();return v.includes("@")?v.split("@")[0]:v}
 function ownerEmail(v){v=v.trim().toLowerCase();return v.includes("@")?v:""}
 function applyRemote(){if(drag||(dg&&dg.started))return;render()}
 function defaultLists(){return [["A fazer"],["Em andamento"],["Em revisão"],["Concluída",1]].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))}
-function cardObj(c,i){const ae=c.aEmail||"";return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:ae,by:c.by||me.email,done:!!c.done,doneAt:c.doneAt||0,cat:c.cat||0,serie:c.serie||"",boardId:bd.id,ord:i,readers:[...new Set([...(bd.memberEmails||[]),ae].filter(Boolean))].sort()}}
+function cardObj(c,i){const ae=c.aEmail||"";return {t:c.t||"",d:c.d||"",l:c.l||"",p:c.p||"",o:c.o||"",pr:c.pr||"",due:c.due||"",aEmail:ae,by:c.by||me.email,done:!!c.done,doneAt:c.doneAt||0,cat:c.cat||0,serie:c.serie||"",boardId:bd.id,ord:i,readers:[...new Set([...(bd.memberEmails||[]),...(bd.viewerEmails||[]),ae].filter(Boolean))].sort()}}
 function persist(){
-  if(!bd||!me)return;
+  if(!bd||!me||readOnly())return;
   const b=writeBatch(db);let n=0;
   data.cards.forEach((c,i)=>{const o=cardObj(c,i),s=JSON.stringify(o);if(synced.cards[c.id]!==s){b.set(doc(db,"cards",c.id),o);synced.cards[c.id]=s;n++}});
   Object.keys(synced.cards).forEach(id=>{if(!data.cards.some(c=>c.id===id)){b.delete(doc(db,"cards",id));delete synced.cards[id];n++}});
@@ -837,18 +841,15 @@ function rebuildCards(){
   assigned=allCards.filter(c=>c.aEmail===me.email&&c.boardId!==bd.id);
   synced.cards={};data.cards.forEach(c=>{synced.cards[c.id]=JSON.stringify(cardObj(c,c.ord||0))});
 }
-function stopAll(){[unsubB,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubC=unsubA=null;bd=null;allCards=[];procs=[];ivs=[];notes=[];sheets=[];curSh=null;[unsubP,unsubI,unsubN,unsubS,unsubCfg].forEach(f=>f&&f());unsubP=unsubI=unsubN=unsubS=unsubCfg=null;cfg={}}
+function stopAll(){[unsubB,unsubB2,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubB2=unsubC=unsubA=null;bM=[];bV=[];bd=null;allCards=[];procs=[];ivs=[];notes=[];sheets=[];curSh=null;[unsubP,unsubI,unsubN,unsubS,unsubCfg].forEach(f=>f&&f());unsubP=unsubI=unsubN=unsubS=unsubCfg=null;cfg={}}
 function start(){
   const pid="u_"+me.uid;
   unsubB=onSnapshot(query(collection(db,"boards"),where("memberEmails","array-contains",me.email)),snap=>{
-    boards=snap.docs.map(d=>({id:d.id,...d.data()}));
-    if(!boards.some(b=>b.id===pid)&&!snap.metadata.fromCache)setDoc(doc(db,"boards",pid),{name:"Meu quadro",owner:me.uid,personal:true,memberEmails:[me.email],lists:defaultLists()}).catch(fail);
-    const want=boards.find(b=>b.id===curId)||boards.find(b=>b.id===pid)||boards[0];
-    if(!want){render();return}
-    if(!bd||bd.id!==want.id)switchBoard(want);
-    else{bd=want;const rl=JSON.stringify(want.lists||[]);if(rl!==JSON.stringify(data.lists))data.lists=(want.lists||[]).map(x=>({...x}));synced.lists=rl}
-    applyRemote();
+    bM=snap.docs.map(d=>({id:d.id,...d.data()}));boards=mergeBoards();
+    if(!boards.some(b=>b.id===pid)&&!snap.metadata.fromCache)setDoc(doc(db,"boards",pid),{name:"Meu quadro",owner:me.uid,personal:true,memberEmails:[me.email],viewerEmails:[],lists:defaultLists()}).catch(fail);
+    afterBoards();
   },e=>toast("Erro ao carregar quadros ("+e.code+")"));
+  unsubB2=onSnapshot(query(collection(db,"boards"),where("viewerEmails","array-contains",me.email)),snap=>{bV=snap.docs.map(d=>({id:d.id,...d.data()}));boards=mergeBoards();afterBoards()},e=>console.warn(e));
   unsubC=onSnapshot(query(collection(db,"cards"),where("readers","array-contains",me.email)),snap=>{
     allCards=snap.docs.map(d=>({id:d.id,...d.data()}));rebuildCards();applyRemote();
   },e=>toast("Erro ao carregar tarefas ("+e.code+")"));
@@ -859,42 +860,62 @@ function start(){
   unsubCfg=onSnapshot(doc(db,"config","ai"),sn=>{cfg=sn.exists()?sn.data():{}},()=>{cfg={}});
 }
 const boardLabel=b=>b.personal?(me&&b.owner===me.uid?"Meu quadro":"Quadro de "+(((b.memberEmails||[""])[0])||"").split("@")[0]):(b.name||"Quadro");
+async function invite(){inviteTo(bd)}
+function boardPeople(b){return [...(b.memberEmails||[]).filter(e=>e!==me.email).map(e=>({e,r:"editor"})),...(b.viewerEmails||[]).filter(e=>e!==me.email).map(e=>({e,r:"leitor"}))]}
 function boardShareBar(b,mini){
   if(!b||!me)return "";
-  const ppl=(b.memberEmails||[]).filter(e=>e!==me.email),own=b.owner===me.uid,show=ppl.slice(0,4),more=ppl.length-show.length;
-  const av=e=>{const n=e.split("@")[0],i=n.slice(0,2).toUpperCase(),st=`background:hsl(${hue(n)} 52% 46%)`;return own?`<button class="sav" data-bunshare="${b.id}" data-e="${esc(e)}" title="${esc(e)} · toque para remover" aria-label="Remover acesso de ${esc(e)}" style="${st}">${esc(i)}</button>`:`<span class="sav" title="${esc(e)}" style="${st}">${esc(i)}</span>`};
-  return `<span class="shv">${mini?"":'<span class="lab" style="margin:0 4px 0 0">Acompanhando:</span>'}${show.map(av).join("")}${more>0?`<span class="sav more" title="${esc(ppl.slice(4).join(", "))}">+${more}</span>`:""}${ppl.length||mini?"":'<span class="sub2" style="margin:0 6px">ninguém ainda</span>'}${mini?"":`<button class="btn sm" data-bshare="${b.id}">Compartilhar</button>`}</span>`;
+  const ppl=boardPeople(b),own=b.owner===me.uid,show=ppl.slice(0,4),more=ppl.length-show.length;
+  const av=p=>{const n=p.e.split("@")[0],i=n.slice(0,2).toUpperCase(),st=`background:hsl(${hue(n)} 52% 46%)`,t=esc(p.e)+" ("+p.r+")";return own?`<button class="sav" data-bunshare="${b.id}" data-e="${esc(p.e)}" title="${t} · toque para gerenciar" aria-label="Gerenciar acesso de ${esc(p.e)}" style="${st}">${esc(i)}</button>`:`<span class="sav" title="${t}" style="${st}">${esc(i)}</span>`};
+  return `<span class="shv">${mini?"":'<span class="lab" style="margin:0 4px 0 0">Acompanhando:</span>'}${show.map(av).join("")}${more>0?`<span class="sav more" title="${esc(ppl.slice(4).map(p=>p.e).join(", "))}">+${more}</span>`:""}${ppl.length||mini?"":'<span class="sub2" style="margin:0 6px">ninguém ainda</span>'}${mini||!own?"":`<button class="btn sm" data-bshare="${b.id}">Compartilhar</button>`}</span>`;
 }
 async function inviteTo(b){
   if(!b)return;
-  const cur=b.memberEmails||[];
-  if(cur.length>=6){toast("Limite atingido: você pode compartilhar com até 5 pessoas.");return}
-  const e=(prompt("Quem já tem acesso: "+cur.join(", ")+"\n\nE-mail da pessoa para compartilhar (limite de 5 pessoas):")||"").trim().toLowerCase();
-  if(!e.includes("@")||cur.includes(e))return;
+  const mem=b.memberEmails||[],vw=b.viewerEmails||[];
+  if(mem.length+vw.length>=6){toast("Limite atingido: você pode compartilhar com até 5 pessoas.");return}
+  const e=(prompt("Quem já tem acesso: "+[...mem,...vw].join(", ")+"\n\nE-mail da pessoa que vai ver as atividades (somente leitura, limite de 5 pessoas):")||"").trim().toLowerCase();
+  if(!e.includes("@")||mem.includes(e)||vw.includes(e))return;
   try{
     const bt=writeBatch(db);
-    bt.update(doc(db,"boards",b.id),{memberEmails:arrayUnion(e)});
+    bt.update(doc(db,"boards",b.id),{viewerEmails:arrayUnion(e)});
     allCards.filter(c=>c.boardId===b.id).forEach(c=>bt.update(doc(db,"cards",c.id),{readers:arrayUnion(e)}));
     sheets.filter(x=>x.boardId===b.id).forEach(x=>bt.update(doc(db,"sheets",x.id),{readers:arrayUnion(e)}));
-    await bt.commit();toast(e+" agora tem acesso. Avise a pessoa para entrar com esse e-mail.");
+    await bt.commit();toast(e+" agora pode ver as atividades, sem editar. Avise a pessoa para entrar com esse e-mail.");
   }catch(x){fail(x)}
 }
-async function invite(){inviteTo(bd)}
+async function makeViewer(b,e){
+  try{const bt=writeBatch(db);bt.update(doc(db,"boards",b.id),{memberEmails:arrayRemove(e),viewerEmails:arrayUnion(e)});await bt.commit();toast(e+" agora é leitor.")}catch(x){fail(x)}
+}
 async function unshareBoard(b,e){
-  if(!b||b.owner!==me.uid||!confirm("Remover o acesso de "+e+"?"))return;
+  if(!b||b.owner!==me.uid)return;
   try{
     const bt=writeBatch(db);
-    bt.update(doc(db,"boards",b.id),{memberEmails:arrayRemove(e)});
+    bt.update(doc(db,"boards",b.id),{memberEmails:arrayRemove(e),viewerEmails:arrayRemove(e)});
     allCards.filter(c=>c.boardId===b.id&&c.aEmail!==e).forEach(c=>bt.update(doc(db,"cards",c.id),{readers:arrayRemove(e)}));
     sheets.filter(x=>x.boardId===b.id).forEach(x=>bt.update(doc(db,"sheets",x.id),{readers:arrayRemove(e)}));
     await bt.commit();toast("Acesso removido.");
   }catch(x){fail(x)}
 }
+function accessBoard(b,e){
+  if(!b||b.owner!==me.uid)return;
+  if((b.memberEmails||[]).includes(e)){
+    if(confirm(e+" hoje é EDITOR deste quadro.\n\nOK = tornar LEITOR (só visualiza)\nCancelar = outras opções")){makeViewer(b,e);return}
+  }
+  if(confirm("Remover o acesso de "+e+"?"))unshareBoard(b,e);
+}
 document.addEventListener("click",e=>{
   const s=e.target.closest("[data-bshare]"),u=e.target.closest("[data-bunshare]");
   if(s)inviteTo(boards.find(b=>b.id===s.dataset.bshare));
-  else if(u)unshareBoard(boards.find(b=>b.id===u.dataset.bunshare),u.dataset.e);
+  else if(u)accessBoard(boards.find(b=>b.id===u.dataset.bunshare),u.dataset.e);
 });
+function readOnly(){return !!(bd&&me&&!(bd.memberEmails||[]).includes(me.email))}
+function mergeBoards(){return [...bM,...bV.filter(v=>!bM.some(m=>m.id===v.id))]}
+function afterBoards(){
+  const pid="u_"+me.uid,want=boards.find(b=>b.id===curId)||boards.find(b=>b.id===pid)||boards[0];
+  if(!want){render();return}
+  if(!bd||bd.id!==want.id)switchBoard(want);
+  else{bd=want;const rl=JSON.stringify(want.lists||[]);if(rl!==JSON.stringify(data.lists))data.lists=(want.lists||[]).map(x=>({...x}));synced.lists=rl}
+  applyRemote();
+}
 async function delBoard(){
   if(!bd||bd.personal||bd.owner!==me.uid||!confirm("Excluir o quadro “"+bd.name+"” e todas as tarefas dele?"))return;
   try{const b=writeBatch(db);allCards.filter(c=>c.boardId===bd.id).forEach(c=>b.delete(doc(db,"cards",c.id)));sheets.filter(x=>x.boardId===bd.id).forEach(x=>b.delete(doc(db,"sheets",x.id)));b.delete(doc(db,"boards",bd.id));curId="u_"+me.uid;await b.commit()}catch(e){fail(e)}
@@ -1125,22 +1146,49 @@ $("#ivshare").onclick=()=>{const c=ivs.find(i=>i.id===iw.id);shareDoc("interview
 const NTPL={ata:["Ata de reunião","Data:\nParticipantes:\n\nPauta:\n- \n\nDecisões:\n- \n\nPróximos passos (quem / prazo):\n- "],fb:["Feedback 1:1","Nome:\nData:\n\nPontos fortes:\n- \n\nPontos de desenvolvimento:\n- \n\nCombinados e prazos:\n- "],rot:["Roteiro de entrevista","Candidato(a):\nVaga:\n\n1. Conte sobre a sua trajetória.\n2. Por que esta vaga?\n3. Uma situação de desafio e como lidou com ela.\n4. Expectativas e pretensão.\n5. Perguntas do candidato.\n\nObservações:\n"]};
 function noteHtml(){
   const l=notes.slice().sort((a,b)=>(b.updated||0)-(a.updated||0));
-  return `<div class="sech"><div><h2 class="sh">Notas</h2><p class="sub2">Seu bloco de notas. Cada nota é privada até você compartilhar.</p></div><button class="btn primary" data-newnote>Nova nota</button></div><div class="pgrid">${l.map(n=>`<button class="pc" data-note="${n.id}"><b>${esc(n.titulo||"Sem título")}</b><div class="snip">${esc((n.texto||"").slice(0,140))}${(n.texto||"").length>140?"…":""}</div><div class="pcf"><span>${n.updated?new Date(n.updated).toLocaleDateString("pt-BR"):""}</span></div></button>`).join("")||'<p class="empty">Nenhuma nota ainda. Toque em “Nova nota” e escolha um modelo, se quiser.</p>'}</div>`;
+  return `<div class="sech"><div><h2 class="sh">Notas</h2><p class="sub2">Seu bloco de notas. Cada nota é privada até você compartilhar.</p></div><button class="btn primary" data-newnote>Nova nota</button></div><div class="pgrid">${l.map(n=>`<button class="pc" data-note="${n.id}"><b>${esc(n.titulo||"Sem título")}</b><div class="snip">${esc((n.texto||"").slice(0,140))}${(n.texto||"").length>140?"…":""}</div><div class="pcf"><span>${n.updated?new Date(n.updated).toLocaleDateString("pt-BR"):""}</span>${n.owner!==me.uid?`<span>de ${esc((n.ownerEmail||"").split("@")[0])} · ${(n.editors||[]).includes(me.email)?"Editor":"Leitor"}</span>`:""}</div></button>`).join("")||'<p class="empty">Nenhuma nota ainda. Toque em “Nova nota” e escolha um modelo, se quiser.</p>'}</div>`;
+}
+function noteShareHtml(n){
+  const ppl=(n.readers||[]).filter(e=>e!==n.ownerEmail&&e!==me.email);
+  return `<div class="sharebar"><span class="lab" style="margin:0 4px 0 0">Compartilhada com:</span>${ppl.map(e=>{const ed=(n.editors||[]).includes(e);return `<span class="chipx">${esc(e.split("@")[0])}<button data-nrole="${esc(e)}" title="Tocar para alternar entre leitor e editor" style="font-size:11px;font-weight:800;color:var(--accent)">${ed?"Editor":"Leitor"}</button><button data-nrm="${esc(e)}" aria-label="Remover acesso de ${esc(e)}">×</button></span>`}).join("")||'<span class="sub2" style="margin:0">ninguém ainda</span>'}</div>`;
 }
 function openNote(id){
   const ex=id?notes.find(n=>n.id===id):null;nd=ex?{...ex}:{titulo:"",texto:""};
+  const own=!ex||ex.owner===me.uid,ed=own||(ex.editors||[]).includes(me.email);
   $("#nh").textContent=ex?"Nota":"Nova nota";$("#ntw").hidden=!!ex;$("#ntp").value="";$("#nt").value=nd.titulo||"";$("#nx").value=nd.texto||"";
-  $("#ndel").hidden=!ex||ex.owner!==me.uid;$("#nshare").hidden=!ex;$("#ndlg").showModal();
+  $("#nt").disabled=!ed;$("#nx").disabled=!ed;$("#nsv").hidden=!ed;
+  $("#ndel").hidden=!ex||!own;$("#nshare").hidden=!ex||!own;
+  $("#nwho").innerHTML=!ex?"":own?noteShareHtml(ex):`<div class="sharebar"><span class="chipx">Enviada por ${esc(ex.ownerEmail||"")}</span><span class="chipx">${ed?"Você pode editar":"Somente leitura"}</span></div>`;
+  $("#ndlg").showModal();
 }
+async function shareNote(){
+  const n=notes.find(x=>x.id===nd.id);if(!n)return;
+  const cur=n.readers||[];
+  if(cur.length>=6){toast("Limite atingido: você pode compartilhar com até 5 pessoas.");return}
+  const e=(prompt("Quem já tem acesso: "+cur.join(", ")+"\n\nE-mail da pessoa (limite de 5 pessoas):")||"").trim().toLowerCase();
+  if(!e.includes("@")||cur.includes(e))return;
+  const ed=confirm("Como "+e+" vai acessar esta nota?\n\nOK = EDITOR (pode alterar o texto)\nCancelar = LEITOR (só visualiza)");
+  const u={readers:arrayUnion(e)};if(ed)u.editors=arrayUnion(e);
+  try{await updateDoc(doc(db,"notes",n.id),u);toast(e+" agora tem acesso como "+(ed?"editor":"leitor")+". Ela verá que a nota foi enviada por você.");const c=notes.find(x=>x.id===n.id);if(c)$("#nwho").innerHTML=noteShareHtml(c)}catch(x){fail(x)}
+}
+$("#nwho").addEventListener("click",async e=>{
+  const r=e.target.closest("[data-nrole]"),m=e.target.closest("[data-nrm]"),n=notes.find(x=>x.id===nd.id);
+  if(!n||(!r&&!m))return;
+  try{
+    if(r){const em=r.dataset.nrole,ed=(n.editors||[]).includes(em);await updateDoc(doc(db,"notes",n.id),{editors:ed?arrayRemove(em):arrayUnion(em)})}
+    else{const em=m.dataset.nrm;if(!confirm("Remover o acesso de "+em+" a esta nota?"))return;await updateDoc(doc(db,"notes",n.id),{readers:arrayRemove(em),editors:arrayRemove(em)})}
+    const c=notes.find(x=>x.id===n.id);if(c)$("#nwho").innerHTML=noteShareHtml(c);
+  }catch(x){fail(x)}
+});
 $("#ntp").onchange=()=>{const t=NTPL[$("#ntp").value];if(t){$("#nt").value=t[0];$("#nx").value=t[1]}};
 $("#nf").addEventListener("submit",()=>{
   const v={titulo:$("#nt").value.trim(),texto:$("#nx").value,updated:Date.now()};
   if(nd.id)updateDoc(doc(db,"notes",nd.id),v).catch(fail);
-  else setDoc(doc(db,"notes","n"+(++uid)),{...v,owner:me.uid,ownerEmail:me.email,readers:[me.email],createdAt:Date.now()}).catch(fail);
+  else setDoc(doc(db,"notes","n"+(++uid)),{...v,owner:me.uid,ownerEmail:me.email,readers:[me.email],editors:[],createdAt:Date.now()}).catch(fail);
 });
 $("#nclose").onclick=()=>$("#ndlg").close();
 $("#ndel").onclick=()=>{if(nd.id&&confirm("Excluir esta nota?")){deleteDoc(doc(db,"notes",nd.id)).catch(fail);$("#ndlg").close()}};
-$("#nshare").onclick=()=>{const c=notes.find(n=>n.id===nd.id);shareDoc("notes",nd.id,(c&&c.readers)||[])};
+$("#nshare").onclick=shareNote;
 
 $("#sec").addEventListener("click",e=>{
   let el;
@@ -1160,7 +1208,7 @@ $("#tclose").onclick=()=>$("#tdlg").close();
 $("#tf").addEventListener("submit",async()=>{
   const n=$("#tn").value.trim();if(!n)return;
   const t=BT.find(x=>x[0]===$("#tt").value)||BT[0],id="b"+(++uid);curId=id;
-  try{await setDoc(doc(db,"boards",id),{name:n,owner:me.uid,personal:false,memberEmails:[me.email],lists:t[3].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))})}catch(e){fail(e)}
+  try{await setDoc(doc(db,"boards",id),{name:n,owner:me.uid,personal:false,memberEmails:[me.email],viewerEmails:[],lists:t[3].map(([name,d])=>({id:"l"+(++uid),name,done:!!d}))})}catch(e){fail(e)}
 });
 $("#ptp").onchange=()=>{if(pd&&!pd.id){pd.itens=tplItems(pd.tipo,$("#ptp").value);drawItems()}};
 function cvDraw(){
@@ -1407,7 +1455,7 @@ function shPaint(){
   });
 }
 function shMove(dr,dc){shSelect(shSel.r+dr,shSel.c+dc)}
-function shEdit(init){
+function shEdit(init){if(readOnly())return;
   const k=ck(shSel.r,shSel.c),td=$(`#shg td[data-k="${k}"]`);
   if(!td||shEd)return;
   shEd=true;const raw=init!=null?init:(curSh.cells[k]||"");
@@ -1420,7 +1468,7 @@ function shEndEdit(commit){
   if(td)td.textContent="";
   if(commit)shCommit(k,v);else shPaint();
 }
-function shCommit(k,v){
+function shCommit(k,v){if(readOnly()){shPaint();return}
   v=(v||"").trim();
   if(v===(curSh.cells[k]||"")){shPaint();return}
   if(v==="")delete curSh.cells[k];else curSh.cells[k]=v;
@@ -1457,10 +1505,10 @@ function mkCells(rows,hdr){
 async function shCreate(title,rows,hdr=true,open=true){
   const m=mkCells(rows,hdr),id="s"+(++uid);
   if(JSON.stringify(m.cells).length>700000){toast("Planilha grande demais (limite de cerca de 700 KB).");return null}
-  const o={title,boardId:curId,rows:Math.min(500,Math.max(30,m.r+10)),cols:Math.min(26,Math.max(8,m.c)),cells:m.cells,st:m.st,owner:me.uid,ownerEmail:me.email,readers:(bd.memberEmails||[me.email]).slice(0,6),createdAt:Date.now(),updated:Date.now()};
+  const o={title,boardId:curId,rows:Math.min(500,Math.max(30,m.r+10)),cols:Math.min(26,Math.max(8,m.c)),cells:m.cells,st:m.st,owner:me.uid,ownerEmail:me.email,readers:[...(bd.memberEmails||[me.email]),...(bd.viewerEmails||[])].slice(0,6),createdAt:Date.now(),updated:Date.now()};
   try{await setDoc(doc(db,"sheets",id),o);if(open){curSh={id,_p:Date.now(),...o};shSel={r:1,c:1};render()}return id}catch(e){fail(e);return null}
 }
-function newSheet(k){
+function newSheet(k){if(readOnly()){toast("Você tem acesso somente leitura.");return}
   const f=d=>d?d.split("-").reverse().join("/"):"";
   if(k==="blank")return shCreate("Planilha sem título",[],false);
   if(k==="orc")return shCreate("Orçamento do projeto",[["Item","Previsto (R$)","Realizado (R$)","Diferença (R$)"],["Mão de obra","0","0","=B2-C2"],["Materiais","0","0","=B3-C3"],["Serviços","0","0","=B4-C4"],["Outros","0","0","=B5-C5"],["Total","=SUM(B2:B5)","=SUM(C2:C5)","=B6-C6"]]);
@@ -1520,7 +1568,7 @@ async function shPdf(){
   d.autoTable({startY:50,body,theme:"grid",styles:{fontSize:9,cellPadding:4,overflow:"linebreak",lineColor:[220,214,220]},margin:{left:30,right:30}});
   d.save(safeName(s.title)+".pdf");
 }
-async function shImport(file){
+async function shImport(file){if(readOnly()){toast("Você tem acesso somente leitura.");return}
   const ext=(file.name.split(".").pop()||"").toLowerCase(),base=file.name.replace(/\.[^.]+$/,"");
   try{
     if(ext==="csv"||ext==="txt"){
@@ -1649,7 +1697,7 @@ async function repRemind(){
   if(!lst){toast("Seu quadro pessoal ainda não carregou. Tente de novo.");return}
   const n=new Date();n.setHours(12,0,0,0);do{n.setDate(n.getDate()+1)}while(n.getDay()!==1);
   const b=writeBatch(db),sid="s"+(++uid);
-  for(let i=0;i<12;i++){const d=new Date(n);d.setDate(d.getDate()+7*i);b.set(doc(db,"cards","c"+(++uid)),{t:"Gerar o relatório semanal do Pauta e enviar aos gestores",d:"",l:lst.id,p:"",o:"",pr:"media",due:iso(d),aEmail:"",by:me.email,done:false,doneAt:0,cat:Date.now(),serie:sid,boardId:pid,ord:9000+i,readers:pb.memberEmails||[me.email]})}
+  for(let i=0;i<12;i++){const d=new Date(n);d.setDate(d.getDate()+7*i);b.set(doc(db,"cards","c"+(++uid)),{t:"Gerar o relatório semanal do Pauta e enviar aos gestores",d:"",l:lst.id,p:"",o:"",pr:"media",due:iso(d),aEmail:"",by:me.email,done:false,doneAt:0,cat:Date.now(),serie:sid,boardId:pid,ord:9000+i,readers:[...(pb.memberEmails||[me.email]),...(pb.viewerEmails||[])]})}
   try{await b.commit();toast("Lembrete criado: toda segunda-feira, nas próximas 12 semanas, em Minhas tarefas.")}catch(e){fail(e)}
 }
 $("#sec").addEventListener("click",async e=>{
@@ -1673,7 +1721,7 @@ $("#aitest").onclick=async()=>{const t=await aiAsk("Responda apenas com a palavr
 // ---- arrastar cartões entre as listas (mouse e toque)
 let dg=null,dgBlock=false;
 board.addEventListener("pointerdown",e=>{
-  if(e.pointerType==="mouse"&&e.button!==0)return;
+  if(readOnly()||(e.pointerType==="mouse"&&e.button!==0))return;
   const card=e.target.closest(".card");
   if(!card||card.closest(".list.me")||e.target.closest("button,input,textarea,select,a"))return;
   dg={id:card.dataset.id,el:card,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,started:false,type:e.pointerType,pid:e.pointerId,timer:null};
@@ -1811,7 +1859,7 @@ function shMovePreview(){
   g.querySelectorAll("td.movep").forEach(t=>t.classList.remove("movep"));
   g.querySelectorAll("td").forEach(t=>{const r=+t.dataset.r,c=+t.dataset.c;if(r>=R.r1+dr&&r<=R.r2+dr&&c>=R.c1+dc&&c<=R.c2+dc)t.classList.add("movep")});
 }
-function shDoMove(){
+function shDoMove(){if(readOnly())return;
   const g=$("#shg");if(g)g.querySelectorAll("td.movep").forEach(t=>t.classList.remove("movep"));
   const m=shMv;if(!m||!m.to)return;
   const R=m.R,dr=m.to.r-m.from.r,dc=m.to.c-m.from.c;if(!dr&&!dc)return;
@@ -1854,7 +1902,7 @@ function shFillPreview(){
   const r2=down?Math.max(R.r2,to.r):R.r2,c2=down?R.c2:Math.max(R.c2,to.c);
   g.querySelectorAll("td").forEach(t=>{const r=+t.dataset.r,c=+t.dataset.c;if(r>=R.r1&&r<=r2&&c>=R.c1&&c<=c2&&!(r<=R.r2&&c<=R.c2))t.classList.add("fillp")});
 }
-function shDoFill(){
+function shDoFill(){if(readOnly())return;
   const g=$("#shg");if(g)g.querySelectorAll("td.fillp").forEach(t=>t.classList.remove("fillp"));
   const R=shFill.R,to=shFill.to;if(!to)return;
   const down=Math.abs(to.r-R.r2)>=Math.abs(to.c-R.c2),nr=R.r2-R.r1+1,nc=R.c2-R.c1+1;
@@ -1863,7 +1911,7 @@ function shDoFill(){
   else return;
   shPaint();shSaveSoon();
 }
-function shClearRange(){const R=shRange();for(let r=R.r1;r<=R.r2;r++)for(let c=R.c1;c<=R.c2;c++){const k=ck(r,c);delete curSh.cells[k];shDirty.add("c"+k)}shPaint();shSelect(shSel.r,shSel.c,true,true);shSaveSoon()}
+function shClearRange(){if(readOnly())return;const R=shRange();for(let r=R.r1;r<=R.r2;r++)for(let c=R.c1;c<=R.c2;c++){const k=ck(r,c);delete curSh.cells[k];shDirty.add("c"+k)}shPaint();shSelect(shSel.r,shSel.c,true,true);shSaveSoon()}
 function shCopy(cut){
   const R=shRange(),cells=[],sts=[];
   for(let r=R.r1;r<=R.r2;r++){const row=[],srow=[];for(let c=R.c1;c<=R.c2;c++){const k=ck(r,c);row.push(curSh.cells[k]||"");srow.push(curSh.st[k]?{...curSh.st[k]}:null)}cells.push(row);sts.push(srow)}
@@ -1873,7 +1921,7 @@ function shCopy(cut){
   if(cut)shClearRange();
   toast(cut?"Recortado.":"Copiado.");
 }
-function shPasteInternal(){
+function shPasteInternal(){if(readOnly())return false;
   if(!shClip)return false;
   const R=shRange();
   shClip.cells.forEach((row,i)=>row.forEach((v,j)=>{
@@ -1891,7 +1939,7 @@ function shApplyPainter(){
   for(let r=R.r1;r<=R.r2;r++)for(let c=R.c1;c<=R.c2;c++){const k=ck(r,c);if(Object.keys(st).length)curSh.st[k]={...st};else delete curSh.st[k];shDirty.add("s"+k)}
   shPaint();shSaveSoon();toast("Formato aplicado.");
 }
-function shStyle(kind){
+function shStyle(kind){if(readOnly()&&kind!=="cp"){toast("Você tem acesso somente leitura.");return}
   const R=shRange();
   const each=fn=>{for(let r=R.r1;r<=R.r2;r++)for(let c=R.c1;c<=R.c2;c++)fn(ck(r,c))};
   const setS=(key,fn)=>{const s={...(curSh.st[key]||{})};fn(s);if(Object.keys(s).length)curSh.st[key]=s;else delete curSh.st[key];shDirty.add("s"+key)};
@@ -1935,7 +1983,7 @@ document.addEventListener("pointerup",()=>{
   else if(shPaintMode)shApplyPainter();
 });
 document.addEventListener("paste",e=>{
-  if(view!=="sheet"||!curSh||shEd||!$("#shg"))return;
+  if(view!=="sheet"||!curSh||shEd||!$("#shg")||readOnly())return;
   const a=document.activeElement;if(a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"))return;
   const txt=(e.clipboardData&&e.clipboardData.getData("text"))||"";e.preventDefault();
   if(shClip&&txt===shClip.tsv){shPasteInternal();return}
@@ -1976,7 +2024,7 @@ $("#view").addEventListener("click",e=>{
   if(el=e.target.closest("[data-wadd]")){presetDue=el.dataset.wadd;openDlg();presetDue=""}
 });
 $("#view").addEventListener("pointerdown",e=>{
-  if(view!=="cal"||calMode!=="week"||(e.pointerType==="mouse"&&e.button!==0))return;
+  if(view!=="cal"||calMode!=="week"||readOnly()||(e.pointerType==="mouse"&&e.button!==0))return;
   const t=e.target.closest(".wcard");if(!t||e.target.closest("button"))return;
   wkg={id:t.dataset.id,el:t,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,started:false,type:e.pointerType,pid:e.pointerId,timer:null,target:null};
   if(e.pointerType!=="mouse")wkg.timer=setTimeout(wkStart,320);

@@ -395,6 +395,7 @@ body.sec-proj.ro .addc,body.sec-proj.ro .addl,body.sec-proj.ro .newl,body.sec-pr
 body.sec-proj.ro .card,body.sec-proj.ro .wcard{cursor:default}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.chk.lk{opacity:.4;cursor:not-allowed}
 </style>
 </head>
 <body class="anon boot">
@@ -598,8 +599,8 @@ function cardHtml(c,done){
   const late=!done&&c.due&&c.due<iso(new Date());
   return `<article class="card${c.id===newId?" new":""}${done?" done":""}" draggable="false" data-id="${c.id}" tabindex="0" aria-label="Abrir ${esc(c.t)}">
     ${c.pr?`<span class="chip" style="--c:var(--${PC[c.pr]})">${PRI[c.pr]}</span>`:""}
-    <div class="ct"><button class="chk${done?" on":""}" data-chk="${c.id}" aria-label="${done?"Reabrir":"Concluir"} tarefa" title="${done?"Reabrir":"Concluir"}">${done?"✓":""}</button><h3>${esc(c.t)}</h3></div>
-    <div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${c.serie?'<span title="Tarefa recorrente">↻</span>':""}${c.boardId&&c.boardId!==curId&&c.by?`<span>de ${esc(c.by.split("@")[0])}</span>`:""}${c.due?`<span class="due ${late?"late":done?"ok":""}">${late?"Atrasada · ":done?"✓ ":""}${fmt(c.due)}</span>`:""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>${c.boardId&&c.boardId!==curId?"":`<div class="mv"><button data-mv="-1" aria-label="Mover para a lista anterior">‹</button><button data-mv="1" aria-label="Mover para a próxima lista">›</button></div>`}
+    <div class="ct"><button class="chk${done?" on":""}${locked(c)?" lk":""}" data-chk="${c.id}" aria-label="${done?"Reabrir":"Concluir"} tarefa" title="${locked(c)?"Só quem recebeu a tarefa pode concluir":done?"Reabrir":"Concluir"}">${done?"✓":""}</button><h3>${esc(c.t)}</h3></div>
+    <div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${c.serie?'<span title="Tarefa recorrente">↻</span>':""}${locked(c)&&c.boardId===curId?'<span title="Atribuída a outra pessoa: só ela edita e conclui">🔒</span>':""}${c.boardId&&c.boardId!==curId&&c.by?`<span>de ${esc(c.by.split("@")[0])}</span>`:""}${c.due?`<span class="due ${late?"late":done?"ok":""}">${late?"Atrasada · ":done?"✓ ":""}${fmt(c.due)}</span>`:""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div>${(c.boardId&&c.boardId!==curId)||locked(c)?"":`<div class="mv"><button data-mv="-1" aria-label="Mover para a lista anterior">‹</button><button data-mv="1" aria-label="Mover para a próxima lista">›</button></div>`}
   </article>`;
 }
 
@@ -609,8 +610,8 @@ function render(){
   bs.innerHTML=ob.map(x=>`<option value="${x.id}">${esc(boardLabel(x))}</option>`).join("")+'<option value="__new">+ Novo quadro compartilhado…</option>';
   if(bd)bs.value=bd.id;
   $("#inv").hidden=!bd||readOnly()||bd.owner!==me.uid;$("#robadge").hidden=!readOnly();document.body.classList.toggle("ro",readOnly());$("#bshare").innerHTML=bd&&me?boardShareBar(bd,true):"";$("#delb").hidden=!(bd&&!bd.personal&&me&&bd.owner===me.uid);
-  const asg=bd&&bd.id==="u_"+me.uid?assigned.filter(c=>c.boardId!==curId&&vis(c)):[];
-  const vl=asg.length?`<section class="list me"><div class="lh"><span class="ln">Atribuídas a mim</span><span class="cnt">${asg.length}</span></div><div class="cards">${asg.map(c=>cardHtml(c,c.done)).join("")}</div></section>`:"";
+  const asg=bd&&bd.personal?assigned.filter(c=>c.boardId!==curId&&vis(c)):[];
+  const vl=asg.length?`<section class="list me"><div class="lh"><span class="ln">${bd.owner===me.uid?"Atribuídas a mim":"Atribuídas a "+esc((((bd.memberEmails||[""])[0])||"").split("@")[0])}</span><span class="cnt">${asg.length}</span></div><div class="cards">${asg.map(c=>cardHtml(c,cardDone(c))).join("")}</div></section>`:"";
   const hadCq=document.activeElement&&document.activeElement.id==="cq",dv=$("#cq")?$("#cq").value:"";
   const uniq=k=>[...new Set(data.cards.map(c=>c[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
   const owners=uniq("o"),cur=$("#fo").value;
@@ -640,23 +641,24 @@ function addList(){const v=$("#nl").value.trim();if(!v){$("#nl").focus();return}
 function openDlg(id){if(!id&&readOnly()){toast("Você tem acesso somente leitura a este quadro.");return}
   if(!data.lists.length){addingList=true;focusNext=true;render();return}
   editing=id?(data.cards.find(c=>c.id===id)||allCards.find(c=>c.id===id)):null;
-  const ro=!!(editing&&editing.boardId&&editing.boardId!==curId)||readOnly();document.querySelectorAll("#form input,#form select,#form textarea").forEach(x=>x.disabled=ro);$("#sv").style.display=ro?"none":"";$("#del").style.display=editing&&!ro?"":"none";const cl=editing&&data.lists.find(l=>l.id===editing.l);$("#fin").style.display=editing&&!readOnly()?"":"none";$("#fin").textContent=(cl&&cl.done)||(editing&&editing.done)?"Reabrir tarefa":"Concluir tarefa";
+  const lk=locked(editing),ro=!!(editing&&editing.boardId&&editing.boardId!==curId)||readOnly()||lk;document.querySelectorAll("#form input,#form select,#form textarea").forEach(x=>x.disabled=ro);$("#sv").style.display=ro?"none":"";$("#del").style.display=editing&&(!ro||(lk&&!readOnly()&&editing.boardId===curId))?"":"none";const cl=editing&&data.lists.find(l=>l.id===editing.l);$("#fin").style.display=editing&&!readOnly()&&!lk?"":"none";$("#fin").textContent=(cl&&cl.done)||(editing&&editing.done)?"Reabrir tarefa":"Concluir tarefa";
   $("#l").innerHTML=data.lists.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join("");
   const c=editing||{t:"",d:"",l:data.lists[0].id,pr:"media",p:"",o:"",due:presetDue||plus(7)};
   $("#t").value=c.t;$("#d").value=c.d;$("#l").value=c.l;rpDays.clear();$("#rp").value="";$("#rpw").hidden=!!(editing&&(editing.serie||ro));rpUi(true);$("#pr").value=c.pr;$("#p").value=c.p;$("#o").value=c.aEmail||c.o;$("#due").value=c.due;
-  $("#dlg").showModal();
+  $("#dlg").showModal();if(lk&&!readOnly())toast(lockMsg(editing));
 }
 function toggleDone(id){
   const c=data.cards.find(x=>x.id===id);
   if(c&&readOnly()){toast("Você tem acesso somente leitura a este quadro.");return}
-  if(!c){const a=allCards.find(x=>x.id===id);if(a){const nd2=!cardDone(a);updateDoc(doc(db,"cards",id),{done:nd2,doneAt:nd2?Date.now():0}).catch(fail);if(nd2)setTimeout(()=>fx(id),350)}return}
+  if(c&&locked(c)){toast(lockMsg(c));return}
+  if(!c){const a=allCards.find(x=>x.id===id);if(a){if(a.aEmail!==me.email){toast(lockMsg(a));return}const nd2=!cardDone(a);updateDoc(doc(db,"cards",id),{done:nd2,doneAt:nd2?Date.now():0}).catch(fail);if(nd2)setTimeout(()=>fx(id),350)}return}
   const cl0=data.lists.find(l=>l.id===c.l),isDone=!!(c.done||(cl0&&cl0.done));
   if(isDone){c.done=false;c.doneAt=0;if(cl0&&cl0.done){let t=data.lists.find(l=>!l.done);if(!t){t={id:"l"+(++uid),name:"A fazer",done:false};data.lists.unshift(t)}c.l=t.id}}
   else{c.done=true;c.doneAt=Date.now();let d=data.lists.find(l=>l.done);if(!d){d={id:"l"+(++uid),name:"Concluída",done:true};data.lists.push(d)}c.l=d.id}
   data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();if(!isDone)fx(id);
 }
 function moveCard(id,dir){
-  const c=data.cards.find(x=>x.id===id);if(!c||readOnly())return;
+  const c=data.cards.find(x=>x.id===id);if(!c||readOnly()||locked(c))return;
   const i=data.lists.findIndex(l=>l.id===c.l),n=data.lists[i+dir];if(!n)return;
   c.l=n.id;c.done=!!n.done;c.doneAt=n.done?(c.doneAt||Date.now()):0;data.cards=data.cards.filter(x=>x!==c);data.cards.push(c);save();render();
 }
@@ -823,7 +825,11 @@ function cardObj(c,i){const ae=c.aEmail||"";return {t:c.t||"",d:c.d||"",l:c.l||"
 function persist(){
   if(!bd||!me||readOnly())return;
   const b=writeBatch(db);let n=0;
-  data.cards.forEach((c,i)=>{const o=cardObj(c,i),s=JSON.stringify(o);if(synced.cards[c.id]!==s){b.set(doc(db,"cards",c.id),o);synced.cards[c.id]=s;n++}});
+  data.cards.forEach((c,i)=>{const o=cardObj(c,i),s=JSON.stringify(o);if(synced.cards[c.id]!==s){
+    const pv=allCards.find(x=>x.id===c.id);
+    if(pv&&locked(pv)){if((pv.ord||0)!==i){b.update(doc(db,"cards",c.id),{ord:i});n++}}
+    else{b.set(doc(db,"cards",c.id),o);n++}
+    synced.cards[c.id]=s}});
   Object.keys(synced.cards).forEach(id=>{if(!data.cards.some(c=>c.id===id)){b.delete(doc(db,"cards",id));delete synced.cards[id];n++}});
   const ls=JSON.stringify(data.lists);
   if(ls!==synced.lists){b.update(doc(db,"boards",bd.id),{lists:data.lists});synced.lists=ls;n++}
@@ -838,7 +844,7 @@ function switchBoard(b){
 function rebuildCards(){
   if(!bd||!me)return;
   data.cards=allCards.filter(c=>c.boardId===bd.id).map(c=>({...c})).sort((x,y)=>(x.ord||0)-(y.ord||0));
-  assigned=allCards.filter(c=>c.aEmail===me.email&&c.boardId!==bd.id);
+  const oe=bd.personal?((bd.memberEmails||[])[0]||me.email):me.email;assigned=allCards.filter(c=>c.aEmail===oe&&c.boardId!==bd.id);
   synced.cards={};data.cards.forEach(c=>{synced.cards[c.id]=JSON.stringify(cardObj(c,c.ord||0))});
 }
 function stopAll(){[unsubB,unsubB2,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubB2=unsubC=unsubA=null;bM=[];bV=[];bd=null;allCards=[];procs=[];ivs=[];notes=[];sheets=[];curSh=null;[unsubP,unsubI,unsubN,unsubS,unsubCfg].forEach(f=>f&&f());unsubP=unsubI=unsubN=unsubS=unsubCfg=null;cfg={}}
@@ -908,6 +914,8 @@ document.addEventListener("click",e=>{
   else if(u)accessBoard(boards.find(b=>b.id===u.dataset.bunshare),u.dataset.e);
 });
 function readOnly(){return !!(bd&&me&&!(bd.memberEmails||[]).includes(me.email))}
+function locked(c){return !!(c&&me&&c.aEmail&&c.aEmail!==me.email)}
+function lockMsg(c){return "Esta tarefa foi atribuída a "+((c&&(c.o||String(c.aEmail||"").split("@")[0]))||"outra pessoa")+". Só quem recebeu pode editar ou concluir."}
 function mergeBoards(){return [...bM,...bV.filter(v=>!bM.some(m=>m.id===v.id))]}
 function afterBoards(){
   const pid="u_"+me.uid,want=boards.find(b=>b.id===curId)||boards.find(b=>b.id===pid)||boards[0];
@@ -973,7 +981,7 @@ function mineHtml(){
   const G=[["Atrasadas",open.filter(c=>c.due&&c.due<t)],["Hoje",open.filter(c=>c.due===t)],["Próximos 7 dias",open.filter(c=>c.due>t&&c.due<=w)],["Mais tarde",open.filter(c=>c.due>w)],["Sem prazo",open.filter(c=>!c.due)],["Concluídas",done]];
   const tr=c=>{const d=cardDone(c),late=!d&&c.due&&c.due<t;return `<div class="trow"><button class="chk${d?" on":""}" data-chk="${c.id}" aria-label="${d?"Reabrir":"Concluir"} tarefa">${d?"✓":""}</button><button class="tt" data-open="${c.id}"><span class="rt">${esc(c.t)}</span><span class="meta2">${esc(boardName(c.boardId))}${c.by&&c.by!==me.email&&c.aEmail===me.email?" · de "+esc(c.by.split("@")[0]):""}</span></button>${c.due?`<span class="due${late?" late":d?" ok":""}">${fmt(c.due)}</span>`:""}</div>`};
   const body=G.filter(g=>g[1].length).map(([n,l])=>`<div class="panel" style="margin-bottom:12px"><h2>${n} <span class="cnt">${l.length}</span></h2>${l.map(tr).join("")}</div>`).join("");
-  return `<h2 class="sh">Minhas tarefas</h2><p class="sub2">Tarefas atribuídas a você e as do seu quadro pessoal. Compartilhe esta aba para outras pessoas acompanharem e editarem as suas tarefas pessoais.</p>`+boardShareBar(boards.find(x=>x.id==="u_"+me.uid))+(body||'<p class="empty">Você não tem tarefas por enquanto.</p>');
+  return `<h2 class="sh">Minhas tarefas</h2><p class="sub2">Tarefas atribuídas a você e as do seu quadro pessoal. Compartilhe esta aba para outras pessoas acompanharem as suas tarefas (somente leitura).</p>`+boardShareBar(boards.find(x=>x.id==="u_"+me.uid))+(body||'<p class="empty">Você não tem tarefas por enquanto.</p>');
 }
 
 function procHtml(tipo){
@@ -1724,6 +1732,7 @@ board.addEventListener("pointerdown",e=>{
   if(readOnly()||(e.pointerType==="mouse"&&e.button!==0))return;
   const card=e.target.closest(".card");
   if(!card||card.closest(".list.me")||e.target.closest("button,input,textarea,select,a"))return;
+  {const lc=data.cards.find(x=>x.id===card.dataset.id);if(lc&&locked(lc))return}
   dg={id:card.dataset.id,el:card,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,started:false,type:e.pointerType,pid:e.pointerId,timer:null};
   if(e.pointerType!=="mouse")dg.timer=setTimeout(dgStart,320);
 });
@@ -2026,6 +2035,7 @@ $("#view").addEventListener("click",e=>{
 $("#view").addEventListener("pointerdown",e=>{
   if(view!=="cal"||calMode!=="week"||readOnly()||(e.pointerType==="mouse"&&e.button!==0))return;
   const t=e.target.closest(".wcard");if(!t||e.target.closest("button"))return;
+  {const lc=data.cards.find(x=>x.id===t.dataset.id);if(lc&&locked(lc))return}
   wkg={id:t.dataset.id,el:t,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,started:false,type:e.pointerType,pid:e.pointerId,timer:null,target:null};
   if(e.pointerType!=="mouse")wkg.timer=setTimeout(wkStart,320);
 });

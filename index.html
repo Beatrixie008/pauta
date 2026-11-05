@@ -471,8 +471,10 @@ body.sec-proj.ro .card,body.sec-proj.ro .wcard{cursor:default}
       <label>Resultado<select id="ivs"><option>Em análise</option><option>Aprovado(a)</option><option>Reprovado(a)</option><option>Banco de talentos</option></select></label>
       <label>Nota<select id="ivr"><option value="0">Sem nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
       <label class="full">Parecer<textarea id="ivp" rows="6" placeholder="Pontos fortes, pontos de atenção e recomendação…"></textarea></label>
-      <div class="full"><span class="lab">Currículo</span><div id="cvbox" style="margin-bottom:8px"></div><input type="file" id="cvf" accept=".pdf,.doc,.docx,application/pdf" hidden><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="cvadd">Anexar arquivo</button><button type="button" class="btn danger" id="cvrm" hidden>Remover</button></div><p class="sub2" style="margin:6px 0 0">PDF, DOC ou DOCX de até 500 KB. Para arquivos maiores, use o link abaixo.</p></div>
+      <div class="full"><span class="lab">Currículo</span><div id="cvbox" style="margin-bottom:8px"></div><input type="file" id="cvf" accept=".pdf,.doc,.docx,application/pdf" hidden><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="cvadd">Anexar arquivo</button><button type="button" class="btn danger" id="cvrm" hidden>Remover</button></div><p class="sub2" style="margin:6px 0 0">PDF, DOC ou DOCX de até 500 KB (currículo e Lono juntos: até 650 KB). Para arquivos maiores, use o link abaixo.</p></div>
       <label class="full">Link do currículo (opcional)<input id="cvl" type="url" placeholder="https://…" autocapitalize="none"></label>
+      <div class="full"><span class="lab">Lono</span><div id="lnbox" style="margin-bottom:8px"></div><input type="file" id="lnf" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,application/pdf,image/*" hidden><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="lnadd">Anexar arquivo</button><button type="button" class="btn danger" id="lnrm" hidden>Remover</button></div><p class="sub2" style="margin:6px 0 0">PDF, Word, Excel ou imagem de até 500 KB. Para arquivos maiores, use o link abaixo.</p></div>
+      <label class="full">Link do Lono (opcional)<input id="lnl" type="url" placeholder="https://…" autocapitalize="none"></label>
     </div>
     <div class="acts" style="flex-wrap:wrap">
       <button type="button" class="btn danger" id="ivdel">Excluir</button>
@@ -1021,7 +1023,7 @@ function openProc(id,tipo){
   $("#ph").textContent=ex?(adm?"Admissão":"Demissão"):(adm?"Nova admissão":"Nova demissão");
   $("#pn").value=pd.nome;$("#pcg").value=pd.cargo||"";$("#pdp").value=pd.contrato||pd.depto||"";$("#pdt").value=pd.data||"";$("#pm").value=pd.motivo||"Sem justa causa";
   $("#pdtt").textContent=adm?"Data de admissão":"Data de demissão";
-  $("#pmw").hidden=adm;$("#pdel").hidden=!ex||ex.owner!==me.uid;$("#pshare").hidden=!ex;
+  $("#pmw").hidden=adm;$("#pdel").hidden=!ex;$("#pshare").hidden=!ex;
   $("#ptw").hidden=!!ex;$("#ptp").innerHTML=Object.keys(PTPL[pd.tipo]).map(k=>`<option>${k}</option>`).join("");drawItems();$("#pdlg").showModal();
 }
 function rowItem(x){
@@ -1064,7 +1066,7 @@ $("#pf").addEventListener("submit",()=>{
   if(pd.id)updateDoc(doc(db,"processes",pd.id),v).catch(fail);
   else setDoc(doc(db,"processes","p"+(++uid)),{tipo:pd.tipo,...v,owner:me.uid,ownerEmail:me.email,readers:newReaders(pd.tipo),createdAt:Date.now()}).catch(fail);
 });
-$("#pdel").onclick=()=>{if(pd.id&&confirm("Excluir este registro e o checklist dele?")){deleteDoc(doc(db,"processes",pd.id)).catch(fail);$("#pdlg").close()}};
+$("#pdel").onclick=()=>{if(pd.id&&confirm("Excluir "+(pd.tipo==="adm"?"a admissão":"a demissão")+" de "+(pd.nome||"este funcionário")+" e o checklist?\n\nIsso apaga para todas as pessoas com acesso e não pode ser desfeito.")){deleteDoc(doc(db,"processes",pd.id)).catch(fail);$("#pdlg").close()}};
 $("#pshare").onclick=()=>{const c=procs.find(p=>p.id===pd.id);shareDoc("processes",pd.id,(c&&c.readers)||[])};
 $("#gg").onclick=async()=>{am("");fromLogin=true;try{await signInWithPopup(auth,gp())}catch(x){fromLogin=false;am(msg(x))}};
 let fromLogin=false,cel="",findQ="",ivF="all",iw=null,nd=null;
@@ -1128,7 +1130,7 @@ const IVS={"Em análise":"go","Aprovado(a)":"ok","Reprovado(a)":"no","Banco de t
 const stars=n=>"★".repeat(n)+"☆".repeat(5-n);
 function ivHtml(){
   const all=ivs.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")),list=all.filter(i=>ivF==="all"||(i.status||"Em análise")===ivF);
-  const card=i=>`<button class="pc" data-iv="${i.id}"><div class="pch"><span class="av" style="background:hsl(${hue(i.nome)} 52% 46%);margin:0">${esc(ini(i.nome))}</span><div><b>${esc(i.nome)}</b><small>${esc([i.vaga,i.etapa].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${IVS[i.status]||"go"}">${esc(i.status||"Em análise")}</span></div>${i.nota?`<div class="stars">${stars(i.nota)}</div>`:""}<div class="pcf"><span>${esc(i.entrevistador||"")}</span><span>${i.data?fmt(i.data):""}</span></div>${(i.cvData||i.cvl)?'<div class="snip">Currículo anexado</div>':""}${i.parecer?`<div class="snip">${esc(i.parecer.slice(0,110))}${i.parecer.length>110?"…":""}</div>`:""}</button>`;
+  const card=i=>`<button class="pc" data-iv="${i.id}"><div class="pch"><span class="av" style="background:hsl(${hue(i.nome)} 52% 46%);margin:0">${esc(ini(i.nome))}</span><div><b>${esc(i.nome)}</b><small>${esc([i.vaga,i.etapa].filter(Boolean).join(" · "))||"&nbsp;"}</small></div><span class="st ${IVS[i.status]||"go"}">${esc(i.status||"Em análise")}</span></div>${i.nota?`<div class="stars">${stars(i.nota)}</div>`:""}<div class="pcf"><span>${esc(i.entrevistador||"")}</span><span>${i.data?fmt(i.data):""}</span></div>${(i.cvData||i.cvl)?'<div class="snip">Currículo anexado</div>':""}${(i.lnData||i.lnl)?'<div class="snip">Lono anexado</div>':""}${i.parecer?`<div class="snip">${esc(i.parecer.slice(0,110))}${i.parecer.length>110?"…":""}</div>`:""}</button>`;
   const fb=(k,n)=>`<button data-ivf="${k}" aria-pressed="${ivF===k}">${n}</button>`,cnt=s=>all.filter(i=>(i.status||"Em análise")===s).length;
   return `<div class="sech"><div><h2 class="sh">Entrevistas</h2><p class="sub2">Registre cada candidato e o parecer da entrevista.</p></div><button class="btn primary" data-newiv>Nova entrevista</button></div>
   ${shareBar("iv")}<div class="kpis">${kpi(all.length,"Entrevistas")}${kpi(cnt("Em análise"),"Em análise")}${kpi(cnt("Aprovado(a)"),"Aprovados")}${kpi(cnt("Reprovado(a)"),"Reprovados")}</div>
@@ -1139,11 +1141,12 @@ function openIv(id){
   const ex=id?ivs.find(i=>i.id===id):null;
   iw=ex?{...ex}:{nome:"",vaga:"",data:iso(new Date()),entrevistador:"",etapa:"Triagem",status:"Em análise",nota:0,parecer:""};
   $("#ivh").textContent=ex?"Entrevista":"Nova entrevista";
-  $("#ivn").value=iw.nome;$("#ivv").value=iw.vaga||"";$("#ivd").value=iw.data||"";$("#ive").value=iw.entrevistador||"";$("#ivt").value=iw.etapa||"Triagem";$("#ivs").value=iw.status||"Em análise";$("#ivr").value=String(iw.nota||0);$("#ivp").value=iw.parecer||"";iw.cvChanged=false;$("#cvl").value=iw.cvl||"";cvDraw();
+  $("#ivn").value=iw.nome;$("#ivv").value=iw.vaga||"";$("#ivd").value=iw.data||"";$("#ive").value=iw.entrevistador||"";$("#ivt").value=iw.etapa||"Triagem";$("#ivs").value=iw.status||"Em análise";$("#ivr").value=String(iw.nota||0);$("#ivp").value=iw.parecer||"";iw.cvChanged=false;$("#cvl").value=iw.cvl||"";cvDraw();iw.lnChanged=false;$("#lnl").value=iw.lnl||"";lnDraw();
   $("#ivdel").hidden=!ex||ex.owner!==me.uid;$("#ivshare").hidden=!ex;$("#idlg").showModal();
 }
 $("#ivf").addEventListener("submit",()=>{
-  const v={nome:$("#ivn").value.trim(),vaga:$("#ivv").value.trim(),data:$("#ivd").value,entrevistador:$("#ive").value.trim(),etapa:$("#ivt").value,status:$("#ivs").value,nota:+$("#ivr").value,parecer:$("#ivp").value.trim(),cvl:$("#cvl").value.trim()};if(iw.cvChanged||!iw.id){v.cvName=iw.cvName||"";v.cvType=iw.cvType||"";v.cvData=iw.cvData||""}
+  const v={nome:$("#ivn").value.trim(),vaga:$("#ivv").value.trim(),data:$("#ivd").value,entrevistador:$("#ive").value.trim(),etapa:$("#ivt").value,status:$("#ivs").value,nota:+$("#ivr").value,parecer:$("#ivp").value.trim(),cvl:$("#cvl").value.trim(),lnl:$("#lnl").value.trim()};if(iw.cvChanged||!iw.id){v.cvName=iw.cvName||"";v.cvType=iw.cvType||"";v.cvData=iw.cvData||""}
+  if(iw.lnChanged||!iw.id){v.lnName=iw.lnName||"";v.lnType=iw.lnType||"";v.lnData=iw.lnData||""}
   if(iw.id)updateDoc(doc(db,"interviews",iw.id),v).catch(fail);
   else setDoc(doc(db,"interviews","v"+(++uid)),{...v,owner:me.uid,ownerEmail:me.email,readers:newReaders("iv"),createdAt:Date.now()}).catch(fail);
 });
@@ -1228,9 +1231,24 @@ $("#cvadd").onclick=()=>$("#cvf").click();
 $("#cvf").onchange=()=>{
   const f=$("#cvf").files[0];if(!f)return;
   if(f.size>500*1024){toast("Arquivo grande demais. O limite é 500 KB. Use o link do currículo.");$("#cvf").value="";return}
+  if(f.size+attSize(iw.lnData)>650*1024){toast("Currículo e Lono juntos passam de 650 KB. Use o link para um deles.");$("#cvf").value="";return}
   const r=new FileReader();r.onload=()=>{iw.cvData=r.result;iw.cvName=f.name;iw.cvType=f.type;iw.cvChanged=true;cvDraw()};r.readAsDataURL(f);$("#cvf").value="";
 };
 $("#cvrm").onclick=()=>{iw.cvData="";iw.cvName="";iw.cvType="";iw.cvChanged=true;cvDraw()};
+function attSize(d){return d?Math.round(d.length*0.75):0}
+function lnDraw(){
+  const has=!!iw.lnData;
+  $("#lnbox").innerHTML=has?`<a class="btn" href="${iw.lnData}" download="${esc(iw.lnName||"lono")}">Baixar ${esc(iw.lnName||"Lono")}</a>`:'<span class="sub2">Nenhum arquivo anexado.</span>';
+  $("#lnrm").hidden=!has;$("#lnadd").textContent=has?"Trocar arquivo":"Anexar arquivo";
+}
+$("#lnadd").onclick=()=>$("#lnf").click();
+$("#lnf").onchange=()=>{
+  const f=$("#lnf").files[0];if(!f)return;
+  if(f.size>500*1024){toast("Arquivo grande demais. O limite é 500 KB. Use o link do Lono.");$("#lnf").value="";return}
+  if(f.size+attSize(iw.cvData)>650*1024){toast("Currículo e Lono juntos passam de 650 KB. Use o link para um deles.");$("#lnf").value="";return}
+  const r=new FileReader();r.onload=()=>{iw.lnData=r.result;iw.lnName=f.name;iw.lnType=f.type;iw.lnChanged=true;lnDraw()};r.readAsDataURL(f);$("#lnf").value="";
+};
+$("#lnrm").onclick=()=>{iw.lnData="";iw.lnName="";iw.lnType="";iw.lnChanged=true;lnDraw()};
 $("#srch").onclick=()=>{curSec="find";render();swapCur();const f=$("#fq");if(f)f.focus()};
 function shareBar(tipo){
   const mineL=rhShare()[tipo],ppl=tabPeople(tipo),show=ppl.slice(0,4),more=ppl.length-show.length;

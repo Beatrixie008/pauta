@@ -396,6 +396,32 @@ body.sec-proj.ro .card,body.sec-proj.ro .wcard{cursor:default}
 @media (max-width:520px){.f{grid-template-columns:1fr}#q{width:100%;flex:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .chk.lk{opacity:.4;cursor:not-allowed}
+
+/* ===== Visual minimalista (só depois do login) ===== */
+body:not(.anon){--grad:#fafaf9;--bgc:#fafaf9;--glass:#fff;--edge:#ececea;--surface:#fff;--ink:#1d1d1f;--muted:#86868b;--line:#ececea;--shadow:0 1px 2px rgba(0,0,0,.04);--lift:0 8px 24px rgba(0,0,0,.08);font-family:system-ui,-apple-system,"SF Pro Text","Segoe UI",Roboto,sans-serif;letter-spacing:-.005em;background:var(--grad)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body:not(.anon){--grad:#121213;--bgc:#121213;--glass:#1a1a1c;--edge:#2a2a2d;--surface:#1a1a1c;--ink:#ededee;--muted:#8e8e93;--line:#2a2a2d;--lift:0 8px 24px rgba(0,0,0,.4)}}
+:root[data-theme="dark"] body:not(.anon){--grad:#121213;--bgc:#121213;--glass:#1a1a1c;--edge:#2a2a2d;--surface:#1a1a1c;--ink:#ededee;--muted:#8e8e93;--line:#2a2a2d;--lift:0 8px 24px rgba(0,0,0,.4)}
+body:not(.anon) *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body:not(.anon) .intro .list,body:not(.anon) .enter .top,body:not(.anon) .enter .nav,body:not(.anon) .enter .view{animation:none}
+body:not(.anon) .list{background:color-mix(in srgb,var(--ink) 3%,transparent);border:0;border-radius:12px;padding:8px}
+body:not(.anon) .card{border:1px solid var(--line);border-radius:10px;box-shadow:none}
+body:not(.anon) .card:hover{border-color:color-mix(in srgb,var(--ink) 22%,transparent);box-shadow:none;transform:none}
+body:not(.anon) .kpi,body:not(.anon) .panel,body:not(.anon) .pc{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:none}
+body:not(.anon) .pc:hover{transform:none;border-color:color-mix(in srgb,var(--ink) 22%,transparent)}
+body:not(.anon) .btn{border-radius:8px;padding:7px 14px;font-weight:600;box-shadow:none}
+body:not(.anon) .btn.primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-ink)!important}
+body:not(.anon) .nav,body:not(.anon) .tabs{gap:2px}
+body:not(.anon) .nav button,body:not(.anon) .tabs button{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:8px;color:var(--muted);font-weight:600;padding:7px 12px}
+body:not(.anon) .nav button:hover,body:not(.anon) .tabs button:hover{color:var(--ink);transform:none}
+body:not(.anon) .nav button[aria-selected=true],body:not(.anon) .tabs button[aria-selected=true]{background:color-mix(in srgb,var(--accent) 12%,transparent)!important;color:var(--accent)!important;box-shadow:none!important}
+body:not(.anon) .hero2{background:var(--accent)!important;color:var(--accent-ink)!important;box-shadow:none!important;border-radius:14px}
+body:not(.anon) .hero2 svg{display:none}
+body:not(.anon) .mark{background:var(--accent)!important;box-shadow:none!important;border-radius:10px}
+body:not(.anon) .bt i,body:not(.anon) .mini i{background:var(--accent)!important}
+body:not(.anon) .sh,body:not(.anon) h1,body:not(.anon) h2{font-weight:700;letter-spacing:-.015em}
+body:not(.anon) dialog{border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.18)}
+body:not(.anon) dialog::backdrop{background:rgba(0,0,0,.35);backdrop-filter:none}
+body:not(.anon) input,body:not(.anon) select,body:not(.anon) textarea{border-radius:8px}
 </style>
 </head>
 <body class="anon boot">

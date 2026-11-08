@@ -412,6 +412,8 @@ body.sec-proj.ro .card,body.sec-proj.ro .wcard{cursor:default}
 #ndlg{width:min(660px,calc(100% - 24px));border-top:6px solid var(--accent)}
 #ndlg #nt{font-size:21px;font-weight:800;border:0;border-bottom:2px solid var(--line);border-radius:0;background:transparent;padding:6px 2px}
 #ndlg #nx{min-height:44dvh;font-size:15px;line-height:1.7;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+.seg3 .nfc{display:inline-block;min-width:18px;margin-left:4px;padding:0 6px;border-radius:99px;font-size:11px;font-weight:800;background:color-mix(in srgb,var(--ink) 10%,transparent)}
+.seg3 button[aria-pressed=true] .nfc{background:rgba(255,255,255,.28)}
 </style>
 </head>
 <body class="anon boot">
@@ -1085,7 +1087,7 @@ $("#pf").addEventListener("submit",()=>{
 $("#pdel").onclick=()=>{if(pd.id&&confirm("Excluir "+(pd.tipo==="adm"?"a admissão":"a demissão")+" de "+(pd.nome||"este funcionário")+" e o checklist?\n\nIsso apaga para todas as pessoas com acesso e não pode ser desfeito.")){deleteDoc(doc(db,"processes",pd.id)).catch(fail);$("#pdlg").close()}};
 $("#pshare").onclick=()=>{const c=procs.find(p=>p.id===pd.id);shareDoc("processes",pd.id,(c&&c.readers)||[])};
 $("#gg").onclick=async()=>{am("");fromLogin=true;try{await signInWithPopup(auth,gp())}catch(x){fromLogin=false;am(msg(x))}};
-let fromLogin=false,cel="",findQ="",ivF="all",iw=null,nd=null;
+let fromLogin=false,cel="",findQ="",ivF="all",nF="all",iw=null,nd=null;
 function gp(){const p=new GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"});return p}
 function swap(el){if(!el)return;el.classList.remove("sw");void el.offsetWidth;el.classList.add("sw")}
 function swapCur(){swap(curSec==="proj"?(view==="board"?$("#board"):$("#view")):$("#sec"))}
@@ -1174,10 +1176,14 @@ const NTPL={ata:["Ata de reunião","Data:\nParticipantes:\n\nPauta:\n- \n\nDecis
 const NH=[330,285,22,200,150,260,45];
 const nHue=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))%NH.length;return NH[h]};
 function noteHtml(){
-  const l=notes.slice().sort((a,b)=>(b.updated||0)-(a.updated||0));
+  const all=notes.slice().sort((a,b)=>(b.updated||0)-(a.updated||0));
+  const recv=n=>n.owner!==me.uid,mineN=n=>n.owner===me.uid;
+  const l=nF==="recv"?all.filter(recv):nF==="mine"?all.filter(mineN):all;
+  const nb=(k,t,c)=>`<button data-nf="${k}" aria-pressed="${nF===k}">${t}${c!=null?` <span class="nfc">${c}</span>`:""}</button>`;
+  const empty=nF==="recv"?"Nenhuma nota compartilhada com você ainda. Quando alguém enviar uma nota, ela aparece aqui.":"Nenhuma nota aqui.";
   const card=(n,i)=>{const mine=n.owner===me.uid,t=(n.texto||"").trim();
     return `<button class="nc" data-note="${n.id}" style="--nh:${nHue(n.id)};animation-delay:${Math.min(i,10)*45}ms"><b>${esc(n.titulo||"Sem título")}</b><div class="nx">${t?esc(t.slice(0,260)):"Nota vazia"}</div><div class="nf"><span>${n.updated?new Date(n.updated).toLocaleDateString("pt-BR",{day:"2-digit",month:"short"}):""}</span>${mine?((n.readers||[]).length>1?'<span class="nb">Compartilhada</span>':""):`<span class="nb">de ${esc((n.ownerEmail||"").split("@")[0])} · ${(n.editors||[]).includes(me.email)?"Editor":"Leitor"}</span>`}</div></button>`};
-  return `<div class="sech"><div><h2 class="sh">Notas</h2><p class="sub2">${l.length?l.length+(l.length>1?" notas":" nota")+" · ":""}Cada nota é privada até você compartilhar.</p></div><button class="btn primary" data-newnote>Nova nota</button></div><div class="ngrid"><button class="nc nnew" data-newnote><span class="plus">+</span><span>Nova nota</span></button>${l.map(card).join("")}</div>`;
+  return `<div class="sech"><div><h2 class="sh">Notas</h2><p class="sub2">${l.length?l.length+(l.length>1?" notas":" nota")+" · ":""}Cada nota é privada até você compartilhar.</p></div><button class="btn primary" data-newnote>Nova nota</button></div><div class="seg3">${nb("all","Todas",all.length)}${nb("mine","Minhas",all.filter(mineN).length)}${nb("recv","Compartilhadas comigo",all.filter(recv).length)}</div><div class="ngrid">${nF!=="recv"?'<button class="nc nnew" data-newnote><span class="plus">+</span><span>Nova nota</span></button>':""}${l.map(card).join("")||`<p class="empty" style="grid-column:1/-1">${empty}</p>`}</div>`;
 }
 function noteShareHtml(n){
   const ppl=(n.readers||[]).filter(e=>e!==n.ownerEmail&&e!==me.email);
@@ -1226,6 +1232,7 @@ $("#sec").addEventListener("click",e=>{
   if(el=e.target.closest("[data-newiv]")){openIv();return}
   if(el=e.target.closest("[data-iv]")){openIv(el.dataset.iv);return}
   if(el=e.target.closest("[data-ivf]")){ivF=el.dataset.ivf;renderView();return}
+  if(el=e.target.closest("[data-nf]")){nF=el.dataset.nf;renderView();return}
   if(el=e.target.closest("[data-newnote]")){openNote();return}
   if(el=e.target.closest("[data-note]")){openNote(el.dataset.note)}
 });

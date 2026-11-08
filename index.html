@@ -397,31 +397,21 @@ body.sec-proj.ro .card,body.sec-proj.ro .wcard{cursor:default}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .chk.lk{opacity:.4;cursor:not-allowed}
 
-/* ===== Visual minimalista (só depois do login) ===== */
-body:not(.anon){--grad:#fafaf9;--bgc:#fafaf9;--glass:#fff;--edge:#ececea;--surface:#fff;--ink:#1d1d1f;--muted:#86868b;--line:#ececea;--shadow:0 1px 2px rgba(0,0,0,.04);--lift:0 8px 24px rgba(0,0,0,.08);font-family:system-ui,-apple-system,"SF Pro Text","Segoe UI",Roboto,sans-serif;letter-spacing:-.005em;background:var(--grad)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body:not(.anon){--grad:#121213;--bgc:#121213;--glass:#1a1a1c;--edge:#2a2a2d;--surface:#1a1a1c;--ink:#ededee;--muted:#8e8e93;--line:#2a2a2d;--lift:0 8px 24px rgba(0,0,0,.4)}}
-:root[data-theme="dark"] body:not(.anon){--grad:#121213;--bgc:#121213;--glass:#1a1a1c;--edge:#2a2a2d;--surface:#1a1a1c;--ink:#ededee;--muted:#8e8e93;--line:#2a2a2d;--lift:0 8px 24px rgba(0,0,0,.4)}
-body:not(.anon) *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-body:not(.anon) .intro .list,body:not(.anon) .enter .top,body:not(.anon) .enter .nav,body:not(.anon) .enter .view{animation:none}
-body:not(.anon) .list{background:color-mix(in srgb,var(--ink) 3%,transparent);border:0;border-radius:12px;padding:8px}
-body:not(.anon) .card{border:1px solid var(--line);border-radius:10px;box-shadow:none}
-body:not(.anon) .card:hover{border-color:color-mix(in srgb,var(--ink) 22%,transparent);box-shadow:none;transform:none}
-body:not(.anon) .kpi,body:not(.anon) .panel,body:not(.anon) .pc{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:none}
-body:not(.anon) .pc:hover{transform:none;border-color:color-mix(in srgb,var(--ink) 22%,transparent)}
-body:not(.anon) .btn{border-radius:8px;padding:7px 14px;font-weight:600;box-shadow:none}
-body:not(.anon) .btn.primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-ink)!important}
-body:not(.anon) .nav,body:not(.anon) .tabs{gap:2px}
-body:not(.anon) .nav button,body:not(.anon) .tabs button{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:8px;color:var(--muted);font-weight:600;padding:7px 12px}
-body:not(.anon) .nav button:hover,body:not(.anon) .tabs button:hover{color:var(--ink);transform:none}
-body:not(.anon) .nav button[aria-selected=true],body:not(.anon) .tabs button[aria-selected=true]{background:color-mix(in srgb,var(--accent) 12%,transparent)!important;color:var(--accent)!important;box-shadow:none!important}
-body:not(.anon) .hero2{background:var(--accent)!important;color:var(--accent-ink)!important;box-shadow:none!important;border-radius:14px}
-body:not(.anon) .hero2 svg{display:none}
-body:not(.anon) .mark{background:var(--accent)!important;box-shadow:none!important;border-radius:10px}
-body:not(.anon) .bt i,body:not(.anon) .mini i{background:var(--accent)!important}
-body:not(.anon) .sh,body:not(.anon) h1,body:not(.anon) h2{font-weight:700;letter-spacing:-.015em}
-body:not(.anon) dialog{border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.18)}
-body:not(.anon) dialog::backdrop{background:rgba(0,0,0,.35);backdrop-filter:none}
-body:not(.anon) input,body:not(.anon) select,body:not(.anon) textarea{border-radius:8px}
+.ngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.nc{--c:hsl(var(--nh,330) 72% 58%);position:relative;overflow:hidden;text-align:left;display:flex;flex-direction:column;gap:8px;min-height:158px;padding:16px 16px 12px 20px;border:1px solid color-mix(in srgb,var(--c) 30%,transparent);border-radius:18px;color:var(--ink);cursor:pointer;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 18%,var(--surface)),var(--surface) 72%);box-shadow:var(--shadow);transition:transform .22s ease,box-shadow .22s ease;animation:pop .45s both}
+.nc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--c)}
+.nc:hover{transform:translateY(-4px) rotate(-.5deg);box-shadow:var(--lift)}
+.nc:active{transform:scale(.97)}
+.nc b{font-size:16px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+.nc .nx{flex:1;font-size:13.5px;line-height:1.5;color:var(--muted);white-space:pre-line;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
+.nc .nf{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700}
+.nc .nb{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:800;color:var(--ink);background:color-mix(in srgb,var(--c) 22%,transparent)}
+.nc.nnew{align-items:center;justify-content:center;gap:6px;border:2px dashed color-mix(in srgb,var(--accent) 45%,transparent);background:transparent;box-shadow:none;font-weight:800;color:var(--accent)}
+.nc.nnew::before{display:none}
+.nc.nnew .plus{font-size:34px;line-height:1;font-weight:400}
+#ndlg{width:min(660px,calc(100% - 24px));border-top:6px solid var(--accent)}
+#ndlg #nt{font-size:21px;font-weight:800;border:0;border-bottom:2px solid var(--line);border-radius:0;background:transparent;padding:6px 2px}
+#ndlg #nx{min-height:44dvh;font-size:15px;line-height:1.7;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
 </style>
 </head>
 <body class="anon boot">
@@ -1181,9 +1171,13 @@ $("#ivdel").onclick=()=>{if(iw.id&&confirm("Excluir esta entrevista?")){deleteDo
 $("#ivshare").onclick=()=>{const c=ivs.find(i=>i.id===iw.id);shareDoc("interviews",iw.id,(c&&c.readers)||[])};
 
 const NTPL={ata:["Ata de reunião","Data:\nParticipantes:\n\nPauta:\n- \n\nDecisões:\n- \n\nPróximos passos (quem / prazo):\n- "],fb:["Feedback 1:1","Nome:\nData:\n\nPontos fortes:\n- \n\nPontos de desenvolvimento:\n- \n\nCombinados e prazos:\n- "],rot:["Roteiro de entrevista","Candidato(a):\nVaga:\n\n1. Conte sobre a sua trajetória.\n2. Por que esta vaga?\n3. Uma situação de desafio e como lidou com ela.\n4. Expectativas e pretensão.\n5. Perguntas do candidato.\n\nObservações:\n"]};
+const NH=[330,285,22,200,150,260,45];
+const nHue=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))%NH.length;return NH[h]};
 function noteHtml(){
   const l=notes.slice().sort((a,b)=>(b.updated||0)-(a.updated||0));
-  return `<div class="sech"><div><h2 class="sh">Notas</h2><p class="sub2">Seu bloco de notas. Cada nota é privada até você compartilhar.</p></div><button class="btn primary" data-newnote>Nova nota</button></div><div class="pgrid">${l.map(n=>`<button class="pc" data-note="${n.id}"><b>${esc(n.titulo||"Sem título")}</b><div class="snip">${esc((n.texto||"").slice(0,140))}${(n.texto||"").length>140?"…":""}</div><div class="pcf"><span>${n.updated?new Date(n.updated).toLocaleDateString("pt-BR"):""}</span>${n.owner!==me.uid?`<span>de ${esc((n.ownerEmail||"").split("@")[0])} · ${(n.editors||[]).includes(me.email)?"Editor":"Leitor"}</span>`:""}</div></button>`).join("")||'<p class="empty">Nenhuma nota ainda. Toque em “Nova nota” e escolha um modelo, se quiser.</p>'}</div>`;
+  const card=(n,i)=>{const mine=n.owner===me.uid,t=(n.texto||"").trim();
+    return `<button class="nc" data-note="${n.id}" style="--nh:${nHue(n.id)};animation-delay:${Math.min(i,10)*45}ms"><b>${esc(n.titulo||"Sem título")}</b><div class="nx">${t?esc(t.slice(0,260)):"Nota vazia"}</div><div class="nf"><span>${n.updated?new Date(n.updated).toLocaleDateString("pt-BR",{day:"2-digit",month:"short"}):""}</span>${mine?((n.readers||[]).length>1?'<span class="nb">Compartilhada</span>':""):`<span class="nb">de ${esc((n.ownerEmail||"").split("@")[0])} · ${(n.editors||[]).includes(me.email)?"Editor":"Leitor"}</span>`}</div></button>`};
+  return `<div class="sech"><div><h2 class="sh">Notas</h2><p class="sub2">${l.length?l.length+(l.length>1?" notas":" nota")+" · ":""}Cada nota é privada até você compartilhar.</p></div><button class="btn primary" data-newnote>Nova nota</button></div><div class="ngrid"><button class="nc nnew" data-newnote><span class="plus">+</span><span>Nova nota</span></button>${l.map(card).join("")}</div>`;
 }
 function noteShareHtml(n){
   const ppl=(n.readers||[]).filter(e=>e!==n.ownerEmail&&e!==me.email);

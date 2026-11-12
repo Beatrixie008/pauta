@@ -538,7 +538,7 @@ body.dopen #drawer{transform:none}body.dopen #scrim{opacity:1;pointer-events:aut
 
 .hstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;max-width:420px}
 .hstats div{background:rgba(255,255,255,.2);border-radius:14px;padding:8px 10px}.hstats b{display:block;font-size:20px;font-weight:800}.hstats span{font-size:12px;opacity:.92}
-.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.phd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .pbar{height:8px;border-radius:99px;background:color-mix(in srgb,var(--accent) 14%,transparent);overflow:hidden;margin-bottom:10px}
 .pbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--g2,#f93fd0),var(--g3,#b52df0));transition:width .5s}
 .nr{display:flex;align-items:center;gap:10px;width:100%;padding:8px 4px;border-radius:12px;text-align:left;background:transparent;border:0;color:var(--ink);transition:background .18s}
@@ -547,6 +547,21 @@ body.dopen #drawer{transform:none}body.dopen #scrim{opacity:1;pointer-events:aut
 .nd{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
 .linkbtn{background:none;border:0;color:var(--accent);font-weight:800;font-size:12.5px;padding:0}
 .bell{position:relative}.bell .bb{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 4px}.bell .bb[hidden]{display:none}
+
+.hero2{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px;padding:20px 22px}
+.hero2 .dt{margin:0;font-size:13px;font-weight:700;opacity:.92}
+.hero2 h2{margin:2px 0 10px;font-size:26px;color:#fff}
+.hero2 .hstats{width:100%;max-width:460px;margin:4px 0 12px}
+.hero2 .qa button{background:rgba(255,255,255,.22);color:#fff;border:0;padding:8px 14px;font-size:13px;font-weight:700;border-radius:99px;box-shadow:none}
+.hero2 .qa button:hover{background:rgba(255,255,255,.32)}
+.hrow{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--line);border-left:4px solid color-mix(in srgb,var(--ink) 14%,transparent);border-radius:14px;background:var(--surface);transition:transform .18s,box-shadow .18s}
+.hrow:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.hrow.p-alta{border-left-color:var(--high)}.hrow.p-media{border-left-color:var(--mid)}.hrow.p-baixa{border-left-color:var(--low)}
+.hrow.asg{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface))}
+.hrow .tt{flex:1;min-width:0;text-align:left;background:transparent;border:0;color:var(--ink);padding:0;display:flex;flex-direction:column;gap:1px}
+.hrow .tag{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.hrow .rt{font-size:14px;font-weight:700}.hrow .meta2{font-size:12px;color:var(--muted)}
+.hrow.done .rt{text-decoration:line-through;opacity:.6}.hrow.done{opacity:.75}
 </style>
 </head>
 <body class="anon boot">
@@ -807,7 +822,7 @@ function toggleDone(id){
   const c=data.cards.find(x=>x.id===id);
   if(c&&readOnly()){toast("Você tem acesso somente leitura a este quadro.");return}
   if(c&&locked(c)){toast(lockMsg(c));return}
-  if(!c){const a=allCards.find(x=>x.id===id);if(a){if(a.aEmail!==me.email){toast(lockMsg(a));return}const nd2=!cardDone(a);updateDoc(doc(db,"cards",id),{done:nd2,doneAt:nd2?Date.now():0}).catch(fail);if(nd2)setTimeout(()=>fx(id),350)}return}
+  if(!c){const a=allCards.find(x=>x.id===id);if(a){if(a.aEmail!==me.email&&!(a.boardId==="u_"+me.uid&&!a.aEmail)){toast(lockMsg(a));return}const nd2=!cardDone(a);updateDoc(doc(db,"cards",id),{done:nd2,doneAt:nd2?Date.now():0}).catch(fail);if(nd2)setTimeout(()=>fx(id),350)}return}
   const cl0=data.lists.find(l=>l.id===c.l),isDone=!!(c.done||(cl0&&cl0.done));
   if(isDone){c.done=false;c.doneAt=0;if(cl0&&cl0.done){let t=data.lists.find(l=>!l.done);if(!t){t={id:"l"+(++uid),name:"A fazer",done:false};data.lists.unshift(t)}c.l=t.id}}
   else{c.done=true;c.doneAt=Date.now();let d=data.lists.find(l=>l.done);if(!d){d={id:"l"+(++uid),name:"Concluída",done:true};data.lists.push(d)}c.l=d.id}
@@ -1135,16 +1150,17 @@ function homeHtml(){
   const pa=procs.filter(p=>p.tipo==="adm"&&pct(p)<100),pdm=procs.filter(p=>p.tipo==="dem"&&pct(p)<100),hr=[...pa,...pdm].slice(0,6);
   const h=new Date().getHours(),g=h<12?"Bom dia":h<18?"Boa tarde":"Boa noite",d=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
   const row=p=>`<button class="row" data-proc="${p.id}"><span class="dot" style="background:${p.tipo==="adm"?"var(--ok)":"var(--high)"}"></span><span class="rt">${esc(p.nome)} · ${p.tipo==="adm"?"Admissão":"Demissão"}</span><span class="mini"><i style="width:${pct(p)}%"></i></span><b>${pct(p)}%</b></button>`;
+  const PRL={alta:"Alta",media:"Média",baixa:"Baixa"},hrow=c=>{const dn=cardDone(c),as=c.by&&c.by!==me.email&&c.aEmail===me.email;return `<div class="hrow${c.pr?" p-"+c.pr:""}${as?" asg":""}${dn?" done":""}"><button class="chk${dn?" on":""}" data-chk="${c.id}" aria-label="${dn?"Reabrir":"Concluir"} tarefa">${dn?"✓":""}</button><button class="tt" data-open="${c.id}">${as?`<span class="tag">Atribuída por ${esc(c.by.split("@")[0])}</span>`:""}<span class="rt">${esc(c.t)}</span><span class="meta2">${c.pr?PRL[c.pr]:"Sem prioridade"}${c.o?" · "+esc(c.o):""}</span></button></div>`};
   const sn=newsSeen(),news=newsItems();
   const nrow=n=>`<button class="nr" ${n.attr}><span class="av" style="background:hsl(${hue(n.who)} 52% 46%);margin:0">${esc(ini(n.who))}</span><span class="nt"><b>${esc(n.who.split("@")[0])}</b> ${n.html}<small>${ago(n.at)}</small></span>${n.at>sn?'<i class="nd"></i>':""}</button>`;
   const ivUp=ivs.filter(i=>i.data&&i.data>=t).sort((a,b)=>a.data.localeCompare(b.data)).slice(0,4);
   const irow=i=>`<button class="row" data-iv="${i.id}"><span class="dot" style="background:var(--low)"></span><span class="rt">${esc(i.nome)}${i.vaga?" · "+esc(i.vaga):""}</span><b>${fmt(i.data)}</b></button>`;
   return `<div class="hero2"><svg viewBox="0 0 590 520" aria-hidden="true"><defs><linearGradient id="gh" x1="0" y1="1" x2="1" y2=".4"><stop offset="0" stop-color="#ff9f55"/><stop offset=".5" stop-color="#fb5f9a"/><stop offset="1" stop-color="#f93fd0"/></linearGradient></defs><path fill="url(#gh)" d="M590 0C500 5 430 40 395 130C365 210 370 270 320 330C260 400 140 440 60 480C30 495 10 510 0 520L590 520Z"/></svg>
-  <div><p class="hi">${g},</p><h2>${esc(me.name)}</h2><p>${d.charAt(0).toUpperCase()+d.slice(1)}</p></div>
+  <div><p class="dt">${d.charAt(0).toUpperCase()+d.slice(1)}</p><h2>${g}, ${esc(me.name)}</h2></div>
   <div class="hstats"><div><b>${td.length-tdDone}</b><span>para hoje</span></div><div><b>${late.length}</b><span>atrasadas</span></div><div><b>${asgN}</b><span>atribuídas</span></div></div>
   <div class="qa"><button data-q="task">Nova tarefa</button><button data-q="adm">Nova admissão</button><button data-q="dem">Nova demissão</button></div></div>
-  <div class="panel"><div class="ph"><h2 style="margin:0">Hoje</h2><span class="sub2">${tdDone} de ${td.length} feitas</span></div><div class="pbar"><i style="width:${td.length?Math.round(tdDone/td.length*100):0}%"></i></div>${td.filter(c=>!cardDone(c)).map(c=>rowHtml(c,false)).join("")||`<p class="empty">${td.length?"Tudo feito por hoje. Bom trabalho!":"Nenhuma tarefa com prazo para hoje."}</p>`}</div>
-  <div class="grid2"><div class="panel" id="news"><div class="ph"><h2 style="margin:0">Novidades</h2>${news.some(n=>n.at>sn)?'<button class="linkbtn" data-newsread>Marcar como vistas</button>':""}</div>${news.map(nrow).join("")||'<p class="empty">Sem novidades por enquanto.</p>'}</div>
+  <div class="panel"><div class="phd"><h2 style="margin:0">Hoje</h2><span class="sub2">${tdDone} de ${td.length} feitas</span></div><div class="pbar"><i style="width:${td.length?Math.round(tdDone/td.length*100):0}%"></i></div>${[...td.filter(c=>!cardDone(c)),...td.filter(cardDone)].map(hrow).join("")||'<p class="empty">Nenhuma tarefa com prazo para hoje.</p>'}</div>
+  <div class="grid2"><div class="panel" id="news"><div class="phd"><h2 style="margin:0">Novidades</h2>${news.some(n=>n.at>sn)?'<button class="linkbtn" data-newsread>Marcar como vistas</button>':""}</div>${news.map(nrow).join("")||'<p class="empty">Sem novidades por enquanto.</p>'}</div>
   <div class="panel"><h2>Próximos prazos</h2>${[...late,...soon].slice(0,6).map(c=>rowHtml(c,c.due<t)).join("")||'<p class="empty">Nada urgente por aqui. Bom trabalho!</p>'}</div></div>
   <div class="grid2"><div class="panel"><h2>Próximas entrevistas</h2>${ivUp.map(irow).join("")||'<p class="empty">Nenhuma entrevista marcada.</p>'}</div>
   <div class="panel"><h2>Processos de RH em andamento</h2>${hr.map(row).join("")||'<p class="empty">Nenhum processo em andamento.</p>'}</div></div>`;

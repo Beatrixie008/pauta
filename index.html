@@ -717,7 +717,7 @@ const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
 const fmt=s=>s.slice(8)+"/"+s.slice(5,7);
 const ini=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 const hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%5;return [330,285,12,305,350][h]};
-let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],ivs=[],notes=[],sheets=[],cfg={},curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,unsubI,unsubM,msgs=[],chatWith=null,unsubN,unsubS,unsubCfg,unsubB2,bM=[],bV=[],editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
+let uid=Date.now()*1000+Math.floor(Math.random()*1000),data={lists:[],cards:[]},assigned=[],allCards=[],procs=[],ivs=[],notes=[],sheets=[],cfg={},curSec="home",boards=[],bd=null,me=null,curId="",synced={cards:{},lists:""},unsubB,unsubC,unsubA,unsubP,unsubI,unsubM,msgs=[],chatWith=null,asgEdit=false,unsubN,unsubS,unsubCfg,unsubB2,bM=[],bV=[],editing=null,newId=null,compL=null,addingList=false,focusNext=false,drag=null;
 
 function seed(){
   const L=[["l1","A fazer"],["l2","Em andamento"],["l3","Em revisão"],["l4","Concluída",1]].map(([id,name,done])=>({id,name,done:!!done}));
@@ -786,6 +786,8 @@ function openDlg(id){if(!id&&readOnly()){toast("Você tem acesso somente leitura
   $("#l").innerHTML=data.lists.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join("");
   const c=editing||{t:"",d:"",l:data.lists[0].id,pr:"media",p:"",o:"",due:presetDue||plus(7)};
   $("#t").value=c.t;$("#d").value=c.d;$("#l").value=c.l;rpDays.clear();$("#rp").value="";$("#rpw").hidden=!!(editing&&(editing.serie||ro));rpUi(true);$("#pr").value=c.pr;$("#p").value=c.p;$("#o").value=c.aEmail||c.o;$("#due").value=c.due;
+  asgEdit=!!(editing&&editing.aEmail===me.email&&ro&&!lk&&(editing.boardId!==curId||readOnly()));
+  if(asgEdit){$("#d").disabled=false;$("#due").disabled=false;$("#sv").style.display="";toast("Esta tarefa foi atribuída a você: dá para mudar o prazo e a descrição.")}
   $("#dlg").showModal();if(lk&&!readOnly())toast(lockMsg(editing));
 }
 function toggleDone(id){
@@ -808,6 +810,7 @@ $("#new").onclick=()=>openDlg();
 $("#cancel").onclick=()=>$("#dlg").close();
 $("#del").onclick=()=>{if(editing&&confirm("Excluir esta tarefa?")){data.cards=data.cards.filter(c=>c.id!==editing.id);save();$("#dlg").close();render()}};
 $("#form").addEventListener("submit",()=>{
+  if(asgEdit&&editing){const nd={d:$("#d").value.trim(),due:$("#due").value};updateDoc(doc(db,"cards",editing.id),nd).catch(fail);asgEdit=false;return}
   const v={t:$("#t").value.trim(),d:$("#d").value.trim(),l:$("#l").value,pr:$("#pr").value,p:$("#p").value.trim(),o:ownerName($("#o").value),aEmail:ownerEmail($("#o").value),due:$("#due").value};
   if(editing){editing=data.cards.find(c=>c.id===editing.id)||editing;const moved=editing.l!==v.l;Object.assign(editing,v);if(!editing.serie)mkSeries(editing,v);if(moved){{const dn=!!(data.lists.find(l=>l.id===v.l)||{}).done;editing.done=dn;editing.doneAt=dn?(editing.doneAt||Date.now()):0}data.cards=data.cards.filter(c=>c!==editing);data.cards.push(editing)}}
   else{const id="c"+(++uid),nc={id,...v,cat:Date.now()};data.cards.push(nc);newId=id;mkSeries(nc,v)}

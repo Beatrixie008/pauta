@@ -512,6 +512,28 @@ body.dopen #drawer{transform:none}body.dopen #scrim{opacity:1;pointer-events:aut
 .day.today{background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
 .day.today .num{background:linear-gradient(135deg,var(--g2,#d6336c),var(--g3,#f0508c));color:#fff}
 .ev{border-radius:99px;padding:2px 8px;border-left:3px solid var(--c)}
+
+#nx{border:1px solid var(--edge);outline:none;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text}
+#nx:empty::before{content:attr(data-ph);color:var(--muted)}
+#nx:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+#nx b{font-weight:800}
+.ntb{display:flex;gap:6px;margin:6px 0}
+.ntb button{width:38px;height:38px;border-radius:10px;border:1px solid var(--edge);background:var(--surface);color:var(--ink);font-size:16px;transition:background .15s}
+.ntb button:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+
+.wsum{display:flex;align-items:center;gap:14px;margin:0 0 12px;padding:12px 16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.wsum b{font-size:20px;font-weight:800;margin-right:6px}.wsum span{color:var(--muted);font-size:13px;font-weight:700}
+.wbar{flex:1;height:10px;border-radius:99px;background:color-mix(in srgb,var(--accent) 14%,transparent);overflow:hidden}
+.wbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--g2,#f93fd0),var(--g3,#b52df0));transition:width .5s}
+.wcard.asg{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 9%,var(--surface)),var(--surface))}
+.wcard.asg h3::before{content:"Atribuída";display:block;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.wkday.today{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 10%,var(--surface)),var(--surface) 45%)}
+.wkbox{background:var(--glass);border:1px solid var(--edge)}
+.wkgrid .wkday:hover{transform:translateY(-2px)}
+.prev{width:100%;margin-top:10px;max-height:62dvh;overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff;padding:8px;-webkit-overflow-scrolling:touch}
+.prev img{max-width:100%;display:block;margin:0 auto}
+.prev canvas{display:block;margin:0 auto 8px;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.prev .empty{color:#555}.docp{color:#222;font-size:14px;line-height:1.55;padding:8px;overflow-wrap:anywhere}.docp img{max-width:100%}.docp table{border-collapse:collapse}.docp td,.docp th{border:1px solid #ccc;padding:4px 8px}
 </style>
 </head>
 <body class="anon boot">
@@ -588,9 +610,9 @@ body.dopen #drawer{transform:none}body.dopen #scrim{opacity:1;pointer-events:aut
       <label>Resultado<select id="ivs"><option>Em análise</option><option>Aprovado(a)</option><option>Reprovado(a)</option><option>Banco de talentos</option></select></label>
       <label>Nota<select id="ivr"><option value="0">Sem nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
       <label class="full">Parecer<textarea id="ivp" rows="6" placeholder="Pontos fortes, pontos de atenção e recomendação…"></textarea></label>
-      <div class="full"><span class="lab">Currículo</span><div id="cvbox" style="margin-bottom:8px"></div><input type="file" id="cvf" accept=".pdf,.doc,.docx,application/pdf" hidden><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="cvadd">Anexar arquivo</button><button type="button" class="btn danger" id="cvrm" hidden>Remover</button></div><p class="sub2" style="margin:6px 0 0">PDF, DOC ou DOCX de até 500 KB (currículo e Lono juntos: até 650 KB). Para arquivos maiores, use o link abaixo.</p></div>
+      <div class="full"><span class="lab">Currículo</span><div id="cvbox" style="margin-bottom:8px"></div><input type="file" id="cvf" accept=".pdf,.doc,.docx,application/pdf" hidden><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="cvadd">Anexar arquivo</button><button type="button" class="btn danger" id="cvrm" hidden>Remover</button><button type="button" class="btn" id="cvpv" hidden>Visualizar</button></div><div class="prev" id="cvprev" hidden></div><p class="sub2" style="margin:6px 0 0">PDF, DOC ou DOCX de até 500 KB (currículo e Lono juntos: até 650 KB). Para arquivos maiores, use o link abaixo.</p></div>
       <label class="full">Link do currículo (opcional)<input id="cvl" type="url" placeholder="https://…" autocapitalize="none"></label>
-      <div class="full"><span class="lab">Lono</span><div id="lnbox" style="margin-bottom:8px"></div><input type="file" id="lnf" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,application/pdf,image/*" hidden><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="lnadd">Anexar arquivo</button><button type="button" class="btn danger" id="lnrm" hidden>Remover</button></div><p class="sub2" style="margin:6px 0 0">PDF, Word, Excel ou imagem de até 500 KB. Para arquivos maiores, use o link abaixo.</p></div>
+      <div class="full"><span class="lab">Lono</span><div id="lnbox" style="margin-bottom:8px"></div><input type="file" id="lnf" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,application/pdf,image/*" hidden><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="lnadd">Anexar arquivo</button><button type="button" class="btn danger" id="lnrm" hidden>Remover</button><button type="button" class="btn" id="lnpv" hidden>Visualizar</button></div><div class="prev" id="lnprev" hidden></div><p class="sub2" style="margin:6px 0 0">PDF, Word, Excel ou imagem de até 500 KB. Para arquivos maiores, use o link abaixo.</p></div>
       <label class="full">Link do Lono (opcional)<input id="lnl" type="url" placeholder="https://…" autocapitalize="none"></label>
     </div>
     <div class="acts" style="flex-wrap:wrap">
@@ -608,7 +630,7 @@ body.dopen #drawer{transform:none}body.dopen #scrim{opacity:1;pointer-events:aut
     <div class="f">
       <label class="full" id="ntw">Modelo<select id="ntp"><option value="">Em branco</option><option value="ata">Ata de reunião</option><option value="fb">Feedback 1:1</option><option value="rot">Roteiro de entrevista</option></select></label>
       <label class="full">Título<input id="nt" maxlength="80"></label>
-      <label class="full">Anotação<textarea id="nx" rows="12" placeholder="Escreva aqui…"></textarea></label>
+      <div class="full"><span class="lab">Anotação</span><div class="ntb" id="ntb"><button type="button" id="nbold" aria-label="Negrito (Ctrl+B)" title="Negrito (Ctrl+B)"><b>B</b></button></div><div id="nx" contenteditable="true" role="textbox" aria-multiline="true" data-ph="Escreva aqui…"></div></div>
     </div>
     <div class="acts" style="flex-wrap:wrap">
       <button type="button" class="btn danger" id="ndel">Excluir</button>
@@ -919,7 +941,7 @@ function renderView0(){
   $("#board").hidden=view!=="board";$("#view").hidden=view==="board";
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===view));
   if(view==="board")return;
-  const ctx={cs:data.cards.filter(vis),doneIds:new Set(data.lists.filter(l=>l.done).map(l=>l.id)),today:iso(new Date())};
+  const ctx={cs:data.cards.filter(vis).concat(view==="cal"&&bd&&bd.personal?assigned.filter(c=>c.boardId!==curId&&vis(c)):[]),doneIds:new Set(data.lists.filter(l=>l.done).map(l=>l.id)),today:iso(new Date())};
   if(view==="sheet"){drawSheets();return}
   $("#view").innerHTML=view==="cal"?calHtml(ctx):view==="dash"?dashHtml(ctx):chartHtml(ctx);
 }
@@ -1282,7 +1304,7 @@ function noteHtml(){
   const nb=(k,t,c)=>`<button data-nf="${k}" aria-pressed="${nF===k}">${t}${c!=null?` <span class="nfc">${c}</span>`:""}</button>`;
   const empty=nF==="recv"?"Nenhuma nota compartilhada com você ainda. Quando alguém enviar uma nota, ela aparece aqui.":"Nenhuma nota aqui.";
   const card=(n,i)=>{const mine=n.owner===me.uid,t=(n.texto||"").trim();
-    return `<button class="nc" data-note="${n.id}" style="--nh:${nHue(n.id)};animation-delay:${Math.min(i,10)*45}ms"><b>${esc(n.titulo||"Sem título")}</b><div class="nx">${t?esc(t.slice(0,260)):"Nota vazia"}</div><div class="nf"><span>${n.updated?new Date(n.updated).toLocaleDateString("pt-BR",{day:"2-digit",month:"short"}):""}</span>${mine?((n.readers||[]).length>1?'<span class="nb">Compartilhada</span>':""):`<span class="nb">de ${esc((n.ownerEmail||"").split("@")[0])} · ${(n.editors||[]).includes(me.email)?"Editor":"Leitor"}</span>`}</div></button>`};
+    return `<button class="nc" data-note="${n.id}" style="--nh:${nHue(n.id)};animation-delay:${Math.min(i,10)*45}ms"><b>${esc(n.titulo||"Sem título")}</b><div class="nx">${t?esc(t.replace(/\*\*/g,"").slice(0,260)):"Nota vazia"}</div><div class="nf"><span>${n.updated?new Date(n.updated).toLocaleDateString("pt-BR",{day:"2-digit",month:"short"}):""}</span>${mine?((n.readers||[]).length>1?'<span class="nb">Compartilhada</span>':""):`<span class="nb">de ${esc((n.ownerEmail||"").split("@")[0])} · ${(n.editors||[]).includes(me.email)?"Editor":"Leitor"}</span>`}</div></button>`};
   return `<div class="sech"><div><h2 class="sh">Notas</h2><p class="sub2">${l.length?l.length+(l.length>1?" notas":" nota")+" · ":""}Cada nota é privada até você compartilhar.</p></div><button class="btn primary" data-newnote>Nova nota</button></div><div class="seg3">${nb("all","Todas",all.length)}${nb("mine","Minhas",all.filter(mineN).length)}${nb("recv","Compartilhadas comigo",all.filter(recv).length)}</div><div class="ngrid">${nF!=="recv"?'<button class="nc nnew" data-newnote><span class="plus">+</span><span>Nova nota</span></button>':""}${l.map(card).join("")||`<p class="empty" style="grid-column:1/-1">${empty}</p>`}</div>`;
 }
 function noteShareHtml(n){
@@ -1293,7 +1315,7 @@ function openNote(id){
   const ex=id?notes.find(n=>n.id===id):null;nd=ex?{...ex}:{titulo:"",texto:""};
   const own=!ex||ex.owner===me.uid,ed=own||(ex.editors||[]).includes(me.email);
   $("#nh").textContent=ex?"Nota":"Nova nota";$("#ntw").hidden=!!ex;$("#ntp").value="";$("#nt").value=nd.titulo||"";$("#nx").value=nd.texto||"";
-  $("#nt").disabled=!ed;$("#nx").disabled=!ed;$("#nsv").hidden=!ed;
+  $("#nt").disabled=!ed;$("#nx").disabled=!ed;$("#ntb").hidden=!ed;$("#nsv").hidden=!ed;
   $("#ndel").hidden=!ex||!own;$("#nshare").hidden=!ex||!own;
   $("#nwho").innerHTML=!ex?"":own?noteShareHtml(ex):`<div class="sharebar"><span class="chipx">Enviada por ${esc(ex.ownerEmail||"")}</span><span class="chipx">${ed?"Você pode editar":"Somente leitura"}</span></div>`;
   $("#ndlg").showModal();
@@ -1352,7 +1374,7 @@ $("#ptp").onchange=()=>{if(pd&&!pd.id){pd.itens=tplItems(pd.tipo,$("#ptp").value
 function cvDraw(){
   const has=!!iw.cvData;
   $("#cvbox").innerHTML=has?`<a class="btn" href="${iw.cvData}" download="${esc(iw.cvName||"curriculo")}">Baixar ${esc(iw.cvName||"currículo")}</a>`:'<span class="sub2">Nenhum arquivo anexado.</span>';
-  $("#cvrm").hidden=!has;$("#cvadd").textContent=has?"Trocar arquivo":"Anexar arquivo";
+  $("#cvrm").hidden=!has;$("#cvpv").hidden=!has;{const b=$("#cvprev");b.hidden=true;b.dataset.on=""}$("#cvadd").textContent=has?"Trocar arquivo":"Anexar arquivo";
 }
 $("#cvadd").onclick=()=>$("#cvf").click();
 $("#cvf").onchange=()=>{
@@ -1366,7 +1388,7 @@ function attSize(d){return d?Math.round(d.length*0.75):0}
 function lnDraw(){
   const has=!!iw.lnData;
   $("#lnbox").innerHTML=has?`<a class="btn" href="${iw.lnData}" download="${esc(iw.lnName||"lono")}">Baixar ${esc(iw.lnName||"Lono")}</a>`:'<span class="sub2">Nenhum arquivo anexado.</span>';
-  $("#lnrm").hidden=!has;$("#lnadd").textContent=has?"Trocar arquivo":"Anexar arquivo";
+  $("#lnrm").hidden=!has;$("#lnpv").hidden=!has;{const b=$("#lnprev");b.hidden=true;b.dataset.on=""}$("#lnadd").textContent=has?"Trocar arquivo":"Anexar arquivo";
 }
 $("#lnadd").onclick=()=>$("#lnf").click();
 $("#lnf").onchange=()=>{
@@ -2160,13 +2182,14 @@ function weekHtml({cs,doneIds,today}){
   const sorted=l=>l.slice().sort((x,y)=>(isDone(x)-isDone(y))||((po[x.pr]!=null?po[x.pr]:3)-(po[y.pr]!=null?po[y.pr]:3)));
   const task=(c,showDue)=>{
     const dn=isDone(c),late=showDue&&!dn&&c.due&&c.due<today;
-    return `<article class="card wcard${c.pr?" p-"+c.pr:""}${dn?" done":""}" data-id="${c.id}" data-open="${c.id}" tabindex="0">${c.pr?`<span class="chip" style="--c:var(--${PC[c.pr]})">${PRI[c.pr]}</span>`:""}<div class="ct"><button type="button" class="chk${dn?" on":""}" data-chk="${c.id}" aria-label="${dn?"Reabrir":"Concluir"} tarefa" title="${dn?"Reabrir":"Concluir"}">${dn?"✓":""}</button><h3>${esc(c.t)}</h3></div><div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${showDue&&c.due?`<span class="due${late?" late":""}">${late?"Atrasada · ":""}${fmt(c.due)}</span>`:""}${c.serie?'<span title="Tarefa recorrente">↻</span>':""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div></article>`;
+    return `<article class="card wcard${c.pr?" p-"+c.pr:""}${dn?" done":""}${c.boardId&&c.boardId!==curId?" asg":""}" data-id="${c.id}" data-open="${c.id}" tabindex="0">${c.pr?`<span class="chip" style="--c:var(--${PC[c.pr]})">${PRI[c.pr]}</span>`:""}<div class="ct"><button type="button" class="chk${dn?" on":""}" data-chk="${c.id}" aria-label="${dn?"Reabrir":"Concluir"} tarefa" title="${dn?"Reabrir":"Concluir"}">${dn?"✓":""}</button><h3>${esc(c.t)}</h3></div><div class="meta">${c.p?`<span>${esc(c.p)}</span>`:""}${showDue&&c.due?`<span class="due${late?" late":""}">${late?"Atrasada · ":""}${fmt(c.due)}</span>`:""}${c.serie?'<span title="Tarefa recorrente">↻</span>':""}${c.o?`<span class="av" title="${esc(c.o)}" style="background:hsl(${hue(c.o)} 52% 46%)">${esc(ini(c.o))}</span>`:""}</div></article>`;
   };
   const col=(d,i)=>{const k=isos[i],l=sorted(by[k]||[]);return `<div class="wkday${k===today?" today":""}" data-wd="${k}"><div class="lh"><span class="wkn">${DN[i]}<small>${fmt(k)}</small></span><span class="cnt">${l.length}</span></div><div class="wkl">${l.map(c=>task(c,false)).join("")}</div><button class="addc" data-wadd="${k}" aria-label="Adicionar tarefa em ${fmt(k)}">+ Adicionar tarefa</button></div>`};
   const late=sorted(cs.filter(c=>!isDone(c)&&c.due&&c.due<isos[0])),none=sorted(cs.filter(c=>!c.due)),wk=sorted(cs.filter(c=>c.due&&we.includes(c.due)));
   const box=(t,hint,l,attr,showDue)=>`<div class="wkbox"${attr}><div class="lh"><span class="wkn">${t}</span><span class="cnt">${l.length}</span></div><p class="sub2" style="margin:0 6px">${hint}</p><div class="wkl">${l.slice(0,40).map(c=>task(c,showDue)).join("")||'<span class="sub2" style="margin:0 6px">Nada por aqui.</span>'}</div></div>`;
   const f=d=>d.toLocaleDateString("pt-BR",{day:"numeric",month:"short"}),range=f(days[0])+" – "+f(days[4])+" de "+days[4].getFullYear();
-  return `${cmodeBar("week")}<div class="calh"><button class="btn" data-wm="-1" aria-label="Semana anterior">‹</button><h2>${range}</h2><button class="btn" data-wm="1" aria-label="Próxima semana">›</button><button class="btn" data-wm="0">Hoje</button></div>
+  const wt=isos.reduce((n,k)=>n+(by[k]||[]).length,0),wd=isos.reduce((n,k)=>n+(by[k]||[]).filter(isDone).length,0),sum=`<div class="wsum"><div><b>${wd}/${wt}</b><span>concluídas na semana</span></div><div class="wbar"><i style="width:${wt?Math.round(wd/wt*100):0}%"></i></div></div>`;
+  return `${cmodeBar("week")}<div class="calh"><button class="btn" data-wm="-1" aria-label="Semana anterior">‹</button><h2>${range}</h2><button class="btn" data-wm="1" aria-label="Próxima semana">›</button><button class="btn" data-wm="0">Hoje</button></div>${sum}
   <div class="wkgrid" id="wkgrid">${days.map(col).join("")}</div>
   <div class="wkshelf">${box("Sem prazo","Arraste para um dia para agendar. Solte aqui para tirar o prazo.",none,' data-wshelf="none"',false)}${late.length?box("Atrasadas","Arraste para um dia para reagendar.",late,"",true):""}${wk.length?box("Fim de semana","Tarefas com prazo no sábado ou domingo. Arraste para um dia útil.",wk,"",true):""}</div>`;
 }
@@ -2181,7 +2204,7 @@ $("#view").addEventListener("click",e=>{
 $("#view").addEventListener("pointerdown",e=>{
   if(view!=="cal"||calMode!=="week"||readOnly()||(e.pointerType==="mouse"&&e.button!==0))return;
   const t=e.target.closest(".wcard");if(!t||e.target.closest("button"))return;
-  {const lc=data.cards.find(x=>x.id===t.dataset.id);if(lc&&locked(lc))return}
+  {const lc=data.cards.find(x=>x.id===t.dataset.id);if(!lc||locked(lc))return}
   wkg={id:t.dataset.id,el:t,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,started:false,type:e.pointerType,pid:e.pointerId,timer:null,target:null};
   if(e.pointerType!=="mouse")wkg.timer=setTimeout(wkStart,320);
 });
@@ -2268,6 +2291,49 @@ function chatSync(had){
 async function chatSend(){const t=$("#ctx"),x=(t&&t.value||"").trim();if(!x||!chatWith)return;t.value="";try{await setDoc(doc(collection(db,"messages")),{room:roomOf(chatWith),from:me.email,fromName:me.name||"",text:x.slice(0,2000),at:Date.now(),readers:[me.email,chatWith]})}catch(err){t.value=x;fail(err)}}
 $("#sec").addEventListener("click",e=>{const w=e.target.closest("[data-cw]");if(w){chatWith=w.dataset.cw;markSeen(chatWith);renderView();return}if(e.target.closest("[data-cback]")){chatWith=null;renderView();return}if(e.target.closest("#csend"))chatSend()});
 $("#sec").addEventListener("keydown",e=>{if(e.target.id==="ctx"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatSend()}});
+
+function nxGet(){const out=[];
+  const walk=(n,b)=>{
+    if(n.nodeType===3){const v=n.nodeValue;out.push(b&&v.trim()!==""?"**"+v+"**":v);return}
+    if(n.nodeType!==1)return;const tn=n.nodeName;
+    if(tn==="BR"){out.push("\n");return}
+    const bold=b||tn==="B"||tn==="STRONG"||(n.style&&(n.style.fontWeight==="bold"||+n.style.fontWeight>=600));
+    if((tn==="DIV"||tn==="P")&&out.length&&!/\n$/.test(out[out.length-1]))out.push("\n");
+    n.childNodes.forEach(c=>walk(c,bold));
+  };
+  $("#nx").childNodes.forEach(c=>walk(c,false));
+  return out.join("").replace(/\*\*\*\*/g,"")}
+function nxSet(t){$("#nx").innerHTML=esc(t||"").replace(/\*\*([^*]+?)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>")}
+{const el=$("#nx");
+  Object.defineProperty(el,"value",{get:nxGet,set:nxSet,configurable:true});
+  Object.defineProperty(el,"disabled",{get:()=>el.contentEditable!=="true",set:v=>{el.contentEditable=v?"false":"true"},configurable:true});
+  el.addEventListener("paste",e=>{e.preventDefault();document.execCommand("insertText",false,(e.clipboardData||window.clipboardData).getData("text/plain"))});
+  const nb=$("#nbold"),keep=e=>e.preventDefault();
+  nb.addEventListener("mousedown",keep);nb.addEventListener("touchstart",keep,{passive:false});
+  nb.addEventListener("click",()=>{el.focus();document.execCommand("bold")});}
+
+const _ld={};
+const ldScr=u=>_ld[u]||(_ld[u]=new Promise((res,rej)=>{const e=document.createElement("script");e.src=u;e.onload=res;e.onerror=()=>{delete _ld[u];rej(new Error("script"))};document.head.appendChild(e)}));
+const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/",MAMMOTH="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+async function prevToggle(k){
+  const box=$("#"+k+"prev"),d=iw&&iw[k+"Data"];if(!d)return;
+  if(box.dataset.on==="1"){box.hidden=true;box.dataset.on="";return}
+  const t=iw[k+"Type"]||"",n=(iw[k+"Name"]||"").toLowerCase();
+  box.hidden=false;box.dataset.on="1";box.innerHTML='<p class="empty">Carregando prévia…</p>';
+  try{
+    if(t.startsWith("image/")||/\.(png|jpe?g|gif|webp)$/.test(n)){box.innerHTML=`<img src="${d}" alt="Prévia">`;return}
+    if(t==="application/pdf"||n.endsWith(".pdf")){
+      await ldScr(PDFJS+"pdf.min.js");pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js";
+      const bin=atob(d.split(",")[1]),doc=await pdfjsLib.getDocument({data:Uint8Array.from(bin,c=>c.charCodeAt(0))}).promise;
+      box.innerHTML="";const w=Math.max(box.clientWidth-16,260),max=Math.min(doc.numPages,12);
+      for(let i=1;i<=max;i++){const pg=await doc.getPage(i),b0=pg.getViewport({scale:1}),v=pg.getViewport({scale:(w/b0.width)*Math.min(window.devicePixelRatio||1,2)});const c=document.createElement("canvas");c.width=v.width;c.height=v.height;c.style.width="100%";box.appendChild(c);await pg.render({canvasContext:c.getContext("2d"),viewport:v}).promise}
+      if(doc.numPages>max)box.insertAdjacentHTML("beforeend",`<p class="empty">Mostrando ${max} de ${doc.numPages} páginas. Use Baixar para ver tudo.</p>`);
+      return}
+    if(n.endsWith(".docx")){await ldScr(MAMMOTH);const buf=await (await fetch(d)).arrayBuffer(),r=await mammoth.convertToHtml({arrayBuffer:buf});box.innerHTML=`<div class="docp">${(r.value||"<p>Documento vazio.</p>").replace(/href="(?!https?:|mailto:|#)[^"]*"/gi,'href="#"')}</div>`;return}
+    box.innerHTML='<p class="empty">Este tipo de arquivo não tem prévia aqui (arquivos .doc, Excel e outros). Use o botão Baixar.</p>';
+  }catch(err){box.innerHTML='<p class="empty">Não foi possível gerar a prévia (verifique a internet). Use o botão Baixar.</p>'}
+}
+$("#cvpv").onclick=()=>prevToggle("cv");$("#lnpv").onclick=()=>prevToggle("ln");
 </script>
 </body>
 </html>

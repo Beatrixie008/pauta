@@ -534,6 +534,7 @@ body.dopen #drawer{transform:none}body.dopen #scrim{opacity:1;pointer-events:aut
 .prev img{max-width:100%;display:block;margin:0 auto}
 .prev canvas{display:block;margin:0 auto 8px;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .prev .empty{color:#555}.docp{color:#222;font-size:14px;line-height:1.55;padding:8px;overflow-wrap:anywhere}.docp img{max-width:100%}.docp table{border-collapse:collapse}.docp td,.docp th{border:1px solid #ccc;padding:4px 8px}
+.wcard.asg{cursor:grab}
 </style>
 </head>
 <body class="anon boot">
@@ -2205,12 +2206,13 @@ $("#view").addEventListener("click",e=>{
   if(el=e.target.closest("[data-wadd]")){presetDue=el.dataset.wadd;openDlg();presetDue=""}
 });
 $("#view").addEventListener("pointerdown",e=>{
-  if(view!=="cal"||calMode!=="week"||readOnly()||(e.pointerType==="mouse"&&e.button!==0))return;
+  if(view!=="cal"||calMode!=="week"||(e.pointerType==="mouse"&&e.button!==0))return;
   const t=e.target.closest(".wcard");if(!t||e.target.closest("button"))return;
-  {const lc=data.cards.find(x=>x.id===t.dataset.id);if(!lc||locked(lc))return}
-  wkg={id:t.dataset.id,el:t,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,started:false,type:e.pointerType,pid:e.pointerId,timer:null,target:null};
+  const kind=dragKind(t.dataset.id);if(!kind)return;
+  wkg={kind,id:t.dataset.id,el:t,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,started:false,type:e.pointerType,pid:e.pointerId,timer:null,target:null};
   if(e.pointerType!=="mouse")wkg.timer=setTimeout(wkStart,320);
 });
+function dragKind(id){const lc=data.cards.find(x=>x.id===id),a=lc||allCards.find(x=>x.id===id);if(!a)return null;if(a.aEmail===me.email&&(!lc||readOnly()))return"asg";if(lc&&!readOnly()&&!locked(lc))return"own";return null}
 function wkStart(){
   if(!wkg||wkg.started)return;wkg.started=true;
   const r=wkg.el.getBoundingClientRect();wkg.ox=wkg.x-r.left;wkg.oy=wkg.y-r.top;
@@ -2240,11 +2242,13 @@ document.addEventListener("touchmove",e=>{if(wkg&&wkg.started)e.preventDefault()
 function wkEnd(ok){
   if(!wkg)return;
   clearTimeout(wkg.timer);clearInterval(wkg.raf);
-  const t=wkg.target,id=wkg.id,was=wkg.started;
+  const t=wkg.target,id=wkg.id,was=wkg.started,kind=wkg.kind;
   if(wkg.ghost)wkg.ghost.remove();
   document.querySelectorAll(".wdrag,.wover").forEach(n=>n.classList.remove("wdrag","wover"));document.body.classList.remove("dgmode");
   wkg=null;if(!was)return;
-  if(ok&&t){const c=data.cards.find(x=>x.id===id),nd=t.dataset.wd||"";if(c&&c.due!==nd){c.due=nd;save();toast(nd?"Tarefa movida para "+fmt(nd)+".":"Prazo removido.")}}
+  if(ok&&t){const c=data.cards.find(x=>x.id===id),nd=t.dataset.wd||"",msg=nd?"Tarefa movida para "+fmt(nd)+".":"Prazo removido.";
+    if(kind==="asg"){const a=allCards.find(x=>x.id===id)||c;if(a&&a.due!==nd){updateDoc(doc(db,"cards",id),{due:nd}).then(()=>toast(msg)).catch(fail)}}
+    else if(c&&c.due!==nd){c.due=nd;save();toast(msg)}}
   render();
 }
 document.addEventListener("pointerup",e=>{if(wkg&&e.pointerId===wkg.pid){if(wkg.started){wkBlock=true;setTimeout(()=>{wkBlock=false},80)}wkEnd(true)}});

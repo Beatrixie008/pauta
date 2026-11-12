@@ -535,6 +535,18 @@ body.dopen #drawer{transform:none}body.dopen #scrim{opacity:1;pointer-events:aut
 .prev canvas{display:block;margin:0 auto 8px;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .prev .empty{color:#555}.docp{color:#222;font-size:14px;line-height:1.55;padding:8px;overflow-wrap:anywhere}.docp img{max-width:100%}.docp table{border-collapse:collapse}.docp td,.docp th{border:1px solid #ccc;padding:4px 8px}
 .wcard.asg{cursor:grab}
+
+.hstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;max-width:420px}
+.hstats div{background:rgba(255,255,255,.2);border-radius:14px;padding:8px 10px}.hstats b{display:block;font-size:20px;font-weight:800}.hstats span{font-size:12px;opacity:.92}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.pbar{height:8px;border-radius:99px;background:color-mix(in srgb,var(--accent) 14%,transparent);overflow:hidden;margin-bottom:10px}
+.pbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--g2,#f93fd0),var(--g3,#b52df0));transition:width .5s}
+.nr{display:flex;align-items:center;gap:10px;width:100%;padding:8px 4px;border-radius:12px;text-align:left;background:transparent;border:0;color:var(--ink);transition:background .18s}
+.nr:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.nr .nt{flex:1;font-size:13.5px;line-height:1.35}.nr .nt small{display:block;color:var(--muted);font-size:11.5px}
+.nd{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.linkbtn{background:none;border:0;color:var(--accent);font-weight:800;font-size:12.5px;padding:0}
+.bell{position:relative}.bell .bb{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 4px}.bell .bb[hidden]{display:none}
 </style>
 </head>
 <body class="anon boot">
@@ -543,7 +555,7 @@ body.dopen #drawer{transform:none}body.dopen #scrim{opacity:1;pointer-events:aut
   <div id="st"></div>
   <input class="field" type="search" id="q" placeholder="Buscar cartão" aria-label="Buscar cartão">
   <select class="field" id="fo" aria-label="Filtrar por pessoa"></select>
-  <button class="iconbtn" id="srch" aria-label="Buscar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button><button class="btn primary" id="new">Nova tarefa</button><span id="who" hidden></span><button id="out" hidden></button><button class="avbtn" id="prof" aria-label="Perfil e configurações"><span id="pav">P</span></button>
+  <button class="iconbtn bell" id="bell" aria-label="Novidades"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17h12l-1.5-2V11a4.5 4.5 0 10-9 0v4zM10 20a2 2 0 004 0"/></svg><span class="bb" id="bellb" hidden></span></button><button class="iconbtn" id="srch" aria-label="Buscar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button><button class="btn primary" id="new">Nova tarefa</button><span id="who" hidden></span><button id="out" hidden></button><button class="avbtn" id="prof" aria-label="Perfil e configurações"><span id="pav">P</span></button>
 </header>
 <nav class="nav" id="nav" role="tablist" aria-label="Seções"></nav>
 <div class="bar2"><select class="field" id="bsel" aria-label="Quadro"></select><button class="btn" id="inv" hidden>Compartilhar</button><button class="btn danger" id="delb" hidden>Excluir quadro</button><span id="bshare" class="sharebar" style="margin:0"></span><span class="pill" id="robadge" hidden>Somente leitura</span></div>
@@ -1109,16 +1121,32 @@ function mineList(){return allCards.filter(c=>c.aEmail===me.email||(c.boardId===
 function pct(p){const i=p.itens||[];return i.length?Math.round(i.filter(x=>x.done).length/i.length*100):0}
 const pl=(n,s,p)=>n+" "+(n===1?s:p);
 
+const NEWS_K="pauta.news.seen";
+function newsSeen(){try{let v=localStorage.getItem(NEWS_K);if(v==null){v=String(Date.now());localStorage.setItem(NEWS_K,v)}return +v}catch(e){return 0}}
+function newsItems(){
+  const a=allCards.filter(c=>c.aEmail===me.email&&c.by&&c.by!==me.email).map(c=>({at:c.cat||0,who:c.by,html:`atribuiu <b>${esc(c.t)}</b> a você`,attr:`data-open="${c.id}"`}));
+  const last={};msgs.filter(x=>x.from!==me.email).forEach(x=>{if(!last[x.from]||x.at>last[x.from].at)last[x.from]={at:x.at,who:x.from,html:"enviou uma mensagem no chat",attr:`data-newm="${esc(x.from)}"`}});
+  return [...a,...Object.values(last)].sort((x,y)=>y.at-x.at).slice(0,6)}
+function bsync(){const b=$("#bellb");if(!b||!me)return;const sn=newsSeen(),n=newsItems().filter(x=>x.at>sn).length;b.textContent=n>9?"9+":String(n);b.hidden=!n}
+const ago=ts=>{if(!ts)return"";const m=Math.round((Date.now()-ts)/60000);return m<1?"agora":m<60?"há "+m+" min":m<1440?"há "+Math.round(m/60)+" h":"há "+Math.round(m/1440)+" d"};
 function homeHtml(){
-  const t=iso(new Date()),w=plus(7),open=mineList().filter(c=>!cardDone(c)),late=open.filter(c=>c.due&&c.due<t).sort(byDue),soon=open.filter(c=>c.due&&c.due>=t&&c.due<=w).sort(byDue);
+  const t=iso(new Date()),w=plus(7),mine=mineList(),open=mine.filter(c=>!cardDone(c)),late=open.filter(c=>c.due&&c.due<t).sort(byDue),soon=open.filter(c=>c.due&&c.due>t&&c.due<=w).sort(byDue);
+  const td=mine.filter(c=>c.due===t),tdDone=td.filter(cardDone).length,asgN=open.filter(c=>c.aEmail===me.email&&c.by&&c.by!==me.email).length;
   const pa=procs.filter(p=>p.tipo==="adm"&&pct(p)<100),pdm=procs.filter(p=>p.tipo==="dem"&&pct(p)<100),hr=[...pa,...pdm].slice(0,6);
   const h=new Date().getHours(),g=h<12?"Bom dia":h<18?"Boa tarde":"Boa noite",d=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
   const row=p=>`<button class="row" data-proc="${p.id}"><span class="dot" style="background:${p.tipo==="adm"?"var(--ok)":"var(--high)"}"></span><span class="rt">${esc(p.nome)} · ${p.tipo==="adm"?"Admissão":"Demissão"}</span><span class="mini"><i style="width:${pct(p)}%"></i></span><b>${pct(p)}%</b></button>`;
+  const sn=newsSeen(),news=newsItems();
+  const nrow=n=>`<button class="nr" ${n.attr}><span class="av" style="background:hsl(${hue(n.who)} 52% 46%);margin:0">${esc(ini(n.who))}</span><span class="nt"><b>${esc(n.who.split("@")[0])}</b> ${n.html}<small>${ago(n.at)}</small></span>${n.at>sn?'<i class="nd"></i>':""}</button>`;
+  const ivUp=ivs.filter(i=>i.data&&i.data>=t).sort((a,b)=>a.data.localeCompare(b.data)).slice(0,4);
+  const irow=i=>`<button class="row" data-iv="${i.id}"><span class="dot" style="background:var(--low)"></span><span class="rt">${esc(i.nome)}${i.vaga?" · "+esc(i.vaga):""}</span><b>${fmt(i.data)}</b></button>`;
   return `<div class="hero2"><svg viewBox="0 0 590 520" aria-hidden="true"><defs><linearGradient id="gh" x1="0" y1="1" x2="1" y2=".4"><stop offset="0" stop-color="#ff9f55"/><stop offset=".5" stop-color="#fb5f9a"/><stop offset="1" stop-color="#f93fd0"/></linearGradient></defs><path fill="url(#gh)" d="M590 0C500 5 430 40 395 130C365 210 370 270 320 330C260 400 140 440 60 480C30 495 10 510 0 520L590 520Z"/></svg>
-  <div><p class="hi">${g},</p><h2>${esc(me.name)}</h2><p>${d.charAt(0).toUpperCase()+d.slice(1)} · ${pl(open.length,"tarefa em aberto","tarefas em aberto")}${late.length?", "+pl(late.length,"atrasada","atrasadas"):""}</p></div>
+  <div><p class="hi">${g},</p><h2>${esc(me.name)}</h2><p>${d.charAt(0).toUpperCase()+d.slice(1)}</p></div>
+  <div class="hstats"><div><b>${td.length-tdDone}</b><span>para hoje</span></div><div><b>${late.length}</b><span>atrasadas</span></div><div><b>${asgN}</b><span>atribuídas</span></div></div>
   <div class="qa"><button data-q="task">Nova tarefa</button><button data-q="adm">Nova admissão</button><button data-q="dem">Nova demissão</button></div></div>
-  <div class="kpis">${kpi(open.length,"Minhas tarefas em aberto")}${kpi(late.length,"Atrasadas",late.length?"warn":"")}${kpi(pa.length,"Admissões em andamento")}${kpi(pdm.length,"Demissões em andamento")}</div>
-  <div class="grid2"><div class="panel"><h2>Próximos prazos</h2>${[...late,...soon].slice(0,6).map(c=>rowHtml(c,c.due<t)).join("")||'<p class="empty">Nada urgente por aqui. Bom trabalho!</p>'}</div>
+  <div class="panel"><div class="ph"><h2 style="margin:0">Hoje</h2><span class="sub2">${tdDone} de ${td.length} feitas</span></div><div class="pbar"><i style="width:${td.length?Math.round(tdDone/td.length*100):0}%"></i></div>${td.filter(c=>!cardDone(c)).map(c=>rowHtml(c,false)).join("")||`<p class="empty">${td.length?"Tudo feito por hoje. Bom trabalho!":"Nenhuma tarefa com prazo para hoje."}</p>`}</div>
+  <div class="grid2"><div class="panel" id="news"><div class="ph"><h2 style="margin:0">Novidades</h2>${news.some(n=>n.at>sn)?'<button class="linkbtn" data-newsread>Marcar como vistas</button>':""}</div>${news.map(nrow).join("")||'<p class="empty">Sem novidades por enquanto.</p>'}</div>
+  <div class="panel"><h2>Próximos prazos</h2>${[...late,...soon].slice(0,6).map(c=>rowHtml(c,c.due<t)).join("")||'<p class="empty">Nada urgente por aqui. Bom trabalho!</p>'}</div></div>
+  <div class="grid2"><div class="panel"><h2>Próximas entrevistas</h2>${ivUp.map(irow).join("")||'<p class="empty">Nenhuma entrevista marcada.</p>'}</div>
   <div class="panel"><h2>Processos de RH em andamento</h2>${hr.map(row).join("")||'<p class="empty">Nenhum processo em andamento.</p>'}</div></div>`;
 }
 
@@ -1142,7 +1170,7 @@ function procHtml(tipo){
 }
 
 function renderView(){
-  const p=curSec==="proj";vsync();dsync();
+  const p=curSec==="proj";vsync();dsync();bsync();
   SECS.forEach(([k])=>document.body.classList.toggle("sec-"+k,k===curSec));
   document.querySelectorAll("#nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.s===curSec));
   $("#sec").hidden=p;
@@ -2294,7 +2322,7 @@ function chatSync(had){
   if(curSec==="chat"&&chatWith&&m){const end=m.scrollHeight-m.scrollTop-m.clientHeight<90;m.innerHTML=bubbles();if(end)m.scrollTop=m.scrollHeight;markSeen(chatWith)}
   else if(curSec==="chat")renderView();
   else if(had&&msgs.length>had&&nw&&nw.at>Date.now()-5000)toast("Nova mensagem de "+nw.from.split("@")[0]);
-  dsync()}
+  dsync();bsync()}
 async function chatSend(){const t=$("#ctx"),x=(t&&t.value||"").trim();if(!x||!chatWith)return;t.value="";try{await setDoc(doc(collection(db,"messages")),{room:roomOf(chatWith),from:me.email,fromName:me.name||"",text:x.slice(0,2000),at:Date.now(),readers:[me.email,chatWith]})}catch(err){t.value=x;fail(err)}}
 $("#sec").addEventListener("click",e=>{const w=e.target.closest("[data-cw]");if(w){chatWith=w.dataset.cw;markSeen(chatWith);renderView();return}if(e.target.closest("[data-cback]")){chatWith=null;renderView();return}if(e.target.closest("#csend"))chatSend()});
 $("#sec").addEventListener("keydown",e=>{if(e.target.id==="ctx"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatSend()}});
@@ -2341,6 +2369,9 @@ async function prevToggle(k){
   }catch(err){box.innerHTML='<p class="empty">Não foi possível gerar a prévia (verifique a internet). Use o botão Baixar.</p>'}
 }
 $("#cvpv").onclick=()=>prevToggle("cv");$("#lnpv").onclick=()=>prevToggle("ln");
+
+$("#bell").onclick=()=>{curSec="home";dclose();render();swapCur();setTimeout(()=>{const n=$("#news");if(n)n.scrollIntoView({behavior:"smooth",block:"start"})},80)};
+$("#sec").addEventListener("click",e=>{const m=e.target.closest("[data-newm]");if(m){chatWith=m.dataset.newm;markSeen(chatWith);curSec="chat";render();swapCur();return}if(e.target.closest("[data-newsread]")){try{localStorage.setItem(NEWS_K,String(Date.now()))}catch(x){}renderView()}});
 </script>
 </body>
 </html>

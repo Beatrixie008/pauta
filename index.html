@@ -580,6 +580,23 @@ html.dk .sgt td[style*="background"]{color:#1b1b1b}
 html.dk .sgt td.sel{background-color:color-mix(in srgb,var(--accent) 16%,var(--surface))}
 html.dk .sgt .ci{background:var(--surface);color:var(--ink)}
 html.dk .shsw i.shno{background:var(--surface)}
+
+/* ===== Perfil e configurações ===== */
+#sdlg{width:min(520px,calc(100% - 20px));padding:0;overflow-x:hidden;overflow-y:auto}
+#sf{padding:0 20px 18px}
+.pfh{position:relative;display:flex;align-items:center;gap:14px;padding:22px 20px;margin:0 -20px 16px;color:#fff;overflow:hidden;background:linear-gradient(135deg,var(--g2,#f93fd0),var(--g3,#b52df0))}
+.pfh::before,.pfh::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.14)}
+.pfh::before{width:150px;height:150px;right:-40px;top:-60px}.pfh::after{width:90px;height:90px;right:60px;bottom:-50px}
+.pfa{position:relative;flex:none;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:28px;font-weight:800;background:rgba(255,255,255,.95);color:var(--accent);box-shadow:0 8px 20px rgba(0,0,0,.2)}
+.pfh>div{position:relative;min-width:0}.pfh b{display:block;font-size:19px;overflow-wrap:anywhere}.pfh small{display:block;opacity:.9;font-size:13px;overflow-wrap:anywhere}
+.pfb{display:inline-block;margin-top:6px;padding:2px 10px;border-radius:99px;font-size:11.5px;font-weight:800;background:rgba(255,255,255,.22)}.pfb.warn{background:#ffe08a;color:#6b4a00}
+.pfs{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#sdlg .swgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#sdlg .swc{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:700;color:var(--ink);text-align:left;transition:transform .15s,border-color .15s}
+#sdlg .swc i{width:22px;height:22px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
+#sdlg .swc[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent)}
+#sdlg .swc:hover{transform:translateY(-1px)}
+#sdlg .acts{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}
 </style>
 </head>
 <body class="anon boot">
@@ -624,11 +641,12 @@ html.dk .shsw i.shno{background:var(--surface)}
 <div class="welcome" id="welcome" hidden aria-hidden="true"><div><div class="mark big">P</div><h2>Olá, <span id="wname"></span></h2><p>Preparando o seu espaço…</p></div></div>
 <dialog id="sdlg">
   <form method="dialog" id="sf">
-    <h2 style="margin:0 0 12px">Perfil e configurações</h2>
+    <div class="pfh"><span class="pfa" id="pfa">P</span><div><b id="pfn"></b><small id="pfe"></small><span class="pfb" id="pfb"></span></div></div>
     <div class="f">
+      <div class="full pfs">Perfil</div>
       <label class="full">Como você quer ser chamado(a)<input id="sname" maxlength="40"></label>
       <label class="full">E-mail<input id="smail" disabled></label>
-      <div class="full"><span class="lab">Cor do tema</span><div class="swgrid" id="sco"></div></div>
+      <div class="full pfs" style="margin-top:8px">Aparência</div><div class="full"><span class="lab">Cor do tema</span><div class="swgrid" id="sco"></div></div>
       <div class="full"><span class="lab">Modo</span><div class="seg3" id="sth"><button type="button" data-th="auto">Automático</button><button type="button" data-th="light">Claro</button><button type="button" data-th="dark">Escuro</button></div></div>
     </div>
     <div class="pn2" id="inst"><b>Instalar o Pauta</b><p class="sub2" id="insttx" style="margin:0"></p><button type="button" class="btn primary" id="instbtn" hidden>Instalar agora</button></div>
@@ -1275,6 +1293,7 @@ function themePref(){try{const t=localStorage.getItem("pauta.theme")||"auto";ret
 function setTheme(t){try{localStorage.setItem("pauta.theme",t)}catch(e){}applyTheme();document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===t))}
 function openProfile(){
   $("#sname").value=me.full||me.name;$("#smail").value=me.email;
+  $("#pfa").textContent=(me.name||"P")[0].toUpperCase();$("#pfn").textContent=me.full||me.name;$("#pfe").textContent=me.email;{const nd=me.pw&&!me.verified;$("#pfb").textContent=nd?"E-mail pendente de confirmação":"E-mail confirmado";$("#pfb").className="pfb"+(nd?" warn":"")}
   document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===themePref()));markColors();
   const need=me.pw&&!me.verified;$("#sver").textContent=need?"Seu e-mail ainda não foi confirmado.":"";$("#sver2").hidden=!need;
   openProfileExtra();$("#sdlg").showModal();
@@ -2312,7 +2331,7 @@ setTimeout(()=>board.classList.remove("intro"),900);
 
 const ICO={home:"M4 11l8-7 8 7v9h-5v-6H9v6H4z",mine:"M5 12.5l4.5 4.5L19 7",proj:"M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",adm:"M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-3.5 3.6-6 8-6s8 2.5 8 6",dem:"M9 4H5v16h4M15 8l4 4-4 4M19 12H9",iv:"M4 5h16v11H9l-5 4z",note:"M6 3h9l4 4v14H6zM9 12h7M9 16h6",chat:"M21 12a8 8 0 01-11.5 7.2L4 20l1-4.5A8 8 0 1121 12z",rep:"M5 20V10M12 20V4M19 20v-7"};
 function dsync(){const d=$("#drawer");if(!d||!me)return;const u=chatUnread(),G=[["Geral",["home","mine","proj"]],["Recursos humanos",["adm","dem","iv"]],["Ferramentas",["note","chat","rep"]]],nm=Object.fromEntries(SECS);let i=0;
-  d.innerHTML=`<div class="dh"><span class="mark">${esc((me.name||"P")[0].toUpperCase())}</span><div><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++}" data-ds="${k}" aria-current="${k===curSec}"><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg></span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="df">Pauta · versão 41</div>`}
+  d.innerHTML=`<div class="dh"><span class="mark">${esc((me.name||"P")[0].toUpperCase())}</span><div><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++}" data-ds="${k}" aria-current="${k===curSec}"><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg></span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="df">Pauta · versão 42</div>`}
 const dclose=()=>document.body.classList.remove("dopen");
 $("#hamb").onclick=()=>{dsync();document.body.classList.add("dopen")};
 $("#scrim").onclick=dclose;

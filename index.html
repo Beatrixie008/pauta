@@ -535,6 +535,30 @@ body.dopen #drawer{transform:none}body.dopen #scrim{opacity:1;pointer-events:aut
 .prev canvas{display:block;margin:0 auto 8px;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .prev .empty{color:#555}.docp{color:#222;font-size:14px;line-height:1.55;padding:8px;overflow-wrap:anywhere}.docp img{max-width:100%}.docp table{border-collapse:collapse}.docp td,.docp th{border:1px solid #ccc;padding:4px 8px}
 .wcard.asg{cursor:grab}
+
+/* ===== Topo e menu lateral refinados ===== */
+body:not(.anon) .top{position:sticky;top:0;z-index:20;padding:calc(env(safe-area-inset-top,0px) + 10px) 18px 10px;gap:10px;background:color-mix(in srgb,var(--surface) 70%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid color-mix(in srgb,var(--ink) 7%,transparent)}
+body:not(.anon) .brand{font-size:21px;letter-spacing:-.02em}
+body:not(.anon) .brand small{font-size:11.5px;font-weight:700}
+body:not(.anon) .hamb,body:not(.anon) .iconbtn{width:40px;height:40px;border-radius:13px;border:1px solid color-mix(in srgb,var(--ink) 10%,transparent);background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+body:not(.anon) .iconbtn:hover,body:not(.anon) .hamb:hover{border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
+body:not(.anon) .top .mark{width:40px;height:40px;border-radius:13px;font-size:18px;box-shadow:0 10px 20px -10px var(--accent)}
+body:not(.anon) .top .btn.primary{border-radius:13px;padding:0 16px;height:40px;display:inline-flex;align-items:center;gap:6px;font-weight:800}
+body:not(.anon) .top .btn.primary::before{content:"+";font-size:19px;line-height:1;font-weight:600;margin-top:-1px}
+body:not(.anon) .avbtn{width:40px;height:40px;border:2px solid transparent;color:var(--accent);background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,var(--g2,#f93fd0),var(--g3,#b52df0)) border-box;box-shadow:var(--shadow)}
+#scrim{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#drawer{border-radius:0 28px 28px 0;padding-left:14px;padding-right:14px}
+.dh{position:relative;overflow:hidden;padding:16px;border-radius:22px;box-shadow:0 16px 28px -16px var(--accent)}
+.dh::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.16)}
+.dh .mark{width:46px;height:46px;border-radius:15px;font-size:20px;font-weight:800;flex:none}
+.dh b{font-size:16px}
+.dg{padding:16px 14px 6px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#drawer nav{gap:2px}
+#drawer nav button{padding:8px 12px 8px 8px;font-size:14.5px;border-radius:16px}
+#drawer nav .di{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;flex:none;background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);transition:background .18s,color .18s}
+#drawer nav button[aria-current=true] .di{background:rgba(255,255,255,.22);color:#fff}
+body.dopen #drawer nav button{animation:pop .38s both;animation-delay:calc(var(--i,0)*35ms)}
+.df{margin-top:auto;padding:16px 14px 4px;font-size:11.5px;font-weight:700;color:var(--muted);text-align:center}
 </style>
 </head>
 <body class="anon boot">
@@ -2266,8 +2290,8 @@ render();
 setTimeout(()=>board.classList.remove("intro"),900);
 
 const ICO={home:"M4 11l8-7 8 7v9h-5v-6H9v6H4z",mine:"M5 12.5l4.5 4.5L19 7",proj:"M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",adm:"M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-3.5 3.6-6 8-6s8 2.5 8 6",dem:"M9 4H5v16h4M15 8l4 4-4 4M19 12H9",iv:"M4 5h16v11H9l-5 4z",note:"M6 3h9l4 4v14H6zM9 12h7M9 16h6",chat:"M21 12a8 8 0 01-11.5 7.2L4 20l1-4.5A8 8 0 1121 12z",rep:"M5 20V10M12 20V4M19 20v-7"};
-function dsync(){const d=$("#drawer");if(!d||!me)return;const u=chatUnread();
-  d.innerHTML=`<div class="dh"><span class="mark">P</span><div><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${SECS.filter(x=>x[0]!=="find").map(([k,n])=>`<button data-ds="${k}" aria-current="${k===curSec}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg><span>${n}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")}</nav>`}
+function dsync(){const d=$("#drawer");if(!d||!me)return;const u=chatUnread(),G=[["Geral",["home","mine","proj"]],["Recursos humanos",["adm","dem","iv"]],["Ferramentas",["note","chat","rep"]]],nm=Object.fromEntries(SECS);let i=0;
+  d.innerHTML=`<div class="dh"><span class="mark">${esc((me.name||"P")[0].toUpperCase())}</span><div><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++}" data-ds="${k}" aria-current="${k===curSec}"><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg></span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="df">Pauta · versão 39</div>`}
 const dclose=()=>document.body.classList.remove("dopen");
 $("#hamb").onclick=()=>{dsync();document.body.classList.add("dopen")};
 $("#scrim").onclick=dclose;

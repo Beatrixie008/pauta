@@ -608,6 +608,9 @@ html.dk .shsw i.shno{background:var(--surface)}
 .hpf .hm{font-size:14px;opacity:.92;overflow-wrap:anywhere}
 .hpf .hs{margin-top:8px;font-size:13px;opacity:.9}
 .hpf .mot{margin-top:10px;max-width:520px;font-size:14px;font-style:italic;font-weight:600;opacity:.95}
+#drawer>*{flex-shrink:0}
+.dh{flex:none;min-height:86px}
+.dh>div{min-width:0}
 </style>
 </head>
 <body class="anon boot">
@@ -2342,7 +2345,7 @@ setTimeout(()=>board.classList.remove("intro"),900);
 
 const ICO={home:"M4 11l8-7 8 7v9h-5v-6H9v6H4z",mine:"M5 12.5l4.5 4.5L19 7",proj:"M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",adm:"M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-3.5 3.6-6 8-6s8 2.5 8 6",dem:"M9 4H5v16h4M15 8l4 4-4 4M19 12H9",iv:"M4 5h16v11H9l-5 4z",note:"M6 3h9l4 4v14H6zM9 12h7M9 16h6",chat:"M21 12a8 8 0 01-11.5 7.2L4 20l1-4.5A8 8 0 1121 12z",rep:"M5 20V10M12 20V4M19 20v-7"};
 function dsync(){const d=$("#drawer");if(!d||!me)return;const u=chatUnread(),G=[["Geral",["home","mine","proj"]],["Recursos humanos",["adm","dem","iv"]],["Ferramentas",["note","chat","rep"]]],nm=Object.fromEntries(SECS);let i=0;
-  d.innerHTML=`<div class="dh"><span class="mark">${esc((me.name||"P")[0].toUpperCase())}</span><div><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++}" data-ds="${k}" aria-current="${k===curSec}"><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg></span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="df">Pauta · versão 46</div>`}
+  d.innerHTML=`<div class="dh"><span class="mark">${esc((me.name||"P")[0].toUpperCase())}</span><div><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++}" data-ds="${k}" aria-current="${k===curSec}"><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg></span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="df">Pauta · versão 47</div>`}
 const dclose=()=>document.body.classList.remove("dopen");
 $("#hamb").onclick=()=>{dsync();document.body.classList.add("dopen")};
 $("#scrim").onclick=dclose;

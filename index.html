@@ -617,6 +617,27 @@ html.dk .shsw i.shno{background:var(--surface)}
 .rem i{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff;background:linear-gradient(135deg,var(--g2,#f93fd0),var(--g3,#b52df0))}
 .rem div{flex:1;min-width:0}.rem b{display:block;font-size:14px;overflow-wrap:anywhere}.rem small{color:var(--muted);font-size:12px}
 .rem .btn{padding:6px 12px;font-size:12.5px}
+
+.dx{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;font-size:20px;line-height:1;z-index:1;display:grid;place-items:center}
+.dh .gr{display:block;opacity:.85;font-size:12px}
+#drawer nav .di{background:color-mix(in srgb,var(--ic,var(--accent)) 14%,transparent);color:var(--ic,var(--accent))}
+#drawer nav button[aria-current=true] .di{background:rgba(255,255,255,.22);color:#fff}
+.dfoot{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:12px;border-top:1px solid var(--line)}
+.dfoot button{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:14px;background:transparent;border:0;color:var(--ink);font-weight:700;font-size:14px;text-align:left;transition:background .18s}
+.dfoot button:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.dfoot .out{color:#c2255c}
+.dfoot .di{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:none;background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.dfoot .out .di{background:rgba(194,37,92,.12)}
+.df{margin-top:0;padding-top:8px}
+
+.dfoot .inst{background:linear-gradient(135deg,var(--g2,#f93fd0),var(--g3,#b52df0));color:#fff;margin-bottom:4px}
+.dfoot .inst .di{background:rgba(255,255,255,.22)}
+.dfoot .inst:hover{filter:brightness(1.06);background:linear-gradient(135deg,var(--g2,#f93fd0),var(--g3,#b52df0))}
+.linst{display:none}
+body.anon .linst{display:inline-flex;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);z-index:30;align-items:center;gap:8px;padding:10px 18px;border-radius:99px;background:rgba(255,255,255,.92);border:1px solid rgba(214,51,108,.3);color:#b52d72;font-weight:800;box-shadow:0 10px 24px -10px rgba(120,20,90,.45)}
+.linst[hidden]{display:none!important}
+#idlg{width:min(440px,calc(100% - 24px));padding:0}
+.idtx{font-size:14px;line-height:1.55}.idtx ol{margin:6px 0 0;padding-left:20px}.idtx li{margin-bottom:6px}
 </style>
 </head>
 <body class="anon boot">
@@ -635,6 +656,7 @@ html.dk .shsw i.shno{background:var(--surface)}
 <section class="view" id="sec" hidden></section>
 
 <div id="scrim"></div><aside id="drawer" aria-label="Menu"></aside>
+<dialog id="idlg"><div style="padding:22px 22px 18px"><h2 style="margin:0 0 6px">Instalar o Pauta</h2><p class="sub2" style="margin:0 0 12px">Instale como aplicativo para abrir direto da tela inicial, sem precisar digitar o endereço.</p><div id="idtx" class="idtx"></div><div class="acts" style="margin-top:14px"><button type="button" class="btn primary" id="idok">Entendi</button></div></div></dialog>
 <div class="auth" id="auth">
   <svg class="blob b3" viewBox="0 0 575 535" aria-hidden="true"><defs><linearGradient id="g3" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ff4fd8"/><stop offset=".5" stop-color="#b52df0"/><stop offset="1" stop-color="#4f2fff"/></linearGradient></defs><path fill="url(#g3)" d="M0 120C80 50 220 5 330 5C470 5 575 60 575 190C575 330 480 380 320 410C250 424 190 425 140 460C100 485 90 515 80 535L0 535Z"/></svg>
   <svg class="blob b1" viewBox="0 0 600 520" aria-hidden="true"><defs><linearGradient id="g1" x1="0" y1=".7" x2="1" y2=".2"><stop offset="0" stop-color="#f93fd0"/><stop offset=".5" stop-color="#fb6f92"/><stop offset="1" stop-color="#ff9f55"/></linearGradient></defs><path fill="url(#g1)" d="M0 330C0 250 60 215 220 208C330 203 370 130 420 60C455 12 500 -5 545 20C600 50 610 120 560 220C500 340 400 470 300 500C190 530 60 480 20 400C8 375 0 350 0 330Z"/></svg>
@@ -1542,9 +1564,9 @@ function openProfileExtra(){
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   const on=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
   $("#insttx").textContent=on?"O Pauta já está instalado neste aparelho.":dip?"Instale o Pauta como aplicativo neste aparelho.":ios?"No iPhone ou iPad: toque em Compartilhar (quadrado com seta) e depois em Adicionar à Tela de Início.":"No computador (Chrome ou Edge): clique no ícone de instalar na barra de endereço, ou em Menu > Instalar Pauta. No Android: Menu > Instalar app. No Safari do Mac: Arquivo > Adicionar ao Dock.";
-  $("#instbtn").hidden=!dip;const adm=me.email===ADMIN;$("#aibox").hidden=!adm;if(adm){$("#aikey").value=cfg.key||"";$("#aimodel").value=cfg.model||"gemini-3.5-flash-lite"}$("#aistat").textContent=cfg.key?"A IA do relatório está ativa.":"A IA do relatório ainda não foi ativada.";
+  $("#instbtn").hidden=on;const adm=me.email===ADMIN;$("#aibox").hidden=!adm;if(adm){$("#aikey").value=cfg.key||"";$("#aimodel").value=cfg.model||"gemini-3.5-flash-lite"}$("#aistat").textContent=cfg.key?"A IA do relatório está ativa.":"A IA do relatório ainda não foi ativada.";
 }
-$("#instbtn").onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$("#instbtn").hidden=true};
+$("#instbtn").onclick=()=>{$("#sdlg").close();instalar()};
 
 // ---- repetir tarefas
 let rpDays=new Set();
@@ -2354,13 +2376,15 @@ render();
 setTimeout(()=>board.classList.remove("intro"),900);
 
 const ICO={home:"M4 11l8-7 8 7v9h-5v-6H9v6H4z",mine:"M5 12.5l4.5 4.5L19 7",proj:"M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",adm:"M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-3.5 3.6-6 8-6s8 2.5 8 6",dem:"M9 4H5v16h4M15 8l4 4-4 4M19 12H9",iv:"M4 5h16v11H9l-5 4z",note:"M6 3h9l4 4v14H6zM9 12h7M9 16h6",chat:"M21 12a8 8 0 01-11.5 7.2L4 20l1-4.5A8 8 0 1121 12z",rep:"M5 20V10M12 20V4M19 20v-7"};
+const DCOL={home:"#d6336c",mine:"#2f9e6f",proj:"#3b82f6",adm:"#16a34a",dem:"#ef4444",iv:"#8b5cf6",note:"#f59e0b",chat:"#0ea5e9",rep:"#6366f1"};
 function dsync(){const d=$("#drawer");if(!d||!me)return;const u=chatUnread(),G=[["Geral",["home","mine","proj"]],["Recursos humanos",["adm","dem","iv"]],["Ferramentas",["note","chat","rep"]]],nm=Object.fromEntries(SECS);let i=0;
-  d.innerHTML=`<div class="dh"><span class="mark">${esc((me.name||"P")[0].toUpperCase())}</span><div><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++}" data-ds="${k}" aria-current="${k===curSec}"><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg></span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="df">Pauta · versão 48</div>`}
+  const sv=k=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg>`;
+  d.innerHTML=`<div class="dh"><button class="dx" data-dx aria-label="Fechar menu">×</button><span class="mark">${esc((me.name||"P")[0].toUpperCase())}</span><div><small class="gr">Olá,</small><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++};--ic:${DCOL[k]||"var(--accent)"}" data-ds="${k}" aria-current="${k===curSec}"><span class="di">${sv(k)}</span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="dfoot">${instOn()?"":`<button class="inst" data-dinst><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg></span><span>Instalar aplicativo</span></button>`}<button data-dprof><span class="di">${sv("adm")}</span><span>Perfil e configurações</span></button><button class="out" data-dout><span class="di">${sv("dem")}</span><span>Sair</span></button></div><div class="df">Pauta · versão 50</div>`}
 const dclose=()=>document.body.classList.remove("dopen");
 $("#hamb").onclick=()=>{dsync();document.body.classList.add("dopen")};
 $("#scrim").onclick=dclose;
 document.addEventListener("keydown",e=>{if(e.key==="Escape")dclose()});
-$("#drawer").addEventListener("click",e=>{const b=e.target.closest("[data-ds]");if(!b)return;curSec=b.dataset.ds;dclose();render();swapCur()});
+$("#drawer").addEventListener("click",e=>{if(e.target.closest("[data-dx]")){dclose();return}if(e.target.closest("[data-dinst]")){dclose();instalar();return}if(e.target.closest("[data-dprof]")){dclose();$("#prof").click();return}if(e.target.closest("[data-dout]")){dclose();signOut(auth);return}const b=e.target.closest("[data-ds]");if(!b)return;curSec=b.dataset.ds;dclose();render();swapCur()});
 function vsync(){const l=$("#vswl");if(l)l.textContent=(VIEWS.find(v=>v[0]===view)||[0,"Quadro"])[1]}
 $("#tabs").addEventListener("click",e=>{const m=$("#vmenu");if(e.target.closest("#vsw")){m.hidden=!m.hidden;return}if(e.target.closest("[data-v]"))m.hidden=true});
 document.addEventListener("click",e=>{if(!e.target.closest("#tabs")){const m=$("#vmenu");if(m)m.hidden=true}});
@@ -2462,6 +2486,18 @@ setInterval(remScan,30000);setTimeout(remScan,4000);
 $("#icsb").onclick=()=>{const c=editing;if(!c||!c.due)return;const z=n=>String(n).padStart(2,"0"),f=d=>d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+"T"+z(d.getHours())+z(d.getMinutes())+"00",e=x=>String(x||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n"),st=new Date(c.due+"T"+(c.h||"09:00")+":00"),en=new Date(st.getTime()+36e5),m=remMin(c)??30;
   const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Pauta//PT-BR","BEGIN:VEVENT","UID:"+c.id+"@pauta","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,""),"DTSTART:"+f(st),"DTEND:"+f(en),"SUMMARY:"+e(c.t),"DESCRIPTION:"+e(c.d),"BEGIN:VALARM","TRIGGER:-PT"+m+"M","ACTION:DISPLAY","DESCRIPTION:"+e(c.t),"END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="tarefa-pauta.ics";document.body.appendChild(a);a.click();a.remove()};
+
+const instOn=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+function instalar(){
+  if(instOn()){toast("O Pauta já está instalado neste aparelho.");return}
+  if(dip){const p=dip;dip=null;p.prompt();p.userChoice.then(()=>instSync()).catch(()=>{});return}
+  const ua=navigator.userAgent,ios=/iphone|ipad|ipod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),and=/android/i.test(ua);
+  $("#idtx").innerHTML=ios?'<ol><li>Abra o Pauta no <b>Safari</b> (não funciona em navegadores dentro de outros apps).</li><li>Toque no ícone <b>Compartilhar</b> (quadrado com uma seta para cima).</li><li>Role e escolha <b>Adicionar à Tela de Início</b>.</li><li>Toque em <b>Adicionar</b>. O ícone do Pauta aparece na tela inicial.</li></ol>':and?'<ol><li>No Chrome, toque no menu <b>⋮</b> (três pontinhos).</li><li>Escolha <b>Instalar app</b> (ou <b>Adicionar à tela inicial</b>).</li><li>Confirme em <b>Instalar</b>.</li></ol>':'<ol><li>No <b>Chrome</b> ou <b>Edge</b>, clique no ícone de instalar na barra de endereço (à direita), ou em <b>Menu ⋮ &gt; Salvar e compartilhar &gt; Instalar Pauta</b>.</li><li>No <b>Safari do Mac</b>: <b>Arquivo &gt; Adicionar ao Dock</b>.</li><li>Se a opção não aparecer, recarregue a página e tente de novo em alguns segundos.</li></ol>';
+  $("#idlg").showModal()}
+function instSync(){const b=$("#linst");if(b)b.hidden=instOn();dsync()}
+$("#idok").onclick=()=>$("#idlg").close();
+{const b=document.createElement("button");b.id="linst";b.type="button";b.className="linst";b.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg>Instalar aplicativo';b.onclick=instalar;b.hidden=instOn();document.body.appendChild(b)}
+addEventListener("appinstalled",()=>{dip=null;instSync();toast("Pauta instalado!")});
 </script>
 </body>
 </html>

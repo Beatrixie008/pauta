@@ -681,6 +681,20 @@ body.anon .linst{display:inline-flex;position:fixed;left:50%;bottom:calc(env(saf
 #bpanel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);right:12px;width:min(370px,calc(100% - 24px));max-height:70dvh;overflow:auto;z-index:70;padding:12px;border-radius:22px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:var(--lift);animation:pop .2s both}
 #bpanel[hidden]{display:none}.bph{font-size:15px;font-weight:800;margin-bottom:4px}.bs{display:flex;justify-content:space-between;align-items:center;margin:10px 0 2px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .bi{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff;font-weight:800}.bi.late{background:#ef4444}.bi.soon{background:#f59e0b}
+
+/* ===== Perfil novo, fotos, cores compactas, Esta semana ===== */
+.pfw{position:relative;flex:none}.pfc{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;border:0;background:#fff;color:var(--accent);display:grid;place-items:center;box-shadow:0 4px 10px rgba(0,0,0,.2)}
+.pfa{width:78px;height:78px;border:3px solid rgba(255,255,255,.95);font-size:30px}
+.swrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#sdlg .swrow .swc{padding:8px;font-size:12px;gap:6px}#sdlg .swrow .swc i{width:20px;height:20px}
+.swmore{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:8px;padding:9px 12px;border-radius:12px;background:color-mix(in srgb,var(--ink) 5%,transparent);border:0;color:var(--ink);font-weight:700;font-size:13px}
+.swmore svg{transition:transform .2s}.swmore[aria-expanded=true] svg{transform:rotate(180deg)}
+#sco2{margin-top:8px}#sco2[hidden]{display:none}
+.pfa.hasph,.mark.hasph,.hma.hasph{background:var(--myph) center/cover!important;color:transparent!important}
+.avbtn.hasph{background:var(--myph) center/cover padding-box,linear-gradient(135deg,var(--g2,#f93fd0),var(--g3,#b52df0)) border-box!important}.avbtn.hasph #pav{opacity:0}
+.hmo2{padding:10px 12px}.hmwk{gap:5px}.hmd{padding:5px 0}.hmd b{font-size:16px;line-height:1.15}.hmd small{font-size:10.5px;line-height:1.2}
+@media (min-width:560px){.hmd{display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 0}.hmd small,.hmd b{display:inline}}
+#aidlg{width:min(460px,calc(100% - 24px));padding:0}
 </style>
 </head>
 <body class="anon boot">
@@ -699,6 +713,10 @@ body.anon .linst{display:inline-flex;position:fixed;left:50%;bottom:calc(env(saf
 <section class="view" id="sec" hidden></section>
 
 <div id="scrim"></div><aside id="drawer" aria-label="Menu"></aside>
+<dialog id="aidlg"><div style="padding:22px 22px 18px"><h2 style="margin:0 0 6px">Inteligência artificial</h2><p class="sub2" style="margin:0 0 12px">A IA escreve o resumo executivo do Relatório a partir dos números da semana.</p>
+    <p class="sub2" id="aistat" style="margin-top:8px"></p>
+    <div class="pn2" id="aibox" hidden><b>Inteligência artificial (Gemini)</b><p class="sub2" style="margin:0">Cole a chave gratuita do Google AI Studio. Ela fica salva no Firebase e libera a IA para todos que usam o Pauta.</p><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Chave da API<input id="aikey" type="password" autocomplete="off" autocapitalize="none"></label><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Modelo<input id="aimodel" value="gemini-3.5-flash-lite" autocapitalize="none"></label><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="aisave">Salvar IA</button><button type="button" class="btn" id="aitest">Testar</button></div></div>
+<div class="acts" style="margin-top:14px"><button type="button" class="btn primary" id="aiclose">Fechar</button></div></div></dialog>
 <dialog id="idlg"><div style="padding:22px 22px 18px"><h2 style="margin:0 0 6px">Instalar o Pauta</h2><p class="sub2" style="margin:0 0 12px">Instale como aplicativo para abrir direto da tela inicial, sem precisar digitar o endereço.</p><div id="idtx" class="idtx"></div><div class="acts" style="margin-top:14px"><button type="button" class="btn primary" id="idok">Entendi</button></div></div></dialog>
 <div class="auth" id="auth">
   <svg class="blob b3" viewBox="0 0 575 535" aria-hidden="true"><defs><linearGradient id="g3" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ff4fd8"/><stop offset=".5" stop-color="#b52df0"/><stop offset="1" stop-color="#4f2fff"/></linearGradient></defs><path fill="url(#g3)" d="M0 120C80 50 220 5 330 5C470 5 575 60 575 190C575 330 480 380 320 410C250 424 190 425 140 460C100 485 90 515 80 535L0 535Z"/></svg>
@@ -726,17 +744,17 @@ body.anon .linst{display:inline-flex;position:fixed;left:50%;bottom:calc(env(saf
 <div class="welcome" id="welcome" hidden aria-hidden="true"><div><div class="mark big">P</div><h2>Olá, <span id="wname"></span></h2><p>Preparando o seu espaço…</p></div></div>
 <dialog id="sdlg">
   <form method="dialog" id="sf">
-    <div class="pfh"><span class="pfa" id="pfa">P</span><div><b id="pfn"></b><small id="pfe"></small><span class="pfb" id="pfb"></span></div></div>
+    <div class="pfh"><div class="pfw"><span class="pfa" id="pfa">P</span><button type="button" class="pfc" id="pfcam" aria-label="Alterar foto"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4zM12 17a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/></svg></button></div><div><b id="pfn"></b><small id="pfe"></small><span class="pfb" id="pfb"></span></div></div>
     <div class="f">
       <div class="full pfs">Perfil</div>
       <label class="full">Como você quer ser chamado(a)<input id="sname" maxlength="40"></label>
       <label class="full">E-mail<input id="smail" disabled></label>
-      <div class="full pfs" style="margin-top:8px">Aparência</div><div class="full"><span class="lab">Cor do tema</span><div class="swgrid" id="sco"></div></div>
+      <input type="file" id="pff" accept="image/*" hidden>
+      <div class="full" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="pfpick">Escolher foto</button><button type="button" class="btn danger" id="pfrm" hidden>Remover foto</button></div>
+      <div class="full pfs" style="margin-top:8px">Aparência</div><div class="full"><span class="lab">Cor do tema</span><div class="swrow" id="sco"></div><button type="button" class="swmore" id="swmore" aria-expanded="false"><span id="swml">Mais cores</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="swgrid" id="sco2" hidden></div></div>
       <div class="full"><span class="lab">Modo</span><div class="seg3" id="sth"><button type="button" data-th="auto">Automático</button><button type="button" data-th="light">Claro</button><button type="button" data-th="dark">Escuro</button></div></div>
     </div>
     <div class="pn2" id="inst"><b>Instalar o Pauta</b><p class="sub2" id="insttx" style="margin:0"></p><button type="button" class="btn primary" id="instbtn" hidden>Instalar agora</button></div>
-    <div class="pn2" id="aibox" hidden><b>Inteligência artificial (Gemini)</b><p class="sub2" style="margin:0">Cole a chave gratuita do Google AI Studio. Ela fica salva no Firebase e libera a IA para todos que usam o Pauta.</p><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Chave da API<input id="aikey" type="password" autocomplete="off" autocapitalize="none"></label><label class="fl2" style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Modelo<input id="aimodel" value="gemini-3.5-flash-lite" autocapitalize="none"></label><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="aisave">Salvar IA</button><button type="button" class="btn" id="aitest">Testar</button></div></div>
-    <p class="sub2" id="aistat" style="margin-top:8px"></p>
     <p class="sub2" id="sver" style="margin-top:10px"></p>
     <div class="acts" style="flex-wrap:wrap">
       <button type="button" class="btn" id="sver2" hidden>Reenviar e-mail de confirmação</button>
@@ -1144,7 +1162,7 @@ function rebuildCards(){
   const oe=bd.personal?((bd.memberEmails||[])[0]||me.email):me.email;assigned=allCards.filter(c=>c.aEmail===oe&&c.boardId!==bd.id);
   synced.cards={};data.cards.forEach(c=>{synced.cards[c.id]=JSON.stringify(cardObj(c,c.ord||0))});
 }
-function stopAll(){[unsubB,unsubB2,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubB2=unsubC=unsubA=null;bM=[];bV=[];bd=null;allCards=[];procs=[];ivs=[];notes=[];msgs=[];if(unsubM)unsubM();unsubM=null;sheets=[];curSh=null;[unsubP,unsubI,unsubN,unsubS,unsubCfg].forEach(f=>f&&f());unsubP=unsubI=unsubN=unsubS=unsubCfg=null;cfg={}}
+function stopAll(){[unsubB,unsubB2,unsubC,unsubA].forEach(f=>f&&f());unsubB=unsubB2=unsubC=unsubA=null;bM=[];bV=[];bd=null;allCards=[];procs=[];ivs=[];notes=[];msgs=[];if(unsubM)unsubM();unsubM=null;photos={};phRemote=false;if(unsubPr)unsubPr();unsubPr=null;sheets=[];curSh=null;[unsubP,unsubI,unsubN,unsubS,unsubCfg].forEach(f=>f&&f());unsubP=unsubI=unsubN=unsubS=unsubCfg=null;cfg={}}
 function start(){
   const pid="u_"+me.uid;
   unsubB=onSnapshot(query(collection(db,"boards"),where("memberEmails","array-contains",me.email)),snap=>{
@@ -1158,6 +1176,7 @@ function start(){
   },e=>toast("Erro ao carregar tarefas ("+e.code+")"));
   unsubP=onSnapshot(query(collection(db,"processes"),where("readers","array-contains",me.email)),snap=>{procs=snap.docs.map(d=>({id:d.id,...d.data()}));if(pd&&pd.id&&$("#pdlg").open){const r=procs.find(p=>p.id===pd.id);if(r&&JSON.stringify(r.itens)!==JSON.stringify(pd.itens)){pd.itens=JSON.parse(JSON.stringify(r.itens||[]));drawItems()}}applyRemote()},e=>toast("Erro ao carregar processos ("+e.code+")"));
   unsubI=onSnapshot(query(collection(db,"interviews"),where("readers","array-contains",me.email)),snap=>{ivs=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar entrevistas ("+e.code+")"));
+  unsubPr=onSnapshot(collection(db,"profiles"),snap=>{photos={};snap.docs.forEach(d=>{const x=d.data();if(x.email&&x.photo)photos[x.email]=x.photo});phRemote=true;phSync()},e=>console.warn(e));
   unsubM=onSnapshot(query(collection(db,"messages"),where("readers","array-contains",me.email)),snap=>{const had=msgs.length;msgs=snap.docs.map(d=>({id:d.id,...d.data()}));chatSync(had)},e=>console.warn(e));
   unsubN=onSnapshot(query(collection(db,"notes"),where("readers","array-contains",me.email)),snap=>{notes=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar notas ("+e.code+")"));
   unsubS=onSnapshot(query(collection(db,"sheets"),where("readers","array-contains",me.email)),snap=>{sheets=snap.docs.map(d=>({id:d.id,...d.data()}));applyRemote()},e=>toast("Erro ao carregar planilhas ("+e.code+")"));
@@ -1241,7 +1260,7 @@ $("#tin").onclick=()=>setMode("in");$("#tup").onclick=()=>setMode("up");
 $("#eye").onclick=()=>{const p=$("#ap"),s=p.type==="password";p.type=s?"text":"password";$("#eye").textContent=s?"Ocultar":"Mostrar"};
 $("#af").addEventListener("submit",async e=>{e.preventDefault();am("");const em=$("#ae").value.trim(),pw=$("#ap").value,b=$("#asub");if(mode==="up"&&pw.length<6){am("A senha precisa ter ao menos 6 caracteres.");return}b.disabled=true;fromLogin=true;try{if(mode==="in")await signInWithEmailAndPassword(auth,em,pw);else{const cr=await createUserWithEmailAndPassword(auth,em,pw);try{await sendEmailVerification(cr.user);toast("Enviamos um e-mail para confirmar o seu endereço. Veja também o spam.")}catch(e){}}}catch(x){fromLogin=false;am(msg(x))}b.disabled=false});
 $("#afg").onclick=async()=>{const em=$("#ae").value.trim();if(!em){am("Digite seu e-mail acima e toque de novo.");return}try{await sendPasswordResetEmail(auth,em);am("Se existir uma conta com esse e-mail, enviamos o link para redefinir a senha. Veja também a caixa de spam.")}catch(x){am(msg(x))}};
-const SECS=[["home","Início"],["mine","Minhas tarefas"],["proj","Projetos"],["adm","Admissão"],["dem","Demissão"],["iv","Entrevistas"],["note","Notas"],["chat","Chat"],["rep","Relatório"],["find","Buscar"]];
+const SECS=[["home","Início"],["mine","Minhas tarefas"],["proj","Projetos"],["adm","Admissão"],["dem","Demissão"],["iv","Entrevistas"],["note","Notas"],["chat","Chat"],["ia","Inteligência artificial"],["rep","Relatório"],["find","Buscar"]];
 const procF={adm:"open",dem:"open"};
 const FS_ADM=[...["Consultar Lono","Autorizar abertura de vaga","Solicitar Documentação - Seleção","Solicitar carta de recomendação","Solicitar ASO","Termo de Autodeclaração Étnico Racial","Envio de E-mail para DP - Docs disponível no Seleção","Abrir chamado - Solicitar Máquina","Solicitar Criação de E-mail Corporativo","Envio de Informações de Acesso ao E-mail","Confecção de crachá + Assinatura de E-mail","Enviar integração para Gestor e Colaborador","Abrir chamado p/ criação de Usuário de Rede","Integração"].map(t=>[t,"rh"]),...["Envio do NDA e Contrato de Trabalho","Envio da Admissão para o E-social","Solicitação de VA e VT","Conferência de Adesão ao Plano de Saúde e Odonto","Cadastro no Ponto","Liberação de acesso ao Ponto","Envio das demais Documentações","Conferência de Abertura de Conta Bancária"].map(t=>[t,"dp"])];
 const FS_DEM=["Carta de demissão","E-mail de comunicação - Fluxo interno","E-mail para o Colaborador","Solicitação do ASO Demissional","Recebimento do ASO Demissional","Recolhimento de Equipamento de Trabalho","Bloqueio de Acessos","Desligamento"].map(t=>[t,"rh"]);
@@ -1268,7 +1287,7 @@ function newsItems(){
   const last={};msgs.filter(x=>x.from!==me.email).forEach(x=>{if(!last[x.from]||x.at>last[x.from].at)last[x.from]={at:x.at,who:x.from,html:"enviou uma mensagem no chat",attr:`data-newm="${esc(x.from)}"`}});
   return [...a,...Object.values(last)].sort((x,y)=>y.at-x.at)}
 const ago=ts=>{if(!ts)return"";const m=Math.round((Date.now()-ts)/60000);return m<1?"agora":m<60?"há "+m+" min":m<1440?"há "+Math.round(m/60)+" h":"há "+Math.round(m/1440)+" d"};
-const newsRow=(n,sn)=>`<button class="nr" ${n.attr}><span class="av" style="background:hsl(${hue(n.who)} 52% 46%);margin:0">${esc(ini(n.who))}</span><span class="nt"><b>${esc(n.who.split("@")[0])}</b> ${n.html}<small>${ago(n.at)}</small></span>${n.at>sn?'<i class="nd"></i>':""}</button>`;
+const newsRow=(n,sn)=>`<button class="nr" ${n.attr}><span class="av" style="${avS(n.who)}">${esc(ini(n.who))}</span><span class="nt"><b>${esc(n.who.split("@")[0])}</b> ${n.html}<small>${ago(n.at)}</small></span>${n.at>sn?'<i class="nd"></i>':""}</button>`;
 function bellData(){const t=iso(new Date()),now=Date.now(),open=mineList().filter(c=>!cardDone(c)),late=open.filter(c=>c.due&&c.due<t),sn=newsSeen(),news=newsItems().filter(n=>n.at>sn),soon=open.filter(c=>{const ev=evTime(c);return ev!=null&&ev-now<=36e5&&ev-now>=-18e5});return{late,news,soon,n:late.length+news.length+soon.length}}
 function bsync(){const b=$("#bellb");if(!b||!me)return;const n=bellData().n;b.textContent=n>9?"9+":String(n);b.hidden=!n}
 function bellHtml(){const d=bellData(),sn=newsSeen(),ck='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg>';
@@ -1296,7 +1315,7 @@ function homeHtml(){
   const pa=prc("adm"),pdm=prc("dem"),sn=newsSeen(),news=newsItems(),nw=news.slice(0,2);
   const link=(n,go)=>n>2?`<button class="linkbtn" data-go="${go}">Ver todas (${n})</button>`:"";
   return `<div class="hmh"><span class="hmc c1"></span><span class="hmc c2"></span>
-    <div class="hmp"><span class="hma">${esc((me.name||"P")[0].toUpperCase())}</span><div><small>${g},</small><b>${esc(me.full||me.name)}</b><small>${d.charAt(0).toUpperCase()+d.slice(1)}</small></div></div>
+    <div class="hmp"><span class="hma${myPh()?" hasph":""}">${esc((me.name||"P")[0].toUpperCase())}</span><div><small>${g},</small><b>${esc(me.full||me.name)}</b><small>${d.charAt(0).toUpperCase()+d.slice(1)}</small></div></div>
     <p class="hmq">${esc(fraseDia())}</p>
     <div class="hms"><div><b>${tdOpen.length}</b><span>para hoje</span></div><div><b>${late.length}</b><span>${late.length===1?"atrasada":"atrasadas"}</span></div><div><b>${asgN}</b><span>${asgN===1?"atribuída":"atribuídas"}</span></div></div></div>
   <div class="hmcols"><div class="hmcol">
@@ -1419,9 +1438,9 @@ function setTheme(t){try{localStorage.setItem("pauta.theme",t)}catch(e){}applyTh
 function openProfile(){
   $("#sname").value=me.full||me.name;$("#smail").value=me.email;
   $("#pfa").textContent=(me.name||"P")[0].toUpperCase();$("#pfn").textContent=me.full||me.name;$("#pfe").textContent=me.email;{const nd=me.pw&&!me.verified;$("#pfb").textContent=nd?"E-mail pendente de confirmação":"E-mail confirmado";$("#pfb").className="pfb"+(nd?" warn":"")}
-  document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===themePref()));markColors();
+  document.querySelectorAll("#sth button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===themePref()));colorBuild();markColors();
   const need=me.pw&&!me.verified;$("#sver").textContent=need?"Seu e-mail ainda não foi confirmado.":"";$("#sver2").hidden=!need;
-  openProfileExtra();$("#sdlg").showModal();
+  $("#pfa").classList.toggle("hasph",!!myPh());$("#pfrm").hidden=!myPh();openProfileExtra();$("#sdlg").showModal();
 }
 $("#prof").onclick=openProfile;
 $("#sth").addEventListener("click",e=>{const b=e.target.closest("[data-th]");if(b)setTheme(b.dataset.th)});
@@ -2183,9 +2202,16 @@ function applyTheme(){
   if(me&&p&&c!=="rosa"){const css=themeCss(p);root.dataset.color=c;thm.textContent=css;try{localStorage.setItem("pauta.css",css);localStorage.setItem("pauta.color",c)}catch(e){}}
   else{delete root.dataset.color;thm.textContent="";if(me)try{localStorage.removeItem("pauta.css");localStorage.setItem("pauta.color",c)}catch(e){}}
 }
-function markColors(){document.querySelectorAll("#sco button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.co===colorPref()))}
-function setColor(c){try{localStorage.setItem("pauta.color",c)}catch(e){}applyTheme();markColors()}
-$("#sco").innerHTML=PAL.map(p=>`<button type="button" class="swc" data-co="${p.k}" aria-pressed="false" title="${p.n}"><i style="background:linear-gradient(135deg,${p.a} 50%,${p.h2!=null?`hsl(${p.h2} 90% 52%)`:p.ad} 50%)"></i>${p.n}</button>`).join("");
+function markColors(){document.querySelectorAll("#sco button,#sco2 button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.co===colorPref()))}
+function setColor(c){try{localStorage.setItem("pauta.color",c)}catch(e){}applyTheme();colorBuild();markColors()}
+const VISC=["rosa","azul-laranja","roxo-rosa"];
+function colorBuild(){const cur=colorPref(),vis=VISC.slice();if(!vis.includes(cur))vis[2]=cur;
+  const btn=p=>`<button type="button" class="swc" data-co="${p.k}" aria-pressed="false" title="${p.n}"><i style="background:linear-gradient(135deg,${p.a} 50%,${p.h2!=null?`hsl(${p.h2} 90% 52%)`:p.ad} 50%)"></i>${p.n}</button>`;
+  $("#sco").innerHTML=vis.map(k=>PAL.find(p=>p.k===k)).filter(Boolean).map(btn).join("");
+  const rest=PAL.filter(p=>!vis.includes(p.k));$("#sco2").innerHTML=rest.map(btn).join("");$("#swml").textContent="Mais cores ("+rest.length+")"}
+colorBuild();
+$("#swmore").onclick=()=>{const o=$("#sco2").hidden;$("#sco2").hidden=!o;$("#swmore").setAttribute("aria-expanded",String(o))};
+$("#sco2").addEventListener("click",e=>{const b=e.target.closest("[data-co]");if(b)setColor(b.dataset.co)});
 $("#sco").addEventListener("click",e=>{const b=e.target.closest("[data-co]");if(b)setColor(b.dataset.co)});
 function secTxt(it){const rh=it.filter(x=>(x.setor||"rh")==="rh"),dp=it.filter(x=>x.setor==="dp"),f=a=>a.filter(x=>x.done).length+"/"+a.length;return "RH "+f(rh)+(dp.length?" · DP "+f(dp):"")}
 
@@ -2456,16 +2482,16 @@ onAuthStateChanged(auth,u=>{
 render();
 setTimeout(()=>board.classList.remove("intro"),900);
 
-const ICO={home:"M4 11l8-7 8 7v9h-5v-6H9v6H4z",mine:"M5 12.5l4.5 4.5L19 7",proj:"M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",adm:"M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-3.5 3.6-6 8-6s8 2.5 8 6",dem:"M9 4H5v16h4M15 8l4 4-4 4M19 12H9",iv:"M4 5h16v11H9l-5 4z",note:"M6 3h9l4 4v14H6zM9 12h7M9 16h6",chat:"M21 12a8 8 0 01-11.5 7.2L4 20l1-4.5A8 8 0 1121 12z",rep:"M5 20V10M12 20V4M19 20v-7"};
-const DCOL={home:"#d6336c",mine:"#2f9e6f",proj:"#3b82f6",adm:"#16a34a",dem:"#ef4444",iv:"#8b5cf6",note:"#f59e0b",chat:"#0ea5e9",rep:"#6366f1"};
-function dsync(){const d=$("#drawer");if(!d||!me)return;const u=chatUnread(),G=[["Geral",["home","mine","proj"]],["Recursos humanos",["adm","dem","iv"]],["Ferramentas",["note","chat","rep"]]],nm=Object.fromEntries(SECS);let i=0;
+const ICO={home:"M4 11l8-7 8 7v9h-5v-6H9v6H4z",mine:"M5 12.5l4.5 4.5L19 7",proj:"M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",adm:"M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-3.5 3.6-6 8-6s8 2.5 8 6",dem:"M9 4H5v16h4M15 8l4 4-4 4M19 12H9",iv:"M4 5h16v11H9l-5 4z",note:"M6 3h9l4 4v14H6zM9 12h7M9 16h6",chat:"M21 12a8 8 0 01-11.5 7.2L4 20l1-4.5A8 8 0 1121 12z",rep:"M5 20V10M12 20V4M19 20v-7",ia:"M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"};
+const DCOL={home:"#d6336c",mine:"#2f9e6f",proj:"#3b82f6",adm:"#16a34a",dem:"#ef4444",iv:"#8b5cf6",note:"#f59e0b",chat:"#0ea5e9",rep:"#6366f1",ia:"#8b5cf6"};
+function dsync(){const d=$("#drawer");if(!d||!me)return;const u=chatUnread(),G=[["Geral",["home","mine","proj"]],["Recursos humanos",["adm","dem","iv"]],["Ferramentas",["note","chat","rep","ia"]]],nm=Object.fromEntries(SECS);let i=0;
   const sv=k=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg>`;
-  d.innerHTML=`<div class="dh"><button class="dx" data-dx aria-label="Fechar menu">×</button><span class="mark">${esc((me.name||"P")[0].toUpperCase())}</span><div><small class="gr">Olá,</small><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++};--ic:${DCOL[k]||"var(--accent)"}" data-ds="${k}" aria-current="${k===curSec}"><span class="di">${sv(k)}</span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="dfoot">${instOn()?"":`<button class="inst" data-dinst><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg></span><span>Instalar aplicativo</span></button>`}<button data-dprof><span class="di">${sv("adm")}</span><span>Perfil e configurações</span></button><button class="out" data-dout><span class="di">${sv("dem")}</span><span>Sair</span></button></div><div class="df">Pauta · versão 53</div>`}
+  d.innerHTML=`<div class="dh"><button class="dx" data-dx aria-label="Fechar menu">×</button><span class="mark${myPh()?" hasph":""}">${esc((me.name||"P")[0].toUpperCase())}</span><div><small class="gr">Olá,</small><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++};--ic:${DCOL[k]||"var(--accent)"}" data-ds="${k}" aria-current="${k===curSec}"><span class="di">${sv(k)}</span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="dfoot">${instOn()?"":`<button class="inst" data-dinst><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg></span><span>Instalar aplicativo</span></button>`}<button data-dprof><span class="di">${sv("adm")}</span><span>Perfil e configurações</span></button><button class="out" data-dout><span class="di">${sv("dem")}</span><span>Sair</span></button></div><div class="df">Pauta · versão 54</div>`}
 const dclose=()=>document.body.classList.remove("dopen");
 $("#hamb").onclick=()=>{dsync();document.body.classList.add("dopen")};
 $("#scrim").onclick=dclose;
 document.addEventListener("keydown",e=>{if(e.key==="Escape")dclose()});
-$("#drawer").addEventListener("click",e=>{if(e.target.closest("[data-dx]")){dclose();return}if(e.target.closest("[data-dinst]")){dclose();instalar();return}if(e.target.closest("[data-dprof]")){dclose();$("#prof").click();return}if(e.target.closest("[data-dout]")){dclose();signOut(auth);return}const b=e.target.closest("[data-ds]");if(!b)return;curSec=b.dataset.ds;dclose();render();swapCur()});
+$("#drawer").addEventListener("click",e=>{if(e.target.closest("[data-dx]")){dclose();return}if(e.target.closest("[data-dinst]")){dclose();instalar();return}if(e.target.closest("[data-dprof]")){dclose();$("#prof").click();return}if(e.target.closest("[data-dout]")){dclose();signOut(auth);return}const b=e.target.closest("[data-ds]");if(!b)return;if(b.dataset.ds==="ia"){dclose();openAI();return}curSec=b.dataset.ds;dclose();render();swapCur()});
 function vsync(){const l=$("#vswl");if(l)l.textContent=(VIEWS.find(v=>v[0]===view)||[0,"Quadro"])[1]}
 $("#tabs").addEventListener("click",e=>{const m=$("#vmenu");if(e.target.closest("#vsw")){m.hidden=!m.hidden;return}if(e.target.closest("[data-v]"))m.hidden=true});
 document.addEventListener("click",e=>{if(!e.target.closest("#tabs")){const m=$("#vmenu");if(m)m.hidden=true}});
@@ -2477,9 +2503,9 @@ function chatPeople(){const s=new Set();boards.forEach(b=>[...(b.memberEmails||[
 const hm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 function bubbles(){let day="";return convo(chatWith).map(m=>{const d=new Date(m.at).toLocaleDateString("pt-BR",{day:"2-digit",month:"long"});const sep=d!==day?(day=d,`<div class="cday">${d}</div>`):"";return sep+`<div class="cb ${m.from===me.email?"me":"you"}"><p>${esc(m.text)}</p><small>${hm(m.at)}</small></div>`}).join("")||'<p class="empty">Nenhuma mensagem ainda. Diga olá.</p>'}
 function chatHtml(){
-  const row=e=>{const l=convo(e),last=l[l.length-1],un=l.filter(m=>m.from===e&&m.at>seenAt(e)).length;return `<button class="cr" data-cw="${esc(e)}" aria-pressed="${chatWith===e}"><span class="av" style="background:hsl(${hue(e)} 52% 46%);margin:0">${esc(ini(e))}</span><div><b>${esc(e.split("@")[0])}</b><small>${last?esc((last.from===me.email?"Você: ":"")+last.text.slice(0,48)):esc(e)}</small></div>${un?`<em>${un}</em>`:""}</button>`};
+  const row=e=>{const l=convo(e),last=l[l.length-1],un=l.filter(m=>m.from===e&&m.at>seenAt(e)).length;return `<button class="cr" data-cw="${esc(e)}" aria-pressed="${chatWith===e}"><span class="av" style="${avS(e)}">${esc(ini(e))}</span><div><b>${esc(e.split("@")[0])}</b><small>${last?esc((last.from===me.email?"Você: ":"")+last.text.slice(0,48)):esc(e)}</small></div>${un?`<em>${un}</em>`:""}</button>`};
   const ppl=chatPeople();
-  const conv=chatWith?`<div class="cv"><div class="cvh"><button class="btn" data-cback aria-label="Voltar">‹</button><span class="av" style="background:hsl(${hue(chatWith)} 52% 46%);margin:0">${esc(ini(chatWith))}</span><div><b>${esc(chatWith.split("@")[0])}</b><small>${esc(chatWith)}</small></div></div><div class="cmsgs" id="cmsgs">${bubbles()}</div><div class="cin"><textarea id="ctx" rows="1" maxlength="2000" placeholder="Escreva uma mensagem…"></textarea><button class="btn primary" id="csend">Enviar</button></div></div>`:'<div class="cv cempty"><p class="empty">Escolha uma pessoa para conversar.</p></div>';
+  const conv=chatWith?`<div class="cv"><div class="cvh"><button class="btn" data-cback aria-label="Voltar">‹</button><span class="av" style="${avS(chatWith)}">${esc(ini(chatWith))}</span><div><b>${esc(chatWith.split("@")[0])}</b><small>${esc(chatWith)}</small></div></div><div class="cmsgs" id="cmsgs">${bubbles()}</div><div class="cin"><textarea id="ctx" rows="1" maxlength="2000" placeholder="Escreva uma mensagem…"></textarea><button class="btn primary" id="csend">Enviar</button></div></div>`:'<div class="cv cempty"><p class="empty">Escolha uma pessoa para conversar.</p></div>';
   return `<div class="sech"><div><h2 class="sh">Chat</h2><p class="sub2">Converse com quem compartilha atividades com você.</p></div></div><div class="chat ${chatWith?"open":""}"><div class="cl">${ppl.map(row).join("")||'<p class="empty">Compartilhe um quadro, uma nota ou uma aba com alguém para começar a conversar.</p>'}</div>${conv}</div>`}
 function chatAfter(){const m=$("#cmsgs");if(m){m.scrollTop=m.scrollHeight;markSeen(chatWith);dsync()}}
 function chatSync(had){
@@ -2627,6 +2653,26 @@ async function repPdf(share){
     else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);toast("PDF gerado.")}
   }catch(err){console.warn(err);toast("Não foi possível gerar o PDF. Verifique a internet e tente de novo.")}
   finally{root.remove()}}
+
+let photos={},phRemote=false,unsubPr=null;
+const localPhK=()=>"pauta.photo."+me.uid;
+const localPh=()=>{try{return localStorage.getItem(localPhK())||""}catch(e){return""}};
+const myPh=()=>me?(phRemote?(photos[me.email]||""):localPh()):"";
+const avS=e=>photos[e]?`background:url('${photos[e]}') center/cover;color:transparent;margin:0`:`background:hsl(${hue(e)} 52% 46%);margin:0`;
+function phSync(){const p=myPh();document.documentElement.style.setProperty("--myph",p?`url("${p}")`:"none");const b=$("#prof");if(b)b.classList.toggle("hasph",!!p);const f=$("#pfa");if(f)f.classList.toggle("hasph",!!p);const r=$("#pfrm");if(r)r.hidden=!p;if(me){renderView();dsync()}}
+async function savePhoto(d){
+  try{localStorage.setItem(localPhK(),d)}catch(e){}
+  if(d)photos[me.email]=d;else delete photos[me.email];phSync();
+  try{await setDoc(doc(db,"profiles",me.uid),{email:me.email,name:me.full||me.name,photo:d,updated:Date.now()});phRemote=true;toast(d?"Foto atualizada.":"Foto removida.")}
+  catch(e){phRemote=false;phSync();toast("Foto salva só neste aparelho. Publique as novas regras do Firebase para sincronizar com a equipe.")}}
+$("#pfpick").onclick=$("#pfcam").onclick=()=>$("#pff").click();
+$("#pff").onchange=async()=>{const f=$("#pff").files[0];$("#pff").value="";if(!f)return;
+  try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(f)});
+    const S=256,c=document.createElement("canvas");c.width=c.height=S;const m=Math.min(img.width,img.height);c.getContext("2d").drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);
+    savePhoto(c.toDataURL("image/jpeg",.82))}catch(e){toast("Não foi possível usar esta imagem.")}};
+$("#pfrm").onclick=()=>savePhoto("");
+function openAI(){const adm=me.email===ADMIN;$("#aibox").hidden=!adm;if(adm){$("#aikey").value=cfg.key||"";$("#aimodel").value=cfg.model||"gemini-3.5-flash-lite"}$("#aistat").textContent=(cfg.key?"A IA do relatório está ativa.":"A IA do relatório ainda não foi ativada.")+(adm?"":" A configuração é feita pela administradora.");$("#aidlg").showModal()}
+$("#aiclose").onclick=()=>$("#aidlg").close();
 </script>
 </body>
 </html>

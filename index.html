@@ -695,6 +695,11 @@ body.anon .linst{display:inline-flex;position:fixed;left:50%;bottom:calc(env(saf
 .hmo2{padding:10px 12px}.hmwk{gap:5px}.hmd{padding:5px 0}.hmd b{font-size:16px;line-height:1.15}.hmd small{font-size:10.5px;line-height:1.2}
 @media (min-width:560px){.hmd{display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 0}.hmd small,.hmd b{display:inline}}
 #aidlg{width:min(460px,calc(100% - 24px));padding:0}
+
+.dlgxw{position:sticky;top:0;height:0;z-index:20;display:flex;justify-content:flex-end;pointer-events:none}
+.dlgx{pointer-events:auto;margin:12px 12px 0 0;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 90%,transparent);color:var(--ink);font-size:20px;line-height:1;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.18);cursor:pointer;padding:0}
+.dlgx:hover{background:var(--surface);color:var(--accent)}
+dialog h2{padding-right:38px}
 </style>
 </head>
 <body class="anon boot">
@@ -2486,7 +2491,7 @@ const ICO={home:"M4 11l8-7 8 7v9h-5v-6H9v6H4z",mine:"M5 12.5l4.5 4.5L19 7",proj:
 const DCOL={home:"#d6336c",mine:"#2f9e6f",proj:"#3b82f6",adm:"#16a34a",dem:"#ef4444",iv:"#8b5cf6",note:"#f59e0b",chat:"#0ea5e9",rep:"#6366f1",ia:"#8b5cf6"};
 function dsync(){const d=$("#drawer");if(!d||!me)return;const u=chatUnread(),G=[["Geral",["home","mine","proj"]],["Recursos humanos",["adm","dem","iv"]],["Ferramentas",["note","chat","rep","ia"]]],nm=Object.fromEntries(SECS);let i=0;
   const sv=k=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]||""}"/></svg>`;
-  d.innerHTML=`<div class="dh"><button class="dx" data-dx aria-label="Fechar menu">×</button><span class="mark${myPh()?" hasph":""}">${esc((me.name||"P")[0].toUpperCase())}</span><div><small class="gr">Olá,</small><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++};--ic:${DCOL[k]||"var(--accent)"}" data-ds="${k}" aria-current="${k===curSec}"><span class="di">${sv(k)}</span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="dfoot">${instOn()?"":`<button class="inst" data-dinst><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg></span><span>Instalar aplicativo</span></button>`}<button data-dprof><span class="di">${sv("adm")}</span><span>Perfil e configurações</span></button><button class="out" data-dout><span class="di">${sv("dem")}</span><span>Sair</span></button></div><div class="df">Pauta · versão 54</div>`}
+  d.innerHTML=`<div class="dh"><button class="dx" data-dx aria-label="Fechar menu">×</button><span class="mark${myPh()?" hasph":""}">${esc((me.name||"P")[0].toUpperCase())}</span><div><small class="gr">Olá,</small><b>${esc(me.full||me.name||"Pauta")}</b><small>${esc(me.email||"")}</small></div></div><nav>${G.map(([t,ks])=>`<div class="dg">${t}</div>`+ks.filter(k=>nm[k]).map(k=>`<button style="--i:${i++};--ic:${DCOL[k]||"var(--accent)"}" data-ds="${k}" aria-current="${k===curSec}"><span class="di">${sv(k)}</span><span>${nm[k]}</span>${k==="chat"&&u?`<em>${u}</em>`:""}</button>`).join("")).join("")}</nav><div class="dfoot">${instOn()?"":`<button class="inst" data-dinst><span class="di"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg></span><span>Instalar aplicativo</span></button>`}<button data-dprof><span class="di">${sv("adm")}</span><span>Perfil e configurações</span></button><button class="out" data-dout><span class="di">${sv("dem")}</span><span>Sair</span></button></div><div class="df">Pauta · versão 55</div>`}
 const dclose=()=>document.body.classList.remove("dopen");
 $("#hamb").onclick=()=>{dsync();document.body.classList.add("dopen")};
 $("#scrim").onclick=dclose;
@@ -2673,6 +2678,8 @@ $("#pff").onchange=async()=>{const f=$("#pff").files[0];$("#pff").value="";if(!f
 $("#pfrm").onclick=()=>savePhoto("");
 function openAI(){const adm=me.email===ADMIN;$("#aibox").hidden=!adm;if(adm){$("#aikey").value=cfg.key||"";$("#aimodel").value=cfg.model||"gemini-3.5-flash-lite"}$("#aistat").textContent=(cfg.key?"A IA do relatório está ativa.":"A IA do relatório ainda não foi ativada.")+(adm?"":" A configuração é feita pela administradora.");$("#aidlg").showModal()}
 $("#aiclose").onclick=()=>$("#aidlg").close();
+
+document.querySelectorAll("dialog").forEach(d=>{if(d.querySelector(":scope>.dlgxw"))return;const w=document.createElement("div");w.className="dlgxw";w.innerHTML='<button type="button" class="dlgx" aria-label="Fechar">×</button>';w.firstChild.onclick=()=>d.close();d.insertBefore(w,d.firstChild)});
 </script>
 </body>
 </html>
